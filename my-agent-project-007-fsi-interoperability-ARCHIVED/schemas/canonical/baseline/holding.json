@@ -1,0 +1,197 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://007.fsi/schemas/canonical/holding/v0.1.0",
+  "title": "Holding",
+  "description": "Canonical position/holding. Maps from Orion Position, SF FSC FinancialHolding, custodian positions.",
+  "type": "object",
+  "required": [
+    "canonical_id",
+    "account_ref",
+    "security_identifier",
+    "quantity",
+    "market_value",
+    "source_system"
+  ],
+  "properties": {
+    "canonical_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Primary key for canonical holding record"
+    },
+    "account_ref": {
+      "type": "string",
+      "description": "Canonical Account ID"
+    },
+    "client_ref": {
+      "type": "string",
+      "description": "Canonical Client ID"
+    },
+    "security_identifier": {
+      "type": "object",
+      "description": "Cross-reference: multiple identifiers for the same security",
+      "properties": {
+        "ticker": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Exchange ticker symbol"
+        },
+        "cusip": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "CUSIP identifier (9-char alphanumeric)"
+        },
+        "isin": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "ISIN identifier (2-letter country + 10 alphanum)"
+        },
+        "figi": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "FIGI identifier (12-char alphanumeric)"
+        },
+        "sedol": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "SEDOL identifier (7-char alphanumeric)"
+        },
+        "bloomberg_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Bloomberg ticker format: 'NVDA US Equity'"
+        }
+      }
+    },
+    "security_name": {
+      "type": "string",
+      "description": "Security display name"
+    },
+    "security_type": {
+      "type": "string",
+      "enum": [
+        "equity",
+        "fixed_income",
+        "mutual_fund",
+        "etf",
+        "option",
+        "cash",
+        "alternative",
+        "other"
+      ],
+      "description": "Security classification: equity, fixed_income, mutual_fund, etf, option, cash, alternative, other"
+    },
+    "quantity": {
+      "type": "number",
+      "description": "Number of shares/units"
+    },
+    "market_value": {
+      "type": "number",
+      "description": "DECISION PENDING: Does this include accrued interest? See DECISION-LOG. Currently: excludes accrued interest (Schwab default)."
+    },
+    "market_value_includes_accrued": {
+      "type": "boolean",
+      "default": false,
+      "description": "Explicit flag \u2014 M7 translator sets based on custodian feed"
+    },
+    "cost_basis": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Total cost basis for this holding position"
+    },
+    "unrealized_gain_loss": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Unrealized gain/loss amount"
+    },
+    "unrealized_gain_loss_pct": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Unrealized gain/loss as percentage"
+    },
+    "weight_in_account": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Percentage of account this holding represents"
+    },
+    "currency": {
+      "type": "string",
+      "default": "USD",
+      "description": "ISO 4217 currency code"
+    },
+    "as_of_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date this position data is valid for"
+    },
+    "account_type": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "taxable",
+        "traditional_ira",
+        "roth_ira",
+        "401k",
+        "403b",
+        "457",
+        "sep_ira",
+        "simple_ira",
+        "trust_revocable",
+        "trust_irrevocable",
+        "custodial_utma",
+        "custodial_ugma",
+        "erisa_pension",
+        "erisa_profit_sharing",
+        "529",
+        "hsa",
+        null
+      ],
+      "description": "Account type for ERISA/tax rules. Unified canonical enum per BLOCKER-8 resolution."
+    },
+    "source_system": {
+      "type": "string",
+      "enum": [
+        "orion",
+        "schwab",
+        "fidelity",
+        "pershing",
+        "envestnet",
+        "bloomberg",
+        "factset"
+      ],
+      "description": "Source system that provided this holding data"
+    },
+    "source_id": {
+      "type": "string",
+      "description": "Vendor-specific holding/position ID"
+    },
+    "tax_lots": {
+      "type": "array",
+      "items": {
+        "$ref": "tax-lot.json"
+      },
+      "description": "Individual tax lots for this holding"
+    }
+  }
+}

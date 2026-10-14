@@ -1,0 +1,215 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://007.fsi/schemas/canonical/audit-entry/v0.1.0",
+  "title": "AuditEntry",
+  "description": "Immutable audit trail entry. Written to M10 3-tier storage: Langfuse + S3 Object Lock WORM + CRM. Every agent decision, policy evaluation, and data access is recorded. 6-year retention minimum.",
+  "type": "object",
+  "required": [
+    "canonical_id",
+    "trace_id",
+    "timestamp",
+    "actor_id",
+    "action",
+    "module",
+    "decision",
+    "input_hash",
+    "output_hash",
+    "sha256_integrity"
+  ],
+  "properties": {
+    "canonical_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Primary key for this audit entry"
+    },
+    "trace_id": {
+      "type": "string",
+      "description": "Distributed trace ID linking all entries for one request across all modules"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When this audit entry was created"
+    },
+    "actor_id": {
+      "type": "string",
+      "description": "AID hash of the actor (agent, advisor, system)"
+    },
+    "action": {
+      "type": "string",
+      "description": "What was done (e.g., portfolio_rebalance_proposed, client_record_accessed)"
+    },
+    "module": {
+      "type": "string",
+      "enum": [
+        "m1",
+        "m2",
+        "m4",
+        "m6",
+        "m7",
+        "m8",
+        "m9",
+        "m10",
+        "m11",
+        "m12",
+        "m13"
+      ],
+      "description": "Module that generated this entry"
+    },
+    "target_type": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Entity type acted upon (client, account, security, payment)"
+    },
+    "target_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Canonical ID of the entity acted upon"
+    },
+    "decision": {
+      "type": "string",
+      "enum": [
+        "allow",
+        "deny",
+        "warn",
+        "escalate",
+        "error"
+      ],
+      "description": "Decision outcome: allow, deny, warn, escalate, error"
+    },
+    "reason": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Reason for the decision"
+    },
+    "input_hash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "description": "SHA-256 of input payload for reproducibility"
+    },
+    "output_hash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "description": "SHA-256 of output payload for reproducibility"
+    },
+    "policy_bundle_version": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "OPA bundle version used"
+    },
+    "rule_applied": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Rego rule path evaluated"
+    },
+    "wsp_section": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "WSP section reference (steering rule 19)"
+    },
+    "data_sources_used": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Data sources consulted (salesforce_fsc, bloomberg, etc.)"
+    },
+    "latency_ms": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Operation latency in milliseconds"
+    },
+    "archetype": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Client archetype classification"
+    },
+    "role": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Actor role (advisor, compliance_officer, agent)"
+    },
+    "firm_id": {
+      "type": "string",
+      "description": "Firm context for multi-tenant"
+    },
+    "jurisdiction": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Regulatory jurisdiction (US, UK, EU, SG, HK)"
+    },
+    "provenance_chain": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "items": {
+        "type": "object",
+        "properties": {
+          "stage": {
+            "type": "string"
+          },
+          "module": {
+            "type": "string"
+          },
+          "hash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "description": "Liability provenance chain (ARCH-06 Gap 2). Per-stage SHA-256 hash chain."
+    },
+    "worm_record_id": {
+      "type": "string",
+      "description": "S3 Object Lock key for WORM copy"
+    },
+    "sha256_integrity": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "description": "SHA-256 of entire entry for tamper detection"
+    },
+    "langfuse_trace_url": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uri",
+      "description": "Langfuse trace URL for LLM observability"
+    },
+    "crm_record_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "SF Record ID if written to CRM"
+    },
+    "retention_years": {
+      "type": "integer",
+      "default": 6,
+      "description": "Minimum retention period. 6 years default (SEC 17a-4). Jurisdiction may require more."
+    }
+  }
+}

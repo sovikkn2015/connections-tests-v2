@@ -1,0 +1,54 @@
+# Enterprise Config Template — Tier 4 Independent RIA
+# This is a SAMPLE config. Each firm gets their own copy.
+# Loaded by M5 (Enterprise Config Loader). Validated by Pydantic v2.
+
+firm:
+  name: "Acme Wealth Management"
+  lei: null  # LEI not required for most RIAs
+  crd_number: "123456"
+  registration_type: "ria_only"  # ria_only | bd_only | dual_registered
+
+archetype: "tier4_independent_ria"
+
+jurisdiction:
+  primary: "US"
+  data_residency: "US"
+
+deployment:
+  topology: "cloud"  # cloud | hybrid | onprem
+  region: "us-east-1"
+  runtime: "managed-agents"  # managed-agents | strands-sdk
+
+vendors:
+  crm: "salesforce_fsc"
+  portfolio: "orion"
+  planning: "emoney"
+  custodians: ["schwab"]
+  market_data: "alpha_vantage"  # bloomberg deferred to Phase 4
+  compliance_archive: null  # smarsh added in Phase 3
+
+channels:
+  enabled: ["slack", "web"]
+  primary: "slack"
+
+compliance:
+  suitability_standard: "fiduciary"  # fiduciary (RIA) | reg_bi (BD)
+  reg_bi_enabled: false  # RIAs have fiduciary duty, not Reg BI
+  smarsh_enabled: false  # Phase 3
+  principal_review_enabled: false  # Recommended but not required for RIAs
+  worm_retention_years: 6
+  mnpi_filtering: "tier4_advisor_level"  # advisor sees own clients only
+
+specialists:
+  enabled: ["client_service", "research"]  # Phase 2: 2 specialists
+  # execution and onboarding added in Phase 3
+  supervisor_model: "haiku"
+  research_model: "sonnet"
+  client_service_model: "haiku"
+
+memory:
+  l1_ttl_hours: 8
+  l2_retention_days: 7
+  l3_retention_years: 2
+  l4_enabled: true  # semantic memory (client preferences)
+  l5_enabled: true  # procedural memory (advisor preferences)

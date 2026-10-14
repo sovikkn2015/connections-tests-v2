@@ -1,0 +1,56 @@
+# -----------------------------------------------------------------------------
+# M10 Audit Logger sub-chart values.
+# -----------------------------------------------------------------------------
+
+replicaCount: 2
+
+image:
+  repository: 007-fsi/m10-audit-logger
+  tag: latest
+  pullPolicy: Always
+
+service:
+  appPort: 8443
+  probePort: 8080
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+  seccompProfile:
+    type: RuntimeDefault
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 1000
+  capabilities:
+    drop:
+      - ALL
+
+podDisruptionBudget:
+  minAvailable: 1
+
+tmpVolumes:
+  - name: tmp
+    mountPath: /tmp
+  - name: uvicorn-cache
+    mountPath: /home/m10
+
+externalSecretPath: secret/data/007/m10-audit-logger/s3-writer
+
+# Wave 4 egress narrowing.
+egressAllowlist: []
+
+networkPolicy:
+  # egressMode: allowlist|allow-all  -- leave unset to inherit global

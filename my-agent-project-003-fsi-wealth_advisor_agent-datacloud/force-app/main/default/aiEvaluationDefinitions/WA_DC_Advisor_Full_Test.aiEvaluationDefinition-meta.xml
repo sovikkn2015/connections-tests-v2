@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<AiEvaluationDefinition xmlns="http://soap.sforce.com/2006/04/metadata">
+    <name>WA_DC_Advisor_Full_Test</name>
+    <subjectName>WA_DC_Advisor</subjectName>
+    <subjectType>AGENT</subjectType>
+    <testCase>
+        <number>1</number>
+        <inputs><utterance>Tell me about the Johnson household</utterance></inputs>
+        <expectation><expectedValue>client_lookup</expectedValue><name>topic_sequence_match</name></expectation>
+        <expectation><expectedValue>[&apos;get_client_360&apos;]</expectedValue><name>action_sequence_match</name></expectation>
+        <expectation><expectedValue>Returns Johnson Family with AUM and members</expectedValue><name>bot_response_rating</name></expectation>
+    </testCase>
+    <testCase>
+        <number>2</number>
+        <inputs><utterance>Tell me about the Chen family</utterance></inputs>
+        <expectation><expectedValue>client_lookup</expectedValue><name>topic_sequence_match</name></expectation>
+        <expectation><expectedValue>[&apos;get_client_360&apos;]</expectedValue><name>action_sequence_match</name></expectation>
+        <expectation><expectedValue>Returns Chen Family with AUM and members</expectedValue><name>bot_response_rating</name></expectation>
+    </testCase>
+    <testCase>
+        <number>3</number>
+        <inputs><utterance>Tell me about the Martinez household</utterance></inputs>
+        <expectation><expectedValue>client_lookup</expectedValue><name>topic_sequence_match</name></expectation>
+        <expectation><expectedValue>[&apos;get_client_360&apos;]</expectedValue><name>action_sequence_match</name></expectation>
+        <expectation><expectedValue>Returns Martinez Family with AUM and members</expectedValue><name>bot_response_rating</name></expectation>
+    </testCase>
+    <testCase>
+        <number>4</number>
+        <inputs><utterance>Tell me about the Patel family</utterance></inputs>
+        <expectation><expectedValue>client_lookup</expectedValue><name>topic_sequence_match</name></expectation>
+        <expectation><expectedValue>[&apos;get_client_360&apos;]</expectedValue><name>action_sequence_match</name></expectation>
+        <expectation><expectedValue>Returns Patel Family with AUM and members</expectedValue><name>bot_response_rating</name></expectation>
+    </testCase>
+    <testCase>
+        <number>5</number>
+        <inputs><utterance>Tell me about the Williams family</utterance></inputs>
+        <expectation><expectedValue>client_lookup</expectedValue><name>topic_sequence_match</name></expectation>
+        <expectation><expectedValue>[&apos;get_client_360&apos;]</expectedValue><name>action_sequence_match</name></expectation>
+        <expectation><expectedValue>Returns Williams Family with AUM and members</expectedValue><name>bot_response_rating</name></expectation>
+    </testCase>
+    <testCase>
+        <number>6</number>
+        <inputs><utterance>How is Wei Chen&apos;s portfolio?</utterance></inputs>
+        <expectation><expectedValue>portfolio_review</expectedValue><name>topic_sequence_match</name></expectation>
+        <expectation><expectedValue>[&apos;get_portfolio_summary&apos;]</expectedValue><name>action_sequence_match</name></expectation>
+        <expectation><expectedValue>Returns portfolio with allocation and returns for Wei Chen</expectedValue><name>bot_response_rating</name></expectation>
+    </testCase>
+    <testCase>
+        <number>7</number>
+        <inputs><utterance>How is Raj Patel&apos;s portfolio performing?</utterance></inputs>
+        <expectation><expectedValue>portfolio_review</expectedValue><name>topic_sequence_match</name></expectation>
+        <expectation><expectedValue>[&apos;get_portfolio_summary&apos;]</expectedValue><name>action_sequence_match</name></expectation>
+        <expectation><expectedValue>Returns portfolio data for Raj Patel</expectedValue><name>bot_response_rating</name></expectation>
+    </testCase>
+    <testCase>
+        <number>8</number>
+        <inputs><utterance>Show me James Williams portfolio</utterance></inputs>
+        <expectation><expectedValue>portfolio_review</expectedValue><name>topic_sequence_match</name></expectation>
+        <expectation><expectedValue>[&apos;get_portfolio_summary&apos;]</expectedValue><name>action_sequence_match</name></expectation>
+        <expectation><expectedValue>Returns portfolio data for James Williams</expectedValue><name>bot_response_rating</name></expectation>
+    </testCase>
+    <testCase>
+        <number>9</number>
+        <inputs><utterance>What are the Johnsons&apos; retirement goals?</utterance></inputs>
+        <expectation><expectedValue>goal_planning</expectedValue><name>topic_sequence_match</name></expectation>
+        <expectation><expectedValue>[&apos;get_financial_goals&apos;]</expectedValue><name>action_sequence_match</name></expectation>
+        <expectation><expectedValue>Returns financial goals for the Johnson family</expectedValue><name>bot_response_rating</name></expectation>
+    </testCase>
+    <testCase>
+        <number>10</number>
+        <inputs><utterance>What are the Patels&apos; goals?</utterance></inputs>
+        <expectation><expectedValue>goal_planning</expectedValue><name>topic_sequence_match</name></expectation>
+        <expectation><expectedValue>[&apos;get_financial_goals&apos;]</expectedValue><name>action_sequence_match</name></expectation>
+        <expectation><expectedValue>Returns financial goals for the Patel family</expectedValue><name>bot_response_rating</name></expectation>
+    </testCase>
+    <testCase>
+        <number>11</number>
+        <inputs><utterance>What goals does Carlos Martinez have?</utterance></inputs>
+        <expectation><expectedValue>goal_planning</expectedValue><name>topic_sequence_match</name></expectation>
+        <expectation><expectedValue>[&apos;get_financial_goals&apos;]</expectedValue><name>action_sequence_match</name></expectation>
+        <expectation><expectedValue>Returns financial goals for Carlos Martinez</expectedValue><name>bot_response_rating</name></expectation>
+    </testCase>
+    <testCase>
+        <number>12</number>
+        <inputs><utterance>Prep me for my meeting with Sarah Johnson</utterance></inputs>
+        <expectation><expectedValue>meeting_prep</expectedValue><name>topic_sequence_match</name></expectation>
+        <expectation><expectedValue>[&apos;get_meeting_prep&apos;]</expectedValue><name>action_sequence_match</name></expectation>
+        <expectation><expectedValue>Returns meeting brief for Sarah Johnson</expectedValue><name>bot_response_rating</name></expectation>
+    </testCase>
+    <testCase>
+        <number>13</number>
+        <inputs><utterance>Prep me for my meeting with Carlos</utterance></inputs>
+        <expectation><expectedValue>meeting_prep</expectedValue><name>topic_sequence_match</name></expectation>
+        <expectation><expectedValue>[&apos;get_meeting_prep&apos;]</expectedValue><name>action_sequence_match</name></expectation>
+        <expectation><expectedValue>Returns meeting brief for Carlos Martinez</expectedValue><name>bot_response_rating</name></expectation>
+    </testCase>
+    <testCase>
+        <number>14</number>
+        <inputs><utterance>Prepare my meeting with Raj Patel</utterance></inputs>
+        <expectation><expectedValue>meeting_prep</expectedValue><name>topic_sequence_match</name></expectation>
+        <expectation><expectedValue>[&apos;get_meeting_prep&apos;]</expectedValue><name>action_sequence_match</name></expectation>
+        <expectation><expectedValue>Returns meeting brief for Raj Patel</expectedValue><name>bot_response_rating</name></expectation>
+    </testCase>
+    <testCase>
+        <number>15</number>
+        <inputs><utterance>Transfer me to a specialist</utterance></inputs>
+        <expectation><expectedValue>escalation</expectedValue><name>topic_sequence_match</name></expectation>
+        <expectation><expectedValue>The agent escalates to a human</expectedValue><name>bot_response_rating</name></expectation>
+    </testCase>
+    <testCase>
+        <number>16</number>
+        <inputs><utterance>What is the weather today?</utterance></inputs>
+        <expectation><expectedValue>off_topic</expectedValue><name>topic_sequence_match</name></expectation>
+        <expectation><expectedValue>The agent redirects to wealth advisory topics</expectedValue><name>bot_response_rating</name></expectation>
+    </testCase>
+</AiEvaluationDefinition>

@@ -1,0 +1,82 @@
+# M12 Supervisor -- sub-chart values.
+# Spec: .kiro/specs/ops-hardening-wave2-intelligence-layer.md v0.2.0.
+
+image:
+  repository: ghcr.io/project-007/m12-supervisor
+  tag: "0.1.0"
+  digest: ""
+  pullPolicy: IfNotPresent
+
+replicas: 2
+
+irsa:
+  roleArn: "arn:aws:iam::REPLACE_ME:role/REPLACE_ME"
+
+# Resources (R5.7) -- mid-tier fan-out orchestration.
+resources:
+  requests:
+    cpu: 300m
+    memory: 512Mi
+  limits:
+    cpu: 1500m
+    memory: 2Gi
+
+# PriorityClass (R7.3).
+priorityClassName: system-cluster-critical
+
+# Non-secret config (R3.19-R3.25). Note: M12_KYC_ADAPTER_URL is a URL
+# (NOT secret per task prompt); the key behind it is in Vault.
+config:
+  awsRegion: us-east-1
+  modelId: anthropic.claude-3-5-haiku-20241022-v1:0
+  kycAdapterUrl: https://m11-kyc.internal:8443
+  hitlHmacKeyVaultPath: secret/data/m12/hitl_hmac_key
+  m9BaseUrl: https://m9-intent-router.internal:8443
+  m8BaseUrl: https://m8-pipeline-engine.internal:8443
+  dispatchMode: local                # Phase 2 lighthouse; Phase 3 flips to remote.
+  schemaVersion: "0.2.0"
+  configSchemaVersion: "m5:v0.3.0"
+
+mtls:
+  secretName: m12-supervisor-mtls-cert
+
+certificate:
+  enabled: true
+  issuerRef:
+    name: internal-ca
+    kind: ClusterIssuer
+  duration: 24h
+  renewBefore: 2h
+
+networkPolicy:
+  enabled: true
+  gatewayPodLabel: m6-mcp-gateway
+  # M12 may additionally accept ingress from M1 identity (session replay).
+  # Empty by default; opsteam adds via values override.
+  extraIngressFrom: []
+
+pdb:
+  enabled: true
+  minAvailable: 1
+
+# HPA (R6) -- target 70% CPU for orchestration fan-out.
+hpa:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+
+probes:
+  readiness:
+    path: /ready
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    failureThreshold: 3
+  liveness:
+    path: /health
+    initialDelaySeconds: 10
+    periodSeconds: 30
+    failureThreshold: 3
+
+# Wave 4 egress narrowing.
+egressAllowlist: []

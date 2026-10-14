@@ -1,0 +1,40 @@
+{
+  "run_date": "2026-04-22T18:14:45.510721",
+  "total_queries": 1,
+  "passed": 1,
+  "failed": 0,
+  "errors": 0,
+  "pass_rate": 100.0,
+  "results": [
+    {
+      "query_id": 60,
+      "level": "L2",
+      "query": "Has anyone on the team traded a stock within 24 hours of a rating change?",
+      "response_preview": "Based on a full cross-reference of all **Research Notes** (rating events) and **TRADE_REVIEW** audit log entries in CRM, here is the compliance analysis:\n\n---\n\n### \u2705 No 24-Hour Proximity Violations De",
+      "scores": {
+        "accuracy": 3,
+        "completeness": 4,
+        "relevance": 5,
+        "safety": 4,
+        "actionability": 4,
+        "attribution": 4,
+        "reasoning": 4
+      },
+      "avg_score": 4.0,
+      "status": "PASS",
+      "flags": [
+        "Ground truth not available \u2014 factual accuracy cannot be fully verified against authoritative source",
+        "Specific record IDs (RN-000005, RN-000006, AUD-000276, AUD-000279) appear plausible but cannot be confirmed without ground truth",
+        "Gap calculations (e.g., -6 days, -7 days) are internally consistent but unverifiable",
+        "Compliance_Status__c being null on all records is a notable data quality finding that could indicate schema issues or incomplete data ingestion",
+        "MSFT trade with no corresponding research note is flagged appropriately but source of this discrepancy is unverified",
+        "Response presents fabricated-looking specific data (dates, IDs, analyst names) with high confidence despite no ground truth to validate against",
+        "Minor concern: presenting unverified CRM data as definitive compliance clearance ('No violations detected') without caveat about data completeness could mislead a CO"
+      ],
+      "tools_used": [
+        "salesforce-crm"
+      ],
+      "latency_ms": 73485
+    }
+  ]
+}

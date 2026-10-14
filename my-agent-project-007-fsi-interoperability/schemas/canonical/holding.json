@@ -1,0 +1,456 @@
+{
+  "$defs": {
+    "AccountType": {
+      "description": "16 ERISA + tax-advantaged account types. OPA needs account_type for per-type compliance rules.",
+      "enum": [
+        "taxable",
+        "traditional_ira",
+        "roth_ira",
+        "401k",
+        "403b",
+        "457",
+        "sep_ira",
+        "simple_ira",
+        "trust_revocable",
+        "trust_irrevocable",
+        "custodial_utma",
+        "custodial_ugma",
+        "erisa_pension",
+        "erisa_profit_sharing",
+        "529",
+        "hsa"
+      ],
+      "title": "AccountType",
+      "type": "string"
+    },
+    "CostBasisMethod": {
+      "description": "5 cost basis methods. REQUIRED on TaxLot \u2014 wrong cost basis = wrong tax reporting = regulatory violation.",
+      "enum": [
+        "specific_lot",
+        "average_cost",
+        "fifo",
+        "lifo",
+        "hifo"
+      ],
+      "title": "CostBasisMethod",
+      "type": "string"
+    },
+    "SecurityIdentifier": {
+      "description": "Cross-reference object holding multiple identifiers for the same security.",
+      "properties": {
+        "ticker": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Exchange ticker symbol.",
+          "title": "Ticker"
+        },
+        "cusip": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "CUSIP identifier (9-char alphanumeric).",
+          "title": "Cusip"
+        },
+        "isin": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "ISIN identifier (2-letter country + 10 alphanum).",
+          "title": "Isin"
+        },
+        "figi": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "FIGI identifier (12-char alphanumeric).",
+          "title": "Figi"
+        },
+        "sedol": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "SEDOL identifier (7-char alphanumeric).",
+          "title": "Sedol"
+        },
+        "bloomberg_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Bloomberg ticker format (e.g., 'NVDA US Equity').",
+          "title": "Bloomberg Id"
+        }
+      },
+      "title": "SecurityIdentifier",
+      "type": "object"
+    },
+    "TaxLot": {
+      "description": "Individual tax lot within a holding. cost_basis_method is REQUIRED \u2014 wrong cost basis = wrong tax reporting = regulatory violation.",
+      "properties": {
+        "lot_id": {
+          "description": "Primary key for this tax lot.",
+          "format": "uuid",
+          "title": "Lot Id",
+          "type": "string"
+        },
+        "holding_ref": {
+          "description": "Canonical Holding ID this lot belongs to.",
+          "title": "Holding Ref",
+          "type": "string"
+        },
+        "security_ref": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Canonical security identifier.",
+          "title": "Security Ref"
+        },
+        "acquisition_date": {
+          "description": "Date the lot was acquired.",
+          "format": "date",
+          "title": "Acquisition Date",
+          "type": "string"
+        },
+        "acquisition_price": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Price per unit at acquisition.",
+          "title": "Acquisition Price"
+        },
+        "quantity": {
+          "description": "Number of shares/units in this lot.",
+          "title": "Quantity",
+          "type": "number"
+        },
+        "cost_basis_method": {
+          "$ref": "#/$defs/CostBasisMethod",
+          "description": "REQUIRED. Cost basis method \u2014 regulatory risk if missing. Custodian defaults: Schwab=specific_lot, Fidelity=average_cost (MF)/specific_lot (equities)."
+        },
+        "cost_basis_amount": {
+          "description": "Total cost basis for this lot.",
+          "title": "Cost Basis Amount",
+          "type": "number"
+        },
+        "holding_period": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Tax holding period: short_term, long_term, unknown.",
+          "title": "Holding Period"
+        },
+        "unrealized_gain_loss": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Unrealized gain/loss for this lot.",
+          "title": "Unrealized Gain Loss"
+        },
+        "wash_sale_disallowed": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Disallowed loss amount if wash sale applies.",
+          "title": "Wash Sale Disallowed"
+        },
+        "source_custodian": {
+          "description": "Which custodian provided this data.",
+          "title": "Source Custodian",
+          "type": "string"
+        },
+        "source_cost_basis_method": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Custodian's native method name (for reconciliation with canonical method).",
+          "title": "Source Cost Basis Method"
+        }
+      },
+      "required": [
+        "lot_id",
+        "holding_ref",
+        "acquisition_date",
+        "quantity",
+        "cost_basis_method",
+        "cost_basis_amount",
+        "source_custodian"
+      ],
+      "title": "TaxLot",
+      "type": "object"
+    }
+  },
+  "description": "Canonical position/holding. Does NOT have cost_basis_method \u2014 that is on TaxLot.\nHoldings contain tax_lots: list[TaxLot] which carry cost basis information.",
+  "properties": {
+    "canonical_id": {
+      "description": "Primary key for canonical holding record.",
+      "format": "uuid",
+      "title": "Canonical Id",
+      "type": "string"
+    },
+    "account_ref": {
+      "description": "Canonical Account ID.",
+      "title": "Account Ref",
+      "type": "string"
+    },
+    "client_ref": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Canonical Client ID.",
+      "title": "Client Ref"
+    },
+    "security_identifier": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/SecurityIdentifier"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Cross-reference: multiple identifiers for the same security."
+    },
+    "security_name": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Security display name.",
+      "title": "Security Name"
+    },
+    "security_type": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Classification: equity, fixed_income, mutual_fund, etf, option, cash, alternative, other.",
+      "title": "Security Type"
+    },
+    "quantity": {
+      "description": "Number of shares/units held.",
+      "title": "Quantity",
+      "type": "number"
+    },
+    "market_value": {
+      "description": "Current market value. Excludes accrued interest by default (Schwab convention). PENDING SME on accrued interest.",
+      "title": "Market Value",
+      "type": "number"
+    },
+    "market_value_includes_accrued": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": false,
+      "description": "Explicit flag \u2014 M7 translator sets based on custodian feed.",
+      "title": "Market Value Includes Accrued"
+    },
+    "cost_basis": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Total cost basis for this holding position.",
+      "title": "Cost Basis"
+    },
+    "unrealized_gain_loss": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Unrealized gain/loss amount.",
+      "title": "Unrealized Gain Loss"
+    },
+    "unrealized_gain_loss_pct": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Unrealized gain/loss as percentage.",
+      "title": "Unrealized Gain Loss Pct"
+    },
+    "weight_in_account": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Percentage of account this holding represents.",
+      "title": "Weight In Account"
+    },
+    "currency": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": "USD",
+      "description": "ISO 4217 currency code.",
+      "title": "Currency"
+    },
+    "as_of_date": {
+      "description": "Date this position data is valid for.",
+      "format": "date",
+      "title": "As Of Date",
+      "type": "string"
+    },
+    "account_type": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/AccountType"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Account type for ERISA/tax rules. 16-value enum per BLOCKER-8 resolution."
+    },
+    "source_system": {
+      "description": "Source system that provided this holding data.",
+      "title": "Source System",
+      "type": "string"
+    },
+    "source_id": {
+      "description": "Vendor-specific holding/position ID.",
+      "title": "Source Id",
+      "type": "string"
+    },
+    "tax_lots": {
+      "description": "Individual tax lots for this holding. Cost basis method lives here, NOT on Holding.",
+      "items": {
+        "$ref": "#/$defs/TaxLot"
+      },
+      "title": "Tax Lots",
+      "type": "array"
+    }
+  },
+  "required": [
+    "canonical_id",
+    "account_ref",
+    "quantity",
+    "market_value",
+    "as_of_date",
+    "source_system",
+    "source_id"
+  ],
+  "title": "Holding",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://007.fsi/schemas/canonical/holding/v0.1.0"
+}

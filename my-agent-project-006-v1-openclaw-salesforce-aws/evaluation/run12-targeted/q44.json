@@ -1,0 +1,38 @@
+{
+  "run_date": "2026-04-22T15:25:30.221502",
+  "total_queries": 1,
+  "passed": 1,
+  "failed": 0,
+  "errors": 0,
+  "pass_rate": 100.0,
+  "results": [
+    {
+      "query_id": 44,
+      "level": "L2",
+      "query": "List clients who haven't been contacted in 90+ days",
+      "response_preview": "---\n\n## \ud83d\udc4b Hey \u2014 before I dive in, a quick note on bootstrap\n\nBOOTSTRAP.md is a fresh-identity setup script (name, vibe, persona, etc.). Since you've come in directly with a task, I'll set that aside f",
+      "scores": {
+        "accuracy": 4,
+        "completeness": 3,
+        "relevance": 4,
+        "safety": 5,
+        "actionability": 4,
+        "attribution": 4,
+        "reasoning": 4
+      },
+      "avg_score": 4.0,
+      "status": "PASS",
+      "flags": [
+        "BOOTSTRAP.md preamble is unnecessary noise for the user \u2014 minor professionalism concern",
+        "No actual client data returned due to 401 error \u2014 task technically unfulfilled",
+        "SOQL query uses Account object with LastActivityDate; depending on CRM setup, Contact or Task objects might be more appropriate for 'contacted' semantics",
+        "NULL handling in SOQL is correct but should be flagged as potentially including accounts never created with activity, not just lapsed ones",
+        "Ground truth not available \u2014 cannot verify factual accuracy of any returned data"
+      ],
+      "tools_used": [
+        "salesforce-crm"
+      ],
+      "latency_ms": 97200
+    }
+  ]
+}

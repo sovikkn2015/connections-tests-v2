@@ -1,0 +1,41 @@
+{
+  "version": "2026-03-10",
+  "source": "US Treasury OFAC SDN list — V3 demo-mode seed (real feed is a daily download).",
+  "entries": [
+    {
+      "name": "NEGRO, EL",
+      "aliases": ["Black Market Currency Exchange"],
+      "country": "VE",
+      "program": "SDNT",
+      "sdn_id": "SDN-12001"
+    },
+    {
+      "name": "KIM, Jong Un",
+      "aliases": [],
+      "country": "KP",
+      "program": "DPRK3",
+      "sdn_id": "SDN-14202"
+    },
+    {
+      "name": "SANCTIONED SHIPPING LTD",
+      "aliases": ["Red Sea Freight Corp"],
+      "country": "IR",
+      "program": "IRAN-HR",
+      "sdn_id": "SDN-15330"
+    },
+    {
+      "name": "DOE, Jane Sanctioned",
+      "aliases": ["J. Doe"],
+      "country": "RU",
+      "program": "UKRAINE-EO13662",
+      "sdn_id": "SDN-16401"
+    },
+    {
+      "name": "BLOCKED BENEFICIARY BANK",
+      "aliases": ["BBB Holdings"],
+      "country": "SY",
+      "program": "SYRIA",
+      "sdn_id": "SDN-17555"
+    }
+  ]
+}

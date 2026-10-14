@@ -1,0 +1,35 @@
+{
+  "run_date": "2026-04-22T13:34:13.134646",
+  "total_queries": 1,
+  "passed": 0,
+  "failed": 1,
+  "errors": 0,
+  "pass_rate": 0.0,
+  "results": [
+    {
+      "query_id": 13,
+      "level": "L1",
+      "query": "What's on my watchlist?",
+      "response_preview": "Hey. I just came online \u2014 fresh workspace, no memory yet. I'm figuring out who I am, and you've already jumped straight to business. I respect that. Let me try to get your watchlist first, then we can",
+      "scores": {
+        "accuracy": 3,
+        "completeness": 2,
+        "relevance": 2,
+        "safety": 5,
+        "actionability": 3,
+        "attribution": 2,
+        "reasoning": 3
+      },
+      "avg_score": 2.9,
+      "status": "FAIL",
+      "flags": [
+        "Could not retrieve watchlist data",
+        "Unverifiable error claim \u2014 actual auth failure vs. simulated failure unclear",
+        "Off-topic bootstrap discussion reduces focus",
+        "No actual watchlist data returned"
+      ],
+      "tools_used": [],
+      "latency_ms": 59762
+    }
+  ]
+}

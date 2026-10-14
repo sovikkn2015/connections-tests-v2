@@ -1,0 +1,104 @@
+#%RAML 1.0
+title: Rebalance Portfolio Process API
+version: v1
+baseUri: /api
+mediaType: application/json
+description: |
+  Project 006 v2 - MuleSoft Process API for rebalance_portfolio action.
+  Mock backend: returns canned basket_id/status. Real OMS batch integration is a later step.
+  All calls originate from the mulesoft-actions Lambda (MCP server).
+  HITL approval is verified upstream; this API only enforces shape + presence of approval_token_hash.
+  Dual-auth is required when trades > 10 items OR sum(quantity) > 5000 (proxies for basket notional).
+
+types:
+  Trade:
+    type: object
+    additionalProperties: false
+    properties:
+      ticker:
+        type: string
+      side:
+        type: string
+        enum: [BUY, SELL]
+      quantity:
+        type: integer
+        minimum: 1
+
+  RebalanceRequest:
+    type: object
+    additionalProperties: false
+    properties:
+      client_id:
+        type: string
+      trades:
+        type: array
+        items: Trade
+        minItems: 1
+      approval_token_hash:
+        type: string
+        description: SHA-256 hex digest of the raw ApprovalToken. Raw token never crosses this boundary.
+        pattern: "^[a-f0-9]{64}$"
+      dual_approval_token_hash:
+        type: string
+        description: SHA-256 hex digest of the dual-approval token. Required when trades > 10 or sum(quantity) > 5000.
+        pattern: "^[a-f0-9]{64}$"
+        required: false
+
+  RebalanceResponse:
+    type: object
+    properties:
+      basket_id:
+        type: string
+        example: MULE-BASKET-a1b2c3d4
+      status:
+        type: string
+        enum: [SUBMITTED, REJECTED]
+      client_id: string
+      trade_count: integer
+      submitted_at:
+        type: integer
+        description: Unix epoch seconds
+      mulesoft_reference:
+        type: string
+
+  ErrorResponse:
+    type: object
+    properties:
+      error: string
+      message: string
+      missing_fields?:
+        type: array
+        items: string
+
+/rebalances:
+  post:
+    description: Submit a basket of rebalancing trades. Mock implementation returns a canned response.
+    body:
+      application/json:
+        type: RebalanceRequest
+    responses:
+      200:
+        description: Basket accepted.
+        body:
+          application/json:
+            type: RebalanceResponse
+      400:
+        description: Missing required fields or invalid shape.
+        body:
+          application/json:
+            type: ErrorResponse
+      403:
+        description: approval_token_hash missing - or dual_approval_token_hash missing above threshold.
+        body:
+          application/json:
+            type: ErrorResponse
+
+/health:
+  get:
+    description: Liveness probe.
+    responses:
+      200:
+        body:
+          application/json:
+            example: |
+              {"status": "ok", "mode": "mock", "api": "rebalance-portfolio-process-api"}

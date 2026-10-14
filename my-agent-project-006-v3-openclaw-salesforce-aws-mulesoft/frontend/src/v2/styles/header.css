@@ -1,0 +1,86 @@
+/* v2 PersonaHeader — Workflow 360 branded bar with named persona + nav. */
+
+.v2-root .v2-persona-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 3rem;
+  padding: 0 0.875rem;
+  background: var(--forensic-bg-2);
+  color: var(--forensic-text-1);
+  border-bottom: 1px solid var(--forensic-line);
+}
+.v2-root .v2-persona-header--light {
+  background: var(--n-000);
+  color: var(--n-900);
+  border-bottom: 1px solid var(--n-200);
+}
+.v2-root .v2-persona-header--channel {
+  background: var(--channel-header);
+  color: var(--n-000);
+  border-bottom: 1px solid rgba(0,0,0,0.1);
+}
+
+.v2-root .v2-persona-header__brand {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.v2-root .v2-persona-header__logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  font-size: 0.9375rem;
+  letter-spacing: -0.01em;
+}
+.v2-root .v2-persona-header__persona {
+  font-size: 0.75rem;
+  opacity: 0.7;
+}
+.v2-root .v2-persona-header__nav {
+  display: flex;
+  gap: 0.125rem;
+  margin-left: 0.5rem;
+}
+.v2-root .v2-persona-header__nav a {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  color: inherit;
+  opacity: 0.65;
+}
+.v2-root .v2-persona-header__nav a.is-active {
+  background: rgba(255,255,255,0.12);
+  opacity: 1;
+  font-weight: 600;
+}
+.v2-root .v2-persona-header--light .v2-persona-header__nav a.is-active {
+  background: var(--w360-brand-050);
+  color: var(--w360-brand-700);
+}
+.v2-root .v2-persona-header__nav a:hover { opacity: 1; }
+
+.v2-root .v2-persona-header__user {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.8125rem;
+}
+.v2-root .v2-persona-header__role {
+  font-size: 0.6875rem;
+  opacity: 0.6;
+}
+.v2-root .v2-persona-header__avatar {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--w360-brand-500);
+  color: var(--n-000);
+  font-size: 0.6875rem;
+  font-weight: 700;
+}

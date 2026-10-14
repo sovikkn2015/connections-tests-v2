@@ -1,0 +1,38 @@
+{
+  "run_date": "2026-04-22T14:50:19.937390",
+  "total_queries": 1,
+  "passed": 1,
+  "failed": 0,
+  "errors": 0,
+  "pass_rate": 100.0,
+  "results": [
+    {
+      "query_id": 21,
+      "level": "L1",
+      "query": "Show me NVIDIA's latest 10-Q",
+      "response_preview": "---\n\n### \ud83d\udd27 Bootstrap Note\n\nThe BOOTSTRAP.md calls for a conversational identity-building session (name, vibe, emoji, IDENTITY.md, USER.md, SOUL.md). That workflow requires back-and-forth with you \u2014 it",
+      "scores": {
+        "accuracy": 3,
+        "completeness": 3,
+        "relevance": 4,
+        "safety": 5,
+        "actionability": 4,
+        "attribution": 4,
+        "reasoning": 3
+      },
+      "avg_score": 3.7,
+      "status": "PASS",
+      "flags": [
+        "Cannot fully verify November 2025 filing date and accession number against ground truth \u2014 potential hallucination risk on specific metadata",
+        "No financial highlights extracted from the 10-Q itself (revenue, EPS, guidance) \u2014 just filing metadata",
+        "Bootstrap preamble is noise unrelated to the query",
+        "Accession number format and URL cannot be independently verified without live EDGAR access",
+        "Fiscal quarter labeling (Q3 FY2026) appears plausible but unverified"
+      ],
+      "tools_used": [
+        "sec-edgar"
+      ],
+      "latency_ms": 74377
+    }
+  ]
+}

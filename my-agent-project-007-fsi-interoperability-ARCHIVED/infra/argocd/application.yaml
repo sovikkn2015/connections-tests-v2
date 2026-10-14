@@ -1,0 +1,69 @@
+# Project 007 FSI Platform — ArgoCD Application (Cloud Topology)
+# Rule 26: GitOps via ArgoCD with automated sync and self-heal.
+# Topology: Cloud (Tier 3/4) — Managed Agents runtime, Bedrock LLM, us-east-1
+# Prerequisites: ArgoCD installed, repo credentials configured, AppProject created.
+#
+# Sync Wave Order (ordered deployment):
+#   Wave 0: Infrastructure (PostgreSQL, Redis, OPA, MinIO, Langfuse, Keycloak)
+#   Wave 1: Trust Layer (M1 Identity, M2/M4 Policy, M10 Audit) — THE MOAT
+#   Wave 2: Gateway (M6 MCP Gateway — depends on trust layer)
+#   Wave 3: Intelligence Layer (M8 Pipeline, M9 Intent Router, Specialists)
+#   Wave 4: Adapters (M11 MCP Adapters, M13 FIX Bridge)
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: 007-fsi-platform-cloud
+  namespace: argocd
+  labels:
+    app.kubernetes.io/part-of: 007-fsi-platform
+    app.kubernetes.io/managed-by: argocd
+    app.kubernetes.io/component: cloud-topology
+    project007.fsi/topology: cloud
+    project007.fsi/tier: "3-4"
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+    notifications.argoproj.io/subscribe.on-sync-succeeded.slack: "007-deployments"
+    notifications.argoproj.io/subscribe.on-sync-failed.slack: "007-deployments"
+    notifications.argoproj.io/subscribe.on-health-degraded.slack: "007-alerts"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: 007-fsi-platform
+  source:
+    repoURL: <REPO_URL>
+    targetRevision: main
+    path: my-agent-project-007-fsi-interoperability/infra/helm/007-platform
+    helm:
+      valueFiles:
+        - values.yaml
+        - values-cloud.yaml
+      parameters:
+        - name: global.imageTag
+          value: ""
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: fsi-007
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+      allowEmpty: false
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - PrunePropagationPolicy=foreground
+      - PruneLast=true
+      - RespectIgnoreDifferences=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      jsonPointers:
+        - /spec/replicas
+  revisionHistoryLimit: 10

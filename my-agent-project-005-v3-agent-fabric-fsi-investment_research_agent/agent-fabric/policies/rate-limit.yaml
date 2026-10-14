@@ -1,0 +1,19 @@
+# Rate Limiting — per-tool, per-agent
+apiVersion: gateway.mulesoft.com/v1alpha1
+kind: PolicyBinding
+metadata:
+  name: rate-limit
+spec:
+  targetRef:
+    kind: ApiInstance
+    name: fsi-mcp-servers
+  policyRef:
+    name: rate-limiting
+  config:
+    rateLimits:
+      - identifier: "{{agent.id}}"
+        maximumRequests: 25
+        timePeriodInSeconds: 1
+        burstLimit: 50
+    clusterizable: true
+    exposeHeaders: true

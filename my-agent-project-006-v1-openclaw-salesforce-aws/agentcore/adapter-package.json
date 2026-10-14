@@ -1,0 +1,14 @@
+{
+  "name": "agentcore-adapter",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "description": "AgentCore HTTP → OpenClaw REST adapter (no WebSocket needed)",
+  "main": "adapter.js",
+  "scripts": {
+    "start": "node adapter.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0"
+  }
+}

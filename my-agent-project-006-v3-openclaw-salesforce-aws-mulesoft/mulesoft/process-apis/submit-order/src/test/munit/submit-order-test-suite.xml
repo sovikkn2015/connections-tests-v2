@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Project 006 v3 - submit-order Process API MUnit test suite.
+  Hermetic: no Alpaca network calls.
+
+    1. assert-403-when-approval-token-hash-missing
+    2. assert-403-when-plan-hash-missing
+    3. assert-400-when-ticker-missing
+    4. assert-200-happy-path-mock-mode
+    5. assert-403-cancel-when-tokens-missing
+    6. assert-400-modify-when-limit-price-missing
+-->
+<mule xmlns="http://www.mulesoft.org/schema/mule/core"
+      xmlns:munit="http://www.mulesoft.org/schema/mule/munit"
+      xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+      xmlns:http="http://www.mulesoft.org/schema/mule/http"
+      xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="
+        http://www.mulesoft.org/schema/mule/core
+          http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+        http://www.mulesoft.org/schema/mule/munit
+          http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+        http://www.mulesoft.org/schema/mule/munit-tools
+          http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd
+        http://www.mulesoft.org/schema/mule/http
+          http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+        http://www.mulesoft.org/schema/mule/ee/core
+          http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+
+    <munit:config name="submit-order-test-suite.xml">
+        <munit:parameterizations>
+            <munit:parameterization name="mock">
+                <munit:parameters>
+                    <munit:parameter propertyName="mock_mode" value="true"/>
+                </munit:parameters>
+            </munit:parameterization>
+        </munit:parameterizations>
+    </munit:config>
+
+    <munit:dynamic-port propertyName="http.port"/>
+
+    <munit:test name="assert-403-when-approval-token-hash-missing">
+        <munit:execution>
+            <munit:set-event>
+                <munit:payload value="#[output application/json --- { ticker: 'NVDA', side: 'buy', quantity: 10, account_id: 'ACC-1', plan_hash: 'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789' }]"/>
+            </munit:set-event>
+            <flow-ref name="submit-order-main-flow"/>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[vars.httpStatus]" is="#[MunitTools::equalTo(403)]"/>
+            <munit-tools:assert-that expression="#[payload.error]" is="#[MunitTools::equalTo('approval_required')]"/>
+        </munit:validation>
+    </munit:test>
+
+    <munit:test name="assert-403-when-plan-hash-missing">
+        <munit:execution>
+            <munit:set-event>
+                <munit:payload value="#[output application/json --- { ticker: 'NVDA', side: 'buy', quantity: 10, account_id: 'ACC-1', approval_token_hash: 'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789' }]"/>
+            </munit:set-event>
+            <flow-ref name="submit-order-main-flow"/>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[vars.httpStatus]" is="#[MunitTools::equalTo(403)]"/>
+            <munit-tools:assert-that expression="#[payload.error]" is="#[MunitTools::equalTo('approval_required')]"/>
+        </munit:validation>
+    </munit:test>
+
+    <munit:test name="assert-400-when-ticker-missing">
+        <munit:execution>
+            <munit:set-event>
+                <munit:payload value="#[output application/json --- { side: 'buy', quantity: 10, account_id: 'ACC-1', plan_hash: 'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789', approval_token_hash: '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef' }]"/>
+            </munit:set-event>
+            <flow-ref name="submit-order-main-flow"/>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[vars.httpStatus]" is="#[MunitTools::equalTo(400)]"/>
+            <munit-tools:assert-that expression="#[payload.error]" is="#[MunitTools::equalTo('missing_fields')]"/>
+            <munit-tools:assert-that expression="#[payload.missing_fields contains 'ticker']" is="#[MunitTools::equalTo(true)]"/>
+        </munit:validation>
+    </munit:test>
+
+    <munit:test name="assert-200-happy-path-mock-mode">
+        <munit:behavior>
+            <munit-tools:mock-when processor="http:request">
+                <munit-tools:with-attributes>
+                    <munit-tools:with-attribute whereValue="alpaca-paper-api-config" attributeName="config-ref"/>
+                </munit-tools:with-attributes>
+                <munit-tools:then-return>
+                    <munit-tools:payload value='#[output application/json --- { error: "MUNIT_UNEXPECTED_CALL", message: "mock_mode test must not reach Alpaca" }]'/>
+                </munit-tools:then-return>
+            </munit-tools:mock-when>
+        </munit:behavior>
+        <munit:execution>
+            <munit:set-event>
+                <munit:payload value="#[output application/json --- { ticker: 'NVDA', side: 'buy', quantity: 10, order_type: 'market', account_id: 'ACC-1', plan_hash: 'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789', approval_token_hash: '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef' }]"/>
+            </munit:set-event>
+            <flow-ref name="submit-order-main-flow"/>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[payload.status]" is="#[MunitTools::equalTo('accepted')]"/>
+            <munit-tools:assert-that expression="#[payload.order_id startsWith 'MULE-ORDER-']" is="#[MunitTools::equalTo(true)]"/>
+            <munit-tools:assert-that expression="#[payload.ticker]" is="#[MunitTools::equalTo('NVDA')]"/>
+            <munit-tools:assert-that expression="#[payload.quantity]" is="#[MunitTools::equalTo(10)]"/>
+            <munit-tools:assert-that expression="#[payload.error default '']" is="#[MunitTools::not(MunitTools::equalTo('MUNIT_UNEXPECTED_CALL'))]"/>
+        </munit:validation>
+    </munit:test>
+
+    <munit:test name="assert-403-cancel-when-tokens-missing">
+        <munit:execution>
+            <munit:set-event>
+                <munit:payload value="#[output application/json --- { order_id: 'ALPACA-abc123' }]"/>
+                <munit:attributes value="#[{ uriParams: { orderId: 'abc123' } }]"/>
+            </munit:set-event>
+            <flow-ref name="cancel-order-flow"/>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[vars.httpStatus]" is="#[MunitTools::equalTo(403)]"/>
+            <munit-tools:assert-that expression="#[payload.error]" is="#[MunitTools::equalTo('approval_required')]"/>
+        </munit:validation>
+    </munit:test>
+
+    <munit:test name="assert-400-modify-when-limit-price-missing">
+        <munit:execution>
+            <munit:set-event>
+                <munit:payload value="#[output application/json --- { order_id: 'ALPACA-abc123', plan_hash: 'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789', approval_token_hash: '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef' }]"/>
+                <munit:attributes value="#[{ uriParams: { orderId: 'abc123' } }]"/>
+            </munit:set-event>
+            <flow-ref name="modify-order-flow"/>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[vars.httpStatus]" is="#[MunitTools::equalTo(400)]"/>
+            <munit-tools:assert-that expression="#[payload.error]" is="#[MunitTools::equalTo('missing_fields')]"/>
+        </munit:validation>
+    </munit:test>
+
+</mule>

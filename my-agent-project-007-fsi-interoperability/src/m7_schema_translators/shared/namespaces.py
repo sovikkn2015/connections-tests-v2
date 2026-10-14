@@ -1,0 +1,46 @@
+"""
+UUID5 namespaces for deterministic canonical ID derivation.
+
+Per AC10.5: 10 namespaces + `ORDER_NS` reserved (Phase 2 uses `None` for
+`Transaction.order_ref`).
+
+CRITICAL: any change to a namespace value is a MAJOR version bump for EVERY
+translator that uses it — canonical IDs would no longer round-trip.
+"""
+
+from __future__ import annotations
+
+from uuid import UUID
+
+CLIENT_NS: UUID = UUID("b1f4e5a0-0000-5000-8000-000000000001")
+HOUSEHOLD_NS: UUID = UUID("b1f4e5a0-0000-5000-8000-000000000002")
+HOLDING_NS: UUID = UUID("b1f4e5a0-0000-5000-8000-000000000003")
+TAXLOT_NS: UUID = UUID("b1f4e5a0-0000-5000-8000-000000000004")
+TRANSACTION_NS: UUID = UUID("b1f4e5a0-0000-5000-8000-000000000005")
+GOAL_NS: UUID = UUID("b1f4e5a0-0000-5000-8000-000000000006")
+PLAN_NS: UUID = UUID("b1f4e5a0-0000-5000-8000-000000000007")
+FIRM_NS: UUID = UUID("b1f4e5a0-0000-5000-8000-000000000008")
+ACCOUNT_NS: UUID = UUID("b1f4e5a0-0000-5000-8000-000000000009")
+ADVISOR_NS: UUID = UUID("b1f4e5a0-0000-5000-8000-00000000000a")
+ORDER_NS: UUID = UUID("b1f4e5a0-0000-5000-8000-00000000000b")  # reserved
+# Remediation M9 (adapter-agent 2026 Q2): Bloomberg / ICE / Smarsh vendor support.
+SECURITY_NS: UUID = UUID("b1f4e5a0-0000-5000-8000-00000000000c")
+QUOTE_NS: UUID = UUID("b1f4e5a0-0000-5000-8000-00000000000d")
+INTERACTION_NS: UUID = UUID("b1f4e5a0-0000-5000-8000-00000000000e")
+
+ALL_NAMESPACES: tuple[UUID, ...] = (
+    CLIENT_NS,
+    HOUSEHOLD_NS,
+    HOLDING_NS,
+    TAXLOT_NS,
+    TRANSACTION_NS,
+    GOAL_NS,
+    PLAN_NS,
+    FIRM_NS,
+    ACCOUNT_NS,
+    ADVISOR_NS,
+    ORDER_NS,
+    SECURITY_NS,
+    QUOTE_NS,
+    INTERACTION_NS,
+)

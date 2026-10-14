@@ -1,0 +1,40 @@
+{
+  "run_date": "2026-04-22T13:26:57.029722",
+  "total_queries": 1,
+  "passed": 1,
+  "failed": 0,
+  "errors": 0,
+  "pass_rate": 100.0,
+  "results": [
+    {
+      "query_id": 5,
+      "level": "L1",
+      "query": "MSFT volume today vs 30-day average",
+      "response_preview": "---\n\n## \ud83d\udccb Bootstrap Note\n\n**BOOTSTRAP.md** contains an identity-setup workflow (naming, persona, etc.) designed for a blank-slate assistant. This workspace is already configured as an **FSI Equity Res",
+      "scores": {
+        "accuracy": 2,
+        "completeness": 4,
+        "relevance": 5,
+        "safety": 4,
+        "actionability": 4,
+        "attribution": 3,
+        "reasoning": 4
+      },
+      "avg_score": 3.7,
+      "status": "PASS",
+      "flags": [
+        "Cannot verify specific volume figures (31,992,100 today; ~32,879,000 30-day avg) against ground truth \u2014 numbers may be fabricated or stale",
+        "Date '2026-04-21' is suspicious \u2014 could indicate hallucinated future date or system clock issue",
+        "Price of $424.16 cannot be verified; may be fabricated",
+        "Historical volume figures cited (Apr 15-17) cannot be cross-checked and may be hallucinated",
+        "Bootstrap preamble is extraneous noise unrelated to the query",
+        "Yahoo Finance attribution is generic \u2014 no specific API endpoint, timestamp, or ticker snapshot ID provided",
+        "No explicit confidence interval or data freshness timestamp included"
+      ],
+      "tools_used": [
+        "market-data"
+      ],
+      "latency_ms": 97256
+    }
+  ]
+}

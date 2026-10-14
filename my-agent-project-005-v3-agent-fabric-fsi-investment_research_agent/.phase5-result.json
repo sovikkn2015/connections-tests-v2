@@ -1,0 +1,53 @@
+{
+  "phase": 5,
+  "phase_name": "eval-visualizer-migration-doc",
+  "status": "complete",
+  "eval_query_count": 30,
+  "dashboard_panels": 5,
+  "runbook_steps": 5,
+  "checklist_items": 7,
+  "smoke_test_checks": 4,
+  "ready_for_review": true,
+  "deliverables": {
+    "eval_suite_doc":    "docs/30-query-eval-suite.md",
+    "eval_runner":       "scripts/run-v3-eval.py",
+    "dashboard":         "agent-fabric/visualizer-dashboard.json",
+    "migration_runbook": "docs/v3-migration-runbook.md",
+    "reviewer_checklist":"docs/v3-reviewer-checklist.md",
+    "smoke_test":        "scripts/v3-smoke-test.sh",
+    "dry_run_results":   "docs/phase5-eval-results.md"
+  },
+  "panels": [
+    "agent-invocation-heatmap",
+    "policy-trigger-counts",
+    "latency-by-tier",
+    "error-rate-by-tool",
+    "mnpi-redactions"
+  ],
+  "checklist": [
+    "1. Flex Gateway healthy (/health 200 + 5 policies applied)",
+    "2. Agent Registry populated (4 agents + 3 MCP servers)",
+    "3. Apex refactor deployed (IR_FlexGatewayUrl + IR_AgentBrokerClient + tests)",
+    "4. 30-query eval pass rate >= 90%",
+    "5. MNPI policy proven (FinServ__Shares__c redacted, sentinel not leaked)",
+    "6. Rate-limit policy proven (>=1 429 observed)",
+    "7. FINRA audit writes visible (>=15 gateway-origin rows)"
+  ],
+  "smoke_test_checks_detail": [
+    "health — /health returns 200",
+    "mcp — one MCP call through the gateway (market-data.get_quote NVDA)",
+    "mnpi — FinServ__Shares__c sentinel (12345) must not echo in response",
+    "rate-limit — 60 rapid calls must produce >=1 HTTP 429"
+  ],
+  "pass_rate_threshold": 0.90,
+  "v2_baseline_reference": "my-agent-project-005-v2-integrations-fsi-investment_research_agent/docs/end-to-end-test-results-30-queries.md",
+  "v2_baseline_passes": 23,
+  "v2_baseline_total": 30,
+  "notes": [
+    "Eval queries are the SAME 30 as V2 — apples-to-apples regression.",
+    "V3 adds two columns per query: 'V3 Expected Path' (Agent Broker route) and 'Gateway Policies Hit' (which of the 5 Flex Gateway policies fire).",
+    "Dashboard JSON is best-effort Anypoint Platform schema; fields flagged with 'TBD: confirm exact field name' should be validated by the reviewer against current Anypoint docs before first deploy.",
+    "Eval runner compiles clean (python3 -m py_compile), smoke test passes bash -n, dashboard is valid JSON, DRY_RUN mode produces docs/phase5-eval-results.md and exits 0.",
+    "No evals were executed against a live endpoint, no deployments performed — per Phase 5 constraints."
+  ]
+}

@@ -1,0 +1,289 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core"
+      xmlns:http="http://www.mulesoft.org/schema/mule/http"
+      xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+      xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties"
+      xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="
+        http://www.mulesoft.org/schema/mule/core
+        http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+        http://www.mulesoft.org/schema/mule/http
+        http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+        http://www.mulesoft.org/schema/mule/ee/core
+        http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+        http://www.mulesoft.org/schema/mule/secure-properties
+        http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd">
+
+    <!--
+      Project 006 v2 - submit-order Process API (LIVE ALPACA paper backend).
+
+      Now posts to the real Alpaca paper-trading API at paper-api.alpaca.markets.
+      Credentials (key_id, secret) are Mule secure properties, loaded from
+      config.yaml + overridden at CloudHub deploy time via the Anypoint
+      Secure Properties UI. Zero credentials in git.
+
+      Flow shape:
+        - 400 / 403 validation branches are UNCHANGED from the mock variant.
+        - Happy path replaces the canned response builder with:
+            (a) DataWeave canonical -> Alpaca request
+            (b) HTTP POST to /v2/orders with APCA-* auth headers
+            (c) DataWeave Alpaca response -> canonical SubmitOrderResponse
+        - Mock fallback: set mule property "mock_mode=true" to bypass the HTTP call.
+        - Alpaca 4xx is remapped to 502 (we do not leak vendor errors as client errors).
+        - Alpaca timeout is remapped to 504.
+        - Approval token hash still redacted to first 8 chars in logs.
+        - This flow still does NOT write to IR_Audit_Log__c - the Lambda does.
+    -->
+
+    <!-- Load Mule properties (endpoint host/path, secure key_id/secret) -->
+    <configuration-properties file="config.yaml"/>
+
+    <http:listener-config name="submit-order-http-listener-config" doc:name="HTTP Listener Config">
+        <http:listener-connection host="0.0.0.0" port="8081"/>
+    </http:listener-config>
+
+    <!--
+      HTTP request config for the Alpaca paper-trading endpoint.
+      Host comes from ${alpaca.endpoint_host} - NEVER hardcoded.
+      HTTPS 443. Base path ${alpaca.endpoint_path} (/v2); the flow appends /orders.
+    -->
+    <http:request-config name="alpaca-paper-api-config" doc:name="Alpaca Paper API Config"
+                         basePath="${alpaca.endpoint_path}"
+                         responseTimeout="15000">
+        <http:request-connection protocol="HTTPS"
+                                 host="${alpaca.endpoint_host}"
+                                 port="443"/>
+    </http:request-config>
+
+    <!-- ================================================================ -->
+    <!-- POST /api/orders                                                 -->
+    <!-- ================================================================ -->
+    <flow name="submit-order-main-flow" doc:name="submit-order-main-flow">
+        <http:listener config-ref="submit-order-http-listener-config"
+                       path="/api/orders"
+                       allowedMethods="POST"
+                       doc:name="POST /api/orders">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[{'Content-Type': 'application/json'}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:headers>#[{'Content-Type': 'application/json'}]</http:headers>
+            </http:error-response>
+        </http:listener>
+
+        <logger level="INFO"
+                doc:name="Log inbound (redacted)"
+                message='#["[submit-order] inbound ticker=" ++ (payload.ticker default "?") ++ " side=" ++ (payload.side default "?") ++ " qty=" ++ ((payload.quantity default "?") as String) ++ " client=" ++ (payload.client_id default "?") ++ " token_hash_prefix=" ++ (if ((payload.approval_token_hash default "") == "") "NONE" else ((payload.approval_token_hash as String)[0 to 7]))]'/>
+
+        <!-- ============== Validation (UNCHANGED from mock) ============== -->
+        <choice doc:name="Validate required fields">
+            <!-- Missing approval_token_hash: 403, mimics HITL gate -->
+            <when expression="#[isEmpty(payload.approval_token_hash default '')]">
+                <set-variable variableName="httpStatus" value="403" doc:name="status=403"/>
+                <ee:transform doc:name="Build 403 error payload">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  error: "approval_required",
+  message: "approval_token_hash is required - this endpoint mimics the HITL gate"
+}]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+            </when>
+
+            <!-- Missing any other required field: 400 -->
+            <when expression='#[
+                isEmpty(payload.ticker default "")
+                or isEmpty(payload.side default "")
+                or (payload.quantity default 0) == 0
+                or isEmpty(payload.client_id default "")
+                or isEmpty(payload.account_id default "")
+            ]'>
+                <set-variable variableName="httpStatus" value="400" doc:name="status=400"/>
+                <ee:transform doc:name="Build 400 error payload">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  error: "missing_fields",
+  message: "One or more required fields are missing",
+  missing_fields: [
+    if (isEmpty(payload.ticker default "")) "ticker" else null,
+    if (isEmpty(payload.side default "")) "side" else null,
+    if ((payload.quantity default 0) == 0) "quantity" else null,
+    if (isEmpty(payload.client_id default "")) "client_id" else null,
+    if (isEmpty(payload.account_id default "")) "account_id" else null
+  ] filter ($ != null)
+}]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+            </when>
+
+            <!-- Happy path: normalize, then call LIVE Alpaca (or fall back to mock) -->
+            <otherwise>
+                <ee:transform doc:name="Normalize request (vars.normalized)">
+                    <ee:variables>
+                        <ee:set-variable variableName="normalized"><![CDATA[%dw 2.0
+output application/json
+---
+{
+  ticker: payload.ticker,
+  side: payload.side,
+  quantity: payload.quantity,
+  order_type: payload.order_type default "MARKET",
+  limit_price: payload.limit_price default null,
+  client_id: payload.client_id,
+  account_id: payload.account_id,
+  approval_token_hash: payload.approval_token_hash
+}]]></ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+
+                <choice doc:name="mock_mode vs live Alpaca">
+                    <!--
+                      Local-dev escape hatch. Set Mule property "mock_mode=true"
+                      (-Dmock_mode=true on mvn mule:run) to return the legacy
+                      canned response without calling Alpaca.
+                    -->
+                    <when expression="#[(p('mock_mode') default 'false') == 'true']">
+                        <ee:transform doc:name="Build mock response">
+                            <ee:message>
+                                <ee:set-payload><![CDATA[%dw 2.0
+import * from dw::Runtime
+output application/json
+var uuid = randomUUID() replace "-" with ""
+---
+{
+  order_id: "MULE-ORDER-" ++ (uuid[0 to 7]),
+  status: "SUBMITTED",
+  ticker: vars.normalized.ticker,
+  side: vars.normalized.side,
+  quantity: vars.normalized.quantity,
+  submitted_at: (now() as Number {unit: "seconds"}) as Number {format: "#"},
+  mulesoft_reference: "MS-REF-" ++ (uuid[0 to 11])
+}]]></ee:set-payload>
+                            </ee:message>
+                        </ee:transform>
+                    </when>
+
+                    <!-- LIVE ALPACA PAPER TRADING -->
+                    <otherwise>
+                        <!-- Step 1: canonical -> Alpaca request body -->
+                        <ee:transform doc:name="Canonical -> Alpaca request">
+                            <ee:message>
+                                <ee:set-payload resource="transforms/alpaca-request.dwl"/>
+                            </ee:message>
+                        </ee:transform>
+
+                        <!-- Step 2: POST /v2/orders with APCA-* headers from secure props.
+                             try/catch remaps Alpaca 4xx -> 502 and timeouts -> 504. -->
+                        <try doc:name="Call Alpaca paper API">
+                            <http:request method="POST"
+                                          config-ref="alpaca-paper-api-config"
+                                          path="/orders"
+                                          doc:name="POST /v2/orders">
+                                <http:headers>#[{
+                                    "APCA-API-KEY-ID": p("alpaca.key_id"),
+                                    "APCA-API-SECRET-KEY": p("alpaca.secret"),
+                                    "Content-Type": "application/json",
+                                    "Accept": "application/json"
+                                }]</http:headers>
+                            </http:request>
+
+                            <error-handler>
+                                <!-- Timeout / connectivity -> 504 -->
+                                <on-error-continue type="HTTP:TIMEOUT, HTTP:CONNECTIVITY"
+                                                   doc:name="Alpaca unreachable -> 504">
+                                    <set-variable variableName="httpStatus" value="504"/>
+                                    <logger level="ERROR"
+                                            message='#["[submit-order] Alpaca timeout/connectivity - returning 504. error=" ++ (error.description default "?")]'/>
+                                    <ee:transform>
+                                        <ee:message>
+                                            <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  error: "upstream_timeout",
+  message: "Downstream broker did not respond in time"
+}]]></ee:set-payload>
+                                        </ee:message>
+                                    </ee:transform>
+                                </on-error-continue>
+
+                                <!-- Any other Alpaca error (4xx/5xx, bad response, auth) -> 502 -->
+                                <on-error-continue type="ANY" doc:name="Alpaca error -> 502">
+                                    <set-variable variableName="httpStatus" value="502"/>
+                                    <logger level="ERROR"
+                                            message='#["[submit-order] Alpaca error - returning 502. error=" ++ (error.description default "?")]'/>
+                                    <ee:transform>
+                                        <ee:message>
+                                            <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  error: "upstream_error",
+  message: "Downstream broker returned an error"
+}]]></ee:set-payload>
+                                        </ee:message>
+                                    </ee:transform>
+                                </on-error-continue>
+                            </error-handler>
+                        </try>
+
+                        <!-- Step 3: Alpaca response -> canonical response.
+                             Skipped when try/catch set httpStatus to 502/504. -->
+                        <choice doc:name="Map only on success">
+                            <when expression="#[(vars.httpStatus default 200) == 200]">
+                                <ee:transform doc:name="Alpaca -> canonical response">
+                                    <ee:message>
+                                        <ee:set-payload resource="transforms/alpaca-response.dwl"/>
+                                    </ee:message>
+                                </ee:transform>
+                            </when>
+                            <otherwise>
+                                <!-- error payload already set in error-handler above; nothing to do -->
+                                <logger level="DEBUG" message='#["[submit-order] passing through error payload, httpStatus=" ++ ((vars.httpStatus default 500) as String)]'/>
+                            </otherwise>
+                        </choice>
+                    </otherwise>
+                </choice>
+
+                <logger level="INFO"
+                        doc:name="Log submitted"
+                        message='#["[submit-order] SUBMITTED order_id=" ++ (payload.order_id default "?") ++ " ref=" ++ (payload.mulesoft_reference default "?") ++ " status=" ++ (payload.status default "?")]'/>
+            </otherwise>
+        </choice>
+    </flow>
+
+    <!-- ================================================================ -->
+    <!-- GET /api/health                                                  -->
+    <!-- ================================================================ -->
+    <flow name="submit-order-health-flow" doc:name="submit-order-health-flow">
+        <http:listener config-ref="submit-order-http-listener-config"
+                       path="/api/health"
+                       allowedMethods="GET"
+                       doc:name="GET /api/health">
+            <http:response statusCode="200">
+                <http:headers>#[{'Content-Type': 'application/json'}]</http:headers>
+            </http:response>
+        </http:listener>
+
+        <ee:transform doc:name="Health payload">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  status: "ok",
+  mode: if ((p('mock_mode') default 'false') == 'true') "mock" else "alpaca-paper",
+  api: "submit-order-process-api"
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+    </flow>
+
+</mule>

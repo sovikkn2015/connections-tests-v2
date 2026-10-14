@@ -1,0 +1,16 @@
+{{- if .Values.pdb.enabled }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: m9-intent-router
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: m9-intent-router
+    app.kubernetes.io/part-of: 007-fsi
+    app.kubernetes.io/component: intelligence
+spec:
+  minAvailable: {{ .Values.pdb.minAvailable }}
+  selector:
+    matchLabels:
+      app: m9-intent-router
+{{- end }}

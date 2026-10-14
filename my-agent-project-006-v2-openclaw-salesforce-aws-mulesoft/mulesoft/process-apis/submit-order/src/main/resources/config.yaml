@@ -1,0 +1,30 @@
+# Project 006 v2 - submit-order Process API configuration.
+#
+# Loaded by <configuration-properties file="config.yaml"/> in submit-order.xml.
+#
+# Only the non-secret endpoint metadata is committed here. The two credential
+# values (key_id, secret) are PLACEHOLDERS and MUST be overridden at deploy
+# time via the Anypoint CloudHub "Secure Properties" UI. See
+# docs/v2-mulesoft-process-api-deploy.md -> "Deploying submit-order with
+# live Alpaca backend".
+#
+# Zero credentials in git. Per v2 steering rule 18.
+
+alpaca:
+  # Paper trading host. For live trading switch to "api.alpaca.markets" via
+  # a CloudHub property override - do NOT commit that change here, paper
+  # stays the default for safety.
+  endpoint_host: "paper-api.alpaca.markets"
+  endpoint_path: "/v2"
+
+  # PLACEHOLDERS - real values injected at deploy time via CloudHub Secure
+  # Properties (Runtime Manager -> app -> Settings -> Properties ->
+  # "Show secure properties"). The raw credentials live in AWS Secrets
+  # Manager under keys `key_id` and `secret`.
+  key_id: "PLACEHOLDER_SET_VIA_SECURE_PROPERTIES_AT_DEPLOY"
+  secret: "PLACEHOLDER_SET_VIA_SECURE_PROPERTIES_AT_DEPLOY"
+
+# Local-dev flag. Set to "true" via -Dmock_mode=true (mvn mule:run) to bypass
+# the live Alpaca call and return the legacy canned response. Never set true
+# on CloudHub for this app - the whole point of this deploy is the live call.
+mock_mode: "false"

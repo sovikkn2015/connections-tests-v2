@@ -1,0 +1,3 @@
+# Financial Analysis Agent — Dependencies
+# boto3 is included in the Lambda Python runtime but listed for clarity
+boto3>=1.28.0

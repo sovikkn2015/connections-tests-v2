@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<AiEvaluationDefinition xmlns="http://soap.sforce.com/2006/04/metadata">
+    <name>IR_Research_Full_Test</name>
+    <subjectName>IR_Research_Agent</subjectName>
+    <subjectType>AGENT</subjectType>
+    <!-- FINANCIAL ANALYSIS — Sprint 3 placeholder (5 cases) -->
+    <testCase>
+        <number>1</number>
+        <inputs><utterance>What is NVIDIA fair value?</utterance></inputs>
+        <expectation><expectedValue>financial_analysis</expectedValue><name>topic_sequence_match</name></expectation>
+        <expectation><expectedValue>Agent mentions financial analysis coming in a future sprint</expectedValue><name>bot_response_rating</name></expectation>
+    </testCase>
+    <testCase>
+        <number>2</number>
+        <inputs><utterance>Run a comparable analysis on Apple</utterance></inputs>
+        <expectation><expectedValue>financial_analysis</expectedValue><name>topic_sequence_match</name></expectation>
+        <expectation><expectedValue>Agent mentions financial analysis coming in a future sprint</expectedValue><name>bot_response_rating</name></expectation>
+    </testCase>
+    <testCase>
+        <number>3</number>
+        <inputs><utterance>What is the price range for MSFT?</utterance></inputs>
+        <expectation><expectedValue>financial_analysis</expectedValue><name>topic_sequence_match</name></expectation>
+        <expectation><expectedValue>Agent mentions financial analysis coming in a future sprint</expectedValue><name>bot_response_rating</name></expectation>
+    </testCase>
+    <testCase>
+        <number>4</number>
+        <inputs><utterance>Give me a valuation summary for JPM</utterance></inputs>
+        <expectation><expectedValue>financial_analysis</expectedValue><name>topic_sequence_match</name></expectation>
+        <expectation><expectedValue>Agent mentions financial analysis coming in a future sprint</expectedValue><name>bot_response_rating</name></expectation>
+    </testCase>
+    <testCase>
+        <number>5</number>
+        <inputs><utterance>What is the sentiment on NVIDIA latest earnings call?</utterance></inputs>
+        <expectation><expectedValue>financial_analysis</expectedValue><name>topic_sequence_match</name></expectation>
+        <expectation><expectedValue>Agent mentions financial analysis coming in a future sprint</expectedValue><name>bot_response_rating</name></expectation>
+    </testCase>
+    <!-- CRM FALLBACK — company_lookup (3 cases) -->
+    <testCase>
+        <number>6</number>
+        <inputs><utterance>Generate a full research brief on NVIDIA</utterance></inputs>
+        <expectation><expectedValue>company_lookup</expectedValue><name>topic_sequence_match</name></expectation>
+        <expectation><expectedValue>[&apos;get_company_info&apos;]</expectedValue><name>action_sequence_match</name></expectation>
+        <expectation><expectedValue>Returns NVIDIA company information as best available in Sprint 1</expectedValue><name>bot_response_rating</name></expectation>
+    </testCase>
+    <testCase>
+        <number>7</number>
+        <inputs><utterance>Deep dive on NVIDIA ahead of earnings</utterance></inputs>
+        <expectation><expectedValue>company_lookup</expectedValue><name>topic_sequence_match</name></expectation>
+        <expectation><expectedValue>[&apos;get_company_info&apos;]</expectedValue><name>action_sequence_match</name></expectation>
+        <expectation><expectedValue>Returns NVIDIA company information as best available in Sprint 1</expectedValue><name>bot_response_rating</name></expectation>
+    </testCase>
+    <testCase>
+        <number>8</number>
+        <inputs><utterance>Tell me about Microsoft</utterance></inputs>
+        <expectation><expectedValue>company_lookup</expectedValue><name>topic_sequence_match</name></expectation>
+        <expectation><expectedValue>[&apos;get_company_info&apos;]</expectedValue><name>action_sequence_match</name></expectation>
+        <expectation><expectedValue>Returns Microsoft with ticker MSFT, Technology sector, NASDAQ exchange</expectedValue><name>bot_response_rating</name></expectation>
+    </testCase>
+    <!-- COVERAGE CHECK (2 cases) -->
+    <testCase>
+        <number>9</number>
+        <inputs><utterance>Who covers energy stocks?</utterance></inputs>
+        <expectation><expectedValue>coverage_check</expectedValue><name>topic_sequence_match</name></expectation>
+        <expectation><expectedValue>[&apos;get_coverage_info&apos;]</expectedValue><name>action_sequence_match</name></expectation>
+        <expectation><expectedValue>Returns David Chen and James Park covering XOM in the energy sector</expectedValue><name>bot_response_rating</name></expectation>
+    </testCase>
+    <testCase>
+        <number>14</number>
+        <inputs><utterance>Who has a Strong Buy rating?</utterance></inputs>
+        <expectation><expectedValue>coverage_check</expectedValue><name>topic_sequence_match</name></expectation>
+        <expectation><expectedValue>[&apos;get_coverage_info&apos;]</expectedValue><name>action_sequence_match</name></expectation>
+        <expectation><expectedValue>Returns analysts with Strong Buy ratings including Sarah Kim on AAPL and Maria Rodriguez on UNH</expectedValue><name>bot_response_rating</name></expectation>
+    </testCase>
+    <!-- EARNINGS CALENDAR (1 case) -->
+    <testCase>
+        <number>10</number>
+        <inputs><utterance>What earnings are next week?</utterance></inputs>
+        <expectation><expectedValue>earnings_calendar</expectedValue><name>topic_sequence_match</name></expectation>
+        <expectation><expectedValue>[&apos;get_earnings_calendar&apos;]</expectedValue><name>action_sequence_match</name></expectation>
+        <expectation><expectedValue>Returns earnings dates within the next 7 days</expectedValue><name>bot_response_rating</name></expectation>
+    </testCase>
+    <!-- WATCHLIST (1 case) -->
+    <testCase>
+        <number>11</number>
+        <inputs><utterance>Show me Priya Sharma watchlist</utterance></inputs>
+        <expectation><expectedValue>watchlist</expectedValue><name>topic_sequence_match</name></expectation>
+        <expectation><expectedValue>[&apos;get_watchlist&apos;]</expectedValue><name>action_sequence_match</name></expectation>
+        <expectation><expectedValue>Returns Priya Sharma&apos;s watchlist entries</expectedValue><name>bot_response_rating</name></expectation>
+    </testCase>
+    <!-- COMPLIANCE SCREENING (1 case) -->
+    <testCase>
+        <number>12</number>
+        <inputs><utterance>Can I trade Caterpillar?</utterance></inputs>
+        <expectation><expectedValue>compliance_screening</expectedValue><name>topic_sequence_match</name></expectation>
+        <expectation><expectedValue>[&apos;check_compliance&apos;]</expectedValue><name>action_sequence_match</name></expectation>
+        <expectation><expectedValue>Returns compliance screening report for CAT</expectedValue><name>bot_response_rating</name></expectation>
+    </testCase>
+    <!-- COMPANY LOOKUP — additional (1 case) -->
+    <testCase>
+        <number>13</number>
+        <inputs><utterance>Tell me about NextEra Energy</utterance></inputs>
+        <expectation><expectedValue>company_lookup</expectedValue><name>topic_sequence_match</name></expectation>
+        <expectation><expectedValue>[&apos;get_company_info&apos;]</expectedValue><name>action_sequence_match</name></expectation>
+        <expectation><expectedValue>Returns NextEra Energy with ticker NEE, Utilities sector, NYSE exchange</expectedValue><name>bot_response_rating</name></expectation>
+    </testCase>
+</AiEvaluationDefinition>

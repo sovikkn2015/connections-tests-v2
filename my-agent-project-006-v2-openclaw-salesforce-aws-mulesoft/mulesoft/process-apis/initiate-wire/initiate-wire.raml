@@ -1,0 +1,106 @@
+#%RAML 1.0
+title: Initiate Wire Process API
+version: v1
+baseUri: /api
+mediaType: application/json
+description: |
+  Project 006 v2 - MuleSoft Process API for initiate_wire action.
+  Mock backend: returns canned wire_id/status. Real SWIFT/Fedwire integration is a later step.
+  All calls originate from the mulesoft-actions Lambda (MCP server).
+  HITL approval is verified upstream; this API only enforces shape + presence of approval_token_hash.
+  Dual-auth is required when amount > $100,000 (006 v2 steering rule 5).
+
+types:
+  InitiateWireRequest:
+    type: object
+    additionalProperties: false
+    properties:
+      client_id:
+        type: string
+      from_account:
+        type: string
+      to_account:
+        type: string
+      amount:
+        type: number
+        minimum: 0.01
+      currency:
+        type: string
+        enum: [USD, EUR, GBP, JPY]
+      priority:
+        type: string
+        enum: [SAME_DAY, NEXT_DAY, STANDARD]
+        required: false
+        default: STANDARD
+      approval_token_hash:
+        type: string
+        description: SHA-256 hex digest of the raw ApprovalToken. Raw token never crosses this boundary.
+        pattern: "^[a-f0-9]{64}$"
+      dual_approval_token_hash:
+        type: string
+        description: SHA-256 hex digest of the dual-approval token. Required when amount > 100000.
+        pattern: "^[a-f0-9]{64}$"
+        required: false
+
+  InitiateWireResponse:
+    type: object
+    properties:
+      wire_id:
+        type: string
+        example: MULE-WIRE-a1b2c3d4
+      status:
+        type: string
+        enum: [INITIATED, REJECTED]
+      amount: number
+      currency:
+        type: string
+        enum: [USD, EUR, GBP, JPY]
+      from_account: string
+      to_account: string
+      submitted_at:
+        type: integer
+        description: Unix epoch seconds
+      mulesoft_reference:
+        type: string
+
+  ErrorResponse:
+    type: object
+    properties:
+      error: string
+      message: string
+      missing_fields?:
+        type: array
+        items: string
+
+/wires:
+  post:
+    description: Initiate a wire transfer. Mock implementation returns a canned response.
+    body:
+      application/json:
+        type: InitiateWireRequest
+    responses:
+      200:
+        description: Wire accepted and queued for settlement (mock).
+        body:
+          application/json:
+            type: InitiateWireResponse
+      400:
+        description: Missing required fields or invalid shape.
+        body:
+          application/json:
+            type: ErrorResponse
+      403:
+        description: approval_token_hash missing - or dual_approval_token_hash missing for amount > 100000.
+        body:
+          application/json:
+            type: ErrorResponse
+
+/health:
+  get:
+    description: Liveness probe.
+    responses:
+      200:
+        body:
+          application/json:
+            example: |
+              {"status": "ok", "mode": "mock", "api": "initiate-wire-process-api"}

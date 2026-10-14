@@ -1,0 +1,171 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://007.fsi/schemas/canonical/quote/v0.1.0",
+  "title": "Quote",
+  "description": "Canonical real-time or delayed price quote. Maps from Bloomberg B-PIPE (real-time subscription), FactSet, Alpha Vantage (delayed fallback). Delay status explicit for compliance.",
+  "type": "object",
+  "required": [
+    "canonical_id",
+    "security_ref",
+    "price",
+    "as_of_timestamp",
+    "is_delayed",
+    "source_system"
+  ],
+  "properties": {
+    "canonical_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Primary key for this quote"
+    },
+    "security_ref": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Canonical SecurityProfile ID"
+    },
+    "ticker": {
+      "type": "string",
+      "description": "Ticker for quick reference"
+    },
+    "price": {
+      "type": "number",
+      "description": "Last traded or latest quoted price"
+    },
+    "bid": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Current bid price"
+    },
+    "ask": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Current ask price"
+    },
+    "bid_size": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "description": "Bid size in lots"
+    },
+    "ask_size": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "description": "Ask size in lots"
+    },
+    "volume": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0,
+      "description": "Session trading volume"
+    },
+    "open": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Session open price"
+    },
+    "high": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Session high price"
+    },
+    "low": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Session low price"
+    },
+    "previous_close": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Previous session close price"
+    },
+    "change": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Absolute change from previous close"
+    },
+    "change_pct": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Percentage change (1.5 = 1.5%)"
+    },
+    "vwap": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Volume-weighted average price"
+    },
+    "as_of_timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp of this quote"
+    },
+    "is_delayed": {
+      "type": "boolean",
+      "description": "True if delayed. Compliance must disclose delay to clients."
+    },
+    "delay_minutes": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0,
+      "description": "Minutes delayed (null if real-time)"
+    },
+    "market_status": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "pre_market",
+        "open",
+        "post_market",
+        "closed",
+        null
+      ],
+      "description": "Market status: pre_market, open, post_market, closed"
+    },
+    "currency": {
+      "type": "string",
+      "pattern": "^[A-Z]{3}$",
+      "description": "ISO 4217 currency code"
+    },
+    "source_system": {
+      "type": "string",
+      "enum": [
+        "bloomberg",
+        "factset",
+        "alpha_vantage",
+        "iex",
+        "manual"
+      ],
+      "description": "Source system"
+    },
+    "source_id": {
+      "type": "string",
+      "description": "Vendor-specific quote ID"
+    }
+  }
+}

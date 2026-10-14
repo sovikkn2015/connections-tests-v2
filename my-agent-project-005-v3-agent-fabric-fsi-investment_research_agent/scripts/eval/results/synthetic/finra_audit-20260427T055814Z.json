@@ -1,0 +1,11 @@
+{
+  "name": "finra_audit",
+  "passed": false,
+  "details": {
+    "trace_id": "syn-audit-edb01c61-5d62-42a3-90cd-d7458860c8c0",
+    "http_status": 404,
+    "audit_records_found": 0,
+    "audit_has_gateway_stage": false
+  },
+  "error": null
+}

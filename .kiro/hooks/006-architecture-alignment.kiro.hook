@@ -1,0 +1,13 @@
+{
+  "name": "006 Architecture Alignment",
+  "version": "1.0.0",
+  "description": "Before any write to the 006 project, verify the code aligns with the design doc architecture. Catches the shortcuts that caused 005 V1 to fail: bypassing the agent, skipping protocols, stubbing critical features, using wrong tech stack.",
+  "when": {
+    "type": "preToolUse",
+    "toolTypes": ["write"]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "ONLY if the file being written is inside my-agent-project-006-v1-openclaw-salesforce-aws/ or my-agent-project-006-v2-openclaw-salesforce-aws-mulesoft/, check these rules. If NOT in the 006 folder, respond ACCESS GRANTED.\n\n1. AGENT RUNTIME: Is this using OpenClaw? If it uses Agentforce, Strands SDK, or a custom agent loop — BLOCK.\n2. LLM: Is this using Bedrock (Claude Sonnet 4.6 or Haiku 4.5)? If it uses OpenAI, Comprehend, or FinBERT — BLOCK.\n3. PROTOCOL: If this is a MCP server, does it implement GET / + POST /tools/list + POST /tools/call? If it uses plain REST without MCP — BLOCK.\n4. FRONTEND: If this is frontend code, does it connect to OpenClaw WebSocket? If it calls Salesforce Agent API or Apex actions directly — BLOCK.\n5. CREDENTIALS: Does this file contain any API keys, passwords, org URLs, or secrets? If yes — BLOCK.\n6. PHASE ORDER: What phase does this file belong to? Is the previous phase complete? If skipping ahead — WARN.\n7. AUDIT: If this is an agent action or skill, does it write to IR_Audit_Log__c? If not — WARN.\n8. MNPI: Does this code send MNPI fields (holdings amounts, trade intentions, wire details) to LLM prompts or OpenClaw memory? If yes — BLOCK.\n\nIf all checks pass, respond ACCESS GRANTED."
+  }
+}

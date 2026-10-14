@@ -1,0 +1,40 @@
+{
+  "run_date": "2026-04-22T15:40:58.153812",
+  "total_queries": 1,
+  "passed": 0,
+  "failed": 1,
+  "errors": 0,
+  "pass_rate": 0.0,
+  "results": [
+    {
+      "query_id": 52,
+      "level": "L2",
+      "query": "Show me all 10-K filings from my watchlist companies in the last 30 days",
+      "response_preview": "## \u26a0\ufe0f Bootstrap Incomplete\n\nBOOTSTRAP.md is present and unfinished \u2014 no `IDENTITY.md`, `USER.md`, or `SOUL.md` have been created yet, and I haven't established who I am or who you are. I'll note this ",
+      "scores": {
+        "accuracy": 3,
+        "completeness": 2,
+        "relevance": 3,
+        "safety": 5,
+        "actionability": 3,
+        "attribution": 2,
+        "reasoning": 3
+      },
+      "avg_score": 3.0,
+      "status": "FAIL",
+      "flags": [
+        "Bootstrap/identity system preamble is irrelevant noise for end user",
+        "Could not complete primary task due to auth failure",
+        "No actual 10-K data returned",
+        "SEC EDGAR MCP not invoked at all \u2014 even partial demonstration with known tickers was not attempted",
+        "Cached schema referenced but not verified in current session",
+        "No fallback strategy offered using known/default tickers"
+      ],
+      "tools_used": [
+        "sec-edgar",
+        "salesforce-crm"
+      ],
+      "latency_ms": 133952
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "name": "@project-007/m11-smarsh-archive-adapter",
+  "version": "0.1.0",
+  "description": "M11-REST Smarsh adapter — 5 tools (archive_message / retrieve_message / search_messages + Connected Archive archive_capture / get_capture_status), SEC 17a-4 retention tiers, OAuth2 client_credentials OR HMAC-SHA256 request signing (Vault-backed), adapter-side SHA-256 receipt verification.",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "start": "node dist/index.js"
+  },
+  "engines": { "node": ">=20.0.0" },
+  "dependencies": {
+    "@project-007/mcp-sdk": "0.1.0",
+    "zod": "^3.23.0",
+    "undici": "^6.19.0",
+    "pino": "^9.0.0",
+    "fastify": "^4.28.0",
+    "lru-cache": "^11.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "typescript": "^5.4.5",
+    "vitest": "^1.6.0",
+    "fast-check": "^3.19.0"
+  }
+}

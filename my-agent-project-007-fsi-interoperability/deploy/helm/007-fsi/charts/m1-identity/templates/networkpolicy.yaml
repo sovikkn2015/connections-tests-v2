@@ -1,0 +1,84 @@
+{{- /*
+Wave 4 egress narrowing. Spec: .kiro/specs/ops-hardening-wave4-egress-narrowing.md.
+
+Mode selection: global.networkPolicy.egressMode (allow-all | allowlist).
+Default in values.yaml: allow-all (Wave 1 compat).
+Default in values-cloud.yaml: allowlist (production posture, SOC 2 CC6.1).
+Sub-chart override: .Values.networkPolicy.egressMode wins when set.
+*/}}
+{{- $mode := "allow-all" -}}
+{{- if and .Values.global .Values.global.networkPolicy .Values.global.networkPolicy.egressMode -}}
+{{-   $mode = .Values.global.networkPolicy.egressMode -}}
+{{- end -}}
+{{- if and .Values.networkPolicy .Values.networkPolicy.egressMode -}}
+{{-   $mode = .Values.networkPolicy.egressMode -}}
+{{- end -}}
+{{- $allowlist := default list .Values.egressAllowlist -}}
+{{- if and (eq $mode "allowlist") (eq (len $allowlist) 0) -}}
+{{-   fail "M1 identity egressAllowlist must be non-empty in allowlist mode. See deploy/helm/007-fsi/VALUES-EGRESS-README.md." -}}
+{{- end -}}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "007.fullname" . }}
+  labels:
+    {{- include "007.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "007.selectorLabels" . | nindent 6 }}
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # Default-deny: only pods labelled as M6 can reach M1 on the app port.
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: m6-mcp-gateway
+      ports:
+        - protocol: TCP
+          port: {{ .Values.service.probePort }}
+    # Kubelet probes -- in-namespace traffic allowed on probe port.
+    - from: []
+      ports:
+        - protocol: TCP
+          port: {{ .Values.service.probePort }}
+  egress:
+    # Mandatory DNS egress -- synthesised, not configurable (R3/AC3.*).
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+{{- if eq $mode "allow-all" }}
+    # Wave 1 compat marker. Do NOT use in production.
+    - {}
+{{- else }}
+  {{- range $allowlist }}
+    - to:
+      {{- if .host }}
+        - ipBlock:
+            cidr: {{ .host }}/32
+      {{- else if .namespace }}
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ .namespace | quote }}
+          podSelector:
+            matchLabels:
+              {{- toYaml .podLabels | nindent 14 }}
+      {{- else }}
+        {{- fail "egressAllowlist entry must have host OR namespace+podLabels" }}
+      {{- end }}
+      ports:
+        - protocol: {{ default "TCP" .protocol }}
+          port: {{ .port }}
+  {{- end }}
+{{- end }}

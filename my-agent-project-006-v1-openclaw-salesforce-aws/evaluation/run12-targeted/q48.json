@@ -1,0 +1,42 @@
+{
+  "run_date": "2026-04-22T15:32:38.649892",
+  "total_queries": 1,
+  "passed": 0,
+  "failed": 1,
+  "errors": 0,
+  "pass_rate": 0.0,
+  "results": [
+    {
+      "query_id": 48,
+      "level": "L2",
+      "query": "Which semiconductor stock has the best risk-reward right now?",
+      "response_preview": "---\n\n**\u26a1 Bootstrap first \u2014 then your answer.**\n\nHey. I just came online. Fresh workspace, no memory, no identity yet. I'm supposed to figure out who I am before doing anything else \u2014 but you've alread",
+      "scores": {
+        "accuracy": 1,
+        "completeness": 3,
+        "relevance": 3,
+        "safety": 3,
+        "actionability": 3,
+        "attribution": 2,
+        "reasoning": 2
+      },
+      "avg_score": 2.4,
+      "status": "FAIL",
+      "flags": [
+        "FABRICATED_DATA: Price data appears hallucinated or stale \u2014 AMD at $297.86, MU at $475.42, AVGO at $416.31 are highly suspicious and likely incorrect; MU near $475 is implausible given historical trading ranges",
+        "NO_SOQL_USAGE: Expected SF skill (SOQL) was not used at all \u2014 missing internal portfolio, position, or client context that ERA persona would require",
+        "TOOL_ERRORS_NOT_MITIGATED: Agent reports analyst consensus and news tools failing but proceeds with analysis anyway without adequate caveat weight",
+        "BOOTSTRAP_NOISE: Irrelevant identity/bootstrap dialogue clutters a professional FSI response \u2014 unprofessional for ERA persona",
+        "MISSING_VALUATION_METRICS: No P/E, EV/EBITDA, PEG ratios used despite being standard for equity risk-reward analysis",
+        "52W_RANGE_HEURISTIC_OVERSIMPLIFIED: Using proximity to 52W high/low as primary risk-reward metric is technically weak without fundamental anchoring",
+        "INVESTMENT_ADVICE_WITHOUT_DISCLAIMER: Ranking stocks as 'best risk-reward' without proper financial advice disclaimer is a compliance concern for FSI context",
+        "UNVERIFIED_NUMBERS: No ground truth available but multiple price figures appear inconsistent with known semiconductor trading ranges"
+      ],
+      "tools_used": [
+        "market-data",
+        "news-search"
+      ],
+      "latency_ms": 127932
+    }
+  ]
+}

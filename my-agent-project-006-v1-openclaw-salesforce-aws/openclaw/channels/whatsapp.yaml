@@ -1,0 +1,30 @@
+# ==========================================================================
+# WhatsApp Channel — FSI Research Agent
+# Project 006: OpenClaw + Salesforce + AWS
+#
+# Prerequisites:
+#   1. Create a Meta Business account at https://business.facebook.com
+#   2. Set up WhatsApp Business API in Meta Developer Portal
+#   3. Create a WhatsApp Business App and get API credentials
+#   4. Configure a webhook URL pointing to OpenClaw's gateway
+#   5. Verify the webhook with the verify token below
+#   6. Store tokens in AWS Secrets Manager or environment variables
+#
+# Setup guide: https://docs.openclaw.ai/channels/whatsapp
+# ==========================================================================
+
+type: whatsapp
+enabled: true
+
+config:
+  # Phone Number ID — from Meta Developer Portal → WhatsApp → Getting Started
+  phone_number_id: "${WHATSAPP_PHONE_NUMBER_ID}"
+
+  # Permanent access token — from Meta Developer Portal → System Users
+  access_token: "${WHATSAPP_ACCESS_TOKEN}"
+
+  # Webhook verify token — any string you choose, must match Meta webhook config
+  verify_token: "${WHATSAPP_VERIFY_TOKEN}"
+
+  # Default agent to route messages to
+  default_agent: "fsi-research"

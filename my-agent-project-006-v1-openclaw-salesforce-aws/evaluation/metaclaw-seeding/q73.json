@@ -1,0 +1,38 @@
+{
+  "run_date": "2026-04-22T19:45:02.986198",
+  "total_queries": 1,
+  "passed": 0,
+  "failed": 1,
+  "errors": 0,
+  "pass_rate": 0.0,
+  "results": [
+    {
+      "query_id": 73,
+      "level": "L3",
+      "query": "Monte Carlo on TSLA \u2014 what's the 1-year price distribution at 500 sims?",
+      "response_preview": "\u26a0\ufe0f Agent couldn't generate a response. Please try again.",
+      "scores": {
+        "accuracy": 0,
+        "completeness": 0,
+        "relevance": 1,
+        "safety": 4,
+        "actionability": 0,
+        "attribution": 0,
+        "reasoning": 0
+      },
+      "avg_score": 0.7,
+      "status": "FAIL",
+      "flags": [
+        "Agent failed to generate any response \u2014 complete tool/system failure",
+        "No Monte Carlo simulation was performed",
+        "No TSLA price data was fetched via Market Data MCP",
+        "No distribution statistics provided (mean, median, percentiles, std dev)",
+        "No 500-simulation output generated",
+        "Zero actionability for ERA persona",
+        "No source attribution possible given empty response"
+      ],
+      "tools_used": [],
+      "latency_ms": 163441
+    }
+  ]
+}

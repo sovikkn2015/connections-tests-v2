@@ -1,0 +1,303 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://007.fsi/schemas/canonical/payment-instruction/v0.1.0",
+  "title": "PaymentInstruction",
+  "description": "Canonical payment/wire instruction. Maps to ISO 20022 pain.001 (Customer Credit Transfer Initiation). Phase 5 \u2014 Tier 1 bank integration. HITL mandatory for all payment submissions.",
+  "type": "object",
+  "required": [
+    "instruction_id",
+    "client_ref",
+    "account_ref",
+    "payment_type",
+    "amount",
+    "currency",
+    "status",
+    "source_system"
+  ],
+  "properties": {
+    "instruction_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Primary key for this payment instruction"
+    },
+    "client_ref": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Canonical Client ID"
+    },
+    "account_ref": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Source account canonical ID"
+    },
+    "payment_type": {
+      "type": "string",
+      "enum": [
+        "wire_domestic",
+        "wire_international",
+        "ach_transfer",
+        "check_request",
+        "journal_transfer",
+        "standing_instruction",
+        "distribution"
+      ],
+      "description": "Payment classification"
+    },
+    "amount": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Payment amount"
+    },
+    "currency": {
+      "type": "string",
+      "pattern": "^[A-Z]{3}$",
+      "description": "ISO 4217 currency code"
+    },
+    "beneficiary": {
+      "type": "object",
+      "required": [
+        "name",
+        "account_number"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Beneficiary name"
+        },
+        "account_number": {
+          "type": "string",
+          "description": "Beneficiary account number (masked in logs)"
+        },
+        "routing_number": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "ABA routing number (domestic)"
+        },
+        "swift_bic": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$",
+          "description": "SWIFT/BIC code (international)"
+        },
+        "iban": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "IBAN (international)"
+        },
+        "bank_name": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Beneficiary bank name"
+        },
+        "bank_address": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Beneficiary bank address"
+        },
+        "intermediary_bank": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Intermediary/correspondent bank if required"
+        }
+      },
+      "description": "Beneficiary details"
+    },
+    "purpose": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Payment purpose/memo"
+    },
+    "reference": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Client or firm reference number"
+    },
+    "value_date": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date",
+      "description": "Requested value/settlement date"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "compliance_check",
+        "pending_approval",
+        "approved",
+        "submitted",
+        "processing",
+        "completed",
+        "rejected",
+        "cancelled",
+        "failed"
+      ],
+      "description": "Payment lifecycle status. HITL mandatory before submission."
+    },
+    "compliance_checks": {
+      "type": "array",
+      "items": {
+        "$ref": "compliance-check.json"
+      },
+      "description": "BSA/AML, sanctions, OFAC screening results"
+    },
+    "bsa_aml": {
+      "type": "object",
+      "description": "BSA/AML specific fields",
+      "properties": {
+        "ctr_required": {
+          "type": "boolean",
+          "description": "True if amount >= $10,000 (CTR threshold)"
+        },
+        "ctr_filed": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "description": "True if CTR has been filed"
+        },
+        "sar_flagged": {
+          "type": "boolean",
+          "description": "True if structuring or suspicious pattern detected"
+        },
+        "sanctions_screened": {
+          "type": "boolean",
+          "description": "True if sanctions screening completed"
+        },
+        "sanctions_result": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "clear",
+            "potential_match",
+            "confirmed_match",
+            null
+          ],
+          "description": "Sanctions result: clear, potential_match, confirmed_match"
+        },
+        "ofac_screened": {
+          "type": "boolean",
+          "description": "True if OFAC screening completed"
+        },
+        "ofac_result": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "clear",
+            "potential_match",
+            "confirmed_match",
+            null
+          ],
+          "description": "OFAC result: clear, potential_match, confirmed_match"
+        }
+      }
+    },
+    "hitl_approval": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "approver_id": {
+          "type": "string",
+          "description": "ID of the human approver"
+        },
+        "approved_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp of approval"
+        },
+        "approval_token": {
+          "type": "string",
+          "description": "SHA-256(instruction_id + approver_id + timestamp)"
+        }
+      },
+      "description": "HITL approval record"
+    },
+    "iso20022_mapping": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "description": "ISO 20022 pain.001 message mapping (Phase 5)",
+      "properties": {
+        "message_id": {
+          "type": "string",
+          "description": "pain.001 MsgId"
+        },
+        "payment_info_id": {
+          "type": "string",
+          "description": "pain.001 PmtInfId"
+        },
+        "end_to_end_id": {
+          "type": "string",
+          "description": "pain.001 EndToEndId"
+        },
+        "charge_bearer": {
+          "type": "string",
+          "enum": [
+            "DEBT",
+            "CRED",
+            "SHAR",
+            "SLEV"
+          ],
+          "description": "ISO 20022 ChrgBr"
+        }
+      }
+    },
+    "trace_id": {
+      "type": "string",
+      "description": "Links to M10 audit trail"
+    },
+    "source_system": {
+      "type": "string",
+      "enum": [
+        "schwab",
+        "fidelity",
+        "pershing",
+        "swift_gateway",
+        "manual"
+      ],
+      "description": "Source system: schwab, fidelity, pershing, swift_gateway, manual"
+    },
+    "source_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Vendor-specific payment ID"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Payment creation timestamp"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Payment last update timestamp"
+    }
+  }
+}

@@ -1,0 +1,117 @@
+{
+  "phase": "phase-2+4",
+  "title": "Agent Registry + Broker Routing",
+  "target_project": "my-agent-project-005-v3-agent-fabric-fsi-investment_research_agent",
+  "scope": "A",
+  "scope_notes": "Phase 0 was assumed to have verified Agent Fabric entitlement. If entitlement is NOT present, caller should flip scope to 'B degrade: skip registry, keep Flex Gateway policies only' and bypass deploy-agent-network.sh / test-registry.sh - the Flex Gateway policy files under agent-fabric/policies/ remain fully usable independently.",
+  "files_created": [
+    "agent-fabric/deploy-agent-network.sh",
+    "agent-fabric/routing-verification.md",
+    "agent-fabric/test-registry.sh",
+    "aws/strands-agents/financial-analysis/a2a-manifest.json",
+    "aws/strands-agents/financial-analysis/a2a_handler.py",
+    "aws/strands-agents/sentiment-analysis/a2a-manifest.json",
+    "aws/strands-agents/sentiment-analysis/a2a_handler.py"
+  ],
+  "files_modified": [],
+  "files_read_only": [
+    "agent-fabric/agent-network.yaml",
+    "aws/strands-agents/financial-analysis/app.py",
+    "aws/strands-agents/sentiment-analysis/app.py"
+  ],
+  "a2a_manifests_complete": {
+    "financial_analysis": {
+      "path": "aws/strands-agents/financial-analysis/a2a-manifest.json",
+      "capabilities": [
+        "dcf-valuation",
+        "comparable-analysis",
+        "monte-carlo-simulation",
+        "fair-value-estimate"
+      ],
+      "schemas_filled": true,
+      "discovery_path": "/agent/.well-known/agent.json",
+      "auth": ["api-key", "mtls"]
+    },
+    "sentiment_analysis": {
+      "path": "aws/strands-agents/sentiment-analysis/a2a-manifest.json",
+      "capabilities": [
+        "transcript-analysis",
+        "news-sentiment-scoring",
+        "tone-shift-detection",
+        "sentiment-aggregation"
+      ],
+      "schemas_filled": true,
+      "discovery_path": "/agent/.well-known/agent.json",
+      "auth": ["api-key", "mtls"]
+    }
+  },
+  "a2a_handlers_complete": {
+    "financial_analysis": {
+      "path": "aws/strands-agents/financial-analysis/a2a_handler.py",
+      "coexists_with_app_py": true,
+      "serves_manifest_at_well_known": true,
+      "routes_capabilities": true
+    },
+    "sentiment_analysis": {
+      "path": "aws/strands-agents/sentiment-analysis/a2a_handler.py",
+      "coexists_with_app_py": true,
+      "serves_manifest_at_well_known": true,
+      "routes_capabilities": true
+    }
+  },
+  "deploy_script_ready": {
+    "path": "agent-fabric/deploy-agent-network.sh",
+    "executable": true,
+    "bash_syntax_valid": true,
+    "required_env": ["ANYPOINT_ORG_ID", "ANYPOINT_ENV_ID", "ANYPOINT_ACCESS_TOKEN"],
+    "reads_creds_from_env": true,
+    "fails_loudly_on_cli_error": true,
+    "idempotent": true,
+    "strategy": "anypoint-cli-v4 primary, REST fallback (POST /agent-networks for create, PUT /agent-networks/<name> for update)",
+    "rest_api_base": "https://{host}/agent-fabric/api/v1/organizations/{org}/environments/{env}",
+    "post_deploy_verification": "registry list must return all 7 ids",
+    "dry_run_supported": true
+  },
+  "test_script_ready": {
+    "path": "agent-fabric/test-registry.sh",
+    "executable": true,
+    "bash_syntax_valid": true,
+    "asserts_registry_count": 7,
+    "asserts_routing_policies": [
+      "l1-l2-direct-tools",
+      "l3-l4-analysis",
+      "compliance-routing"
+    ],
+    "asserts_l3l4_delegates_to": ["financial-analysis-agent", "sentiment-analysis-agent"],
+    "output_formats": ["human-readable stdout", "JSON summary at .phase2-test-result.json"],
+    "exit_code_on_pass": 0,
+    "exit_code_on_fail": 1,
+    "parseable_by_review_subagent": true
+  },
+  "routing_verification_doc": {
+    "path": "agent-fabric/routing-verification.md",
+    "documents_policies": [
+      "l1-l2-direct-tools",
+      "l3-l4-analysis",
+      "compliance-routing"
+    ],
+    "includes_cli_commands": true,
+    "includes_rest_equivalents": true,
+    "includes_smoke_tests": true,
+    "includes_cli_fallback_matrix": true
+  },
+  "scripts_not_executed": true,
+  "constraints_respected": {
+    "agent_network_yaml_unmodified": true,
+    "existing_strands_app_py_unmodified": true,
+    "phase1_api_instance_linkage_untouched": true
+  },
+  "open_questions": [
+    "Exact anypoint-cli-v4 sub-command names for agent-fabric (validate/deploy/registry/routing) are provisional - the scripts auto-detect availability and fall back to REST. Confirm with MuleSoft release notes before first deploy.",
+    "REST path shape for routing policy GET (assumed /agent-networks/<name>/routing/<policy>) needs confirmation against the Anypoint Exchange spec for Agent Fabric.",
+    "Phase 1 subagent must ensure each agent-network agent.endpoint URL is swapped from the ${MCP_GATEWAY_URL} placeholder to the actual deployed Flex Gateway host before deploy-agent-network.sh is run.",
+    "API Gateway / SAM template for Strands Lambdas should add a route /agent/{a2a_path+} pointing at a2a_handler.lambda_handler - wiring step belongs in Phase 3 (SAM) if not already covered.",
+    "Phase 0 entitlement check result (scope A vs scope B degrade) should be passed forward; if scope B, skip running deploy-agent-network.sh and test-registry.sh."
+  ],
+  "ready_for_review": true
+}

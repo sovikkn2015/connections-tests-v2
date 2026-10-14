@@ -1,0 +1,37 @@
+{
+  "run_date": "2026-04-22T17:05:08.585820",
+  "total_queries": 1,
+  "passed": 1,
+  "failed": 0,
+  "errors": 0,
+  "pass_rate": 100.0,
+  "results": [
+    {
+      "query_id": 3,
+      "level": "L1",
+      "query": "Give me TSLA's 52-week high and low",
+      "response_preview": "**TSLA 52-Week Range:**\n\n| Metric | Price |\n|---|---|\n| 52-Week High | **$498.83** |\n| 52-Week Low | **$244.43** |\n| Current Price | **$389.36** |\n| % Off 52-Wk High | -21.95% |\n| % Above 52-Wk Low | ",
+      "scores": {
+        "accuracy": 3,
+        "completeness": 5,
+        "relevance": 5,
+        "safety": 5,
+        "actionability": 5,
+        "attribution": 4,
+        "reasoning": 4
+      },
+      "avg_score": 4.4,
+      "status": "PASS",
+      "flags": [
+        "Ground truth not available \u2014 TSLA price data cannot be independently verified against a known benchmark",
+        "Data freshness unclear \u2014 no timestamp or 'as of' date provided for the 52-week range figures",
+        "Yahoo Finance cited as source but no direct URL or pull timestamp included",
+        "% calculations appear internally consistent but cannot be cross-validated without confirmed ground truth"
+      ],
+      "tools_used": [
+        "market-data"
+      ],
+      "latency_ms": 56047
+    }
+  ]
+}

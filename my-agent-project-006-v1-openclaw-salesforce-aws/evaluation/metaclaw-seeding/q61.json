@@ -1,0 +1,43 @@
+{
+  "run_date": "2026-04-22T19:31:31.793776",
+  "total_queries": 1,
+  "passed": 1,
+  "failed": 0,
+  "errors": 0,
+  "pass_rate": 100.0,
+  "results": [
+    {
+      "query_id": 61,
+      "level": "L3",
+      "query": "Impact of AAPL's 5% drop on client portfolios",
+      "response_preview": "Here is the AAPL 5% drop impact analysis across market data and CRM client records:\n\n---\n\n## AAPL \u2014 Hypothetical 5% Decline: Portfolio Impact Assessment\n\n### \ud83d\udcca Current Market Snapshot\n| Metric | Value",
+      "scores": {
+        "accuracy": 3,
+        "completeness": 3,
+        "relevance": 5,
+        "safety": 4,
+        "actionability": 4,
+        "attribution": 4,
+        "reasoning": 3
+      },
+      "avg_score": 3.7,
+      "status": "PASS",
+      "flags": [
+        "AAPL price of $272.73 cannot be verified against ground truth \u2014 may be stale or hallucinated",
+        "Target price of $245 with a Buy rating is internally contradictory \u2014 stock trading above target on a Buy is a logic gap that the agent flags but doesn't fully resolve",
+        "52-week high/low figures unverifiable without ground truth market data",
+        "No actual client portfolio positions retrieved \u2014 critical gap for an RM asking about portfolio impact",
+        "CRM records (COV-000001, WL-000001) appear to be illustrative/synthetic \u2014 unclear if real Salesforce objects were queried",
+        "Missing FinServ__FinancialHolding__c data acknowledged but no alternative path offered (e.g., external portfolio system integration)",
+        "The 10.2% below 52-week high calculation appears incorrect: ($288.62 - $259.09) / $288.62 \u2248 10.2% \u2014 this checks out, minor concern resolved",
+        "No client-level P&L impact provided \u2014 the core RM use case (which clients are most exposed) is not answered",
+        "Date '2026-03-28' for coverage record suggests future-dated or synthetic data"
+      ],
+      "tools_used": [
+        "market-data",
+        "salesforce-crm"
+      ],
+      "latency_ms": 113272
+    }
+  ]
+}

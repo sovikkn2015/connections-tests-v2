@@ -1,0 +1,285 @@
+{
+  "$defs": {
+    "AccountType": {
+      "description": "16 ERISA + tax-advantaged account types. OPA needs account_type for per-type compliance rules.",
+      "enum": [
+        "taxable",
+        "traditional_ira",
+        "roth_ira",
+        "401k",
+        "403b",
+        "457",
+        "sep_ira",
+        "simple_ira",
+        "trust_revocable",
+        "trust_irrevocable",
+        "custodial_utma",
+        "custodial_ugma",
+        "erisa_pension",
+        "erisa_profit_sharing",
+        "529",
+        "hsa"
+      ],
+      "title": "AccountType",
+      "type": "string"
+    }
+  },
+  "description": "Canonical account balance. is_real_time distinguishes API vs daily file.",
+  "properties": {
+    "balance_id": {
+      "description": "Primary key for canonical balance snapshot.",
+      "format": "uuid",
+      "title": "Balance Id",
+      "type": "string"
+    },
+    "account_ref": {
+      "description": "Canonical Account ID.",
+      "format": "uuid",
+      "title": "Account Ref",
+      "type": "string"
+    },
+    "client_ref": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Canonical Client ID.",
+      "title": "Client Ref"
+    },
+    "total_value": {
+      "description": "Total account value (long_market_value + cash_balance - short_market_value).",
+      "title": "Total Value",
+      "type": "number"
+    },
+    "cash_balance": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Available cash (settled).",
+      "title": "Cash Balance"
+    },
+    "cash_unsettled": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Cash from unsettled trades.",
+      "title": "Cash Unsettled"
+    },
+    "money_market_balance": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Sweep/money market balance.",
+      "title": "Money Market Balance"
+    },
+    "long_market_value": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Market value of long positions.",
+      "title": "Long Market Value"
+    },
+    "short_market_value": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Market value of short positions (absolute value).",
+      "title": "Short Market Value"
+    },
+    "margin_balance": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Margin debit balance.",
+      "title": "Margin Balance"
+    },
+    "margin_equity": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Equity in margin account.",
+      "title": "Margin Equity"
+    },
+    "buying_power": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Available buying power.",
+      "title": "Buying Power"
+    },
+    "accrued_interest": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Accrued interest on fixed income holdings.",
+      "title": "Accrued Interest"
+    },
+    "pending_activity": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Pending deposits/withdrawals.",
+      "title": "Pending Activity"
+    },
+    "account_type": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/AccountType"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Account type for ERISA/tax rules (ARCH-06 Gap 5)."
+    },
+    "currency": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": "USD",
+      "description": "ISO 4217 currency code.",
+      "title": "Currency"
+    },
+    "as_of_date": {
+      "description": "Date this balance snapshot is valid for.",
+      "format": "date",
+      "title": "As Of Date",
+      "type": "string"
+    },
+    "as_of_time": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Intraday timestamp if real-time balance.",
+      "title": "As Of Time"
+    },
+    "is_real_time": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": false,
+      "description": "True if from real-time API, false if from daily file. Compliance must know data freshness.",
+      "title": "Is Real Time"
+    },
+    "source_system": {
+      "description": "Source system that provided this balance data.",
+      "title": "Source System",
+      "type": "string"
+    },
+    "source_id": {
+      "description": "Vendor-specific balance record ID.",
+      "title": "Source Id",
+      "type": "string"
+    },
+    "source_balance_components": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Custodian's native balance breakdown (for reconciliation).",
+      "title": "Source Balance Components"
+    }
+  },
+  "required": [
+    "balance_id",
+    "account_ref",
+    "total_value",
+    "as_of_date",
+    "source_system",
+    "source_id"
+  ],
+  "title": "Balance",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://007.fsi/schemas/canonical/balance/v0.1.0"
+}

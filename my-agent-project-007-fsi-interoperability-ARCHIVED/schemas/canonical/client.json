@@ -1,0 +1,351 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://007.fsi/schemas/canonical/client/v0.1.0",
+  "title": "Client",
+  "description": "Canonical FSI client profile. Maps from SF FSC Account/Contact, Orion Client, custodian account holders. PII fields marked with x-pii for M4 MNPI filtering.",
+  "type": "object",
+  "required": [
+    "canonical_id",
+    "display_name",
+    "client_type",
+    "source_system"
+  ],
+  "properties": {
+    "canonical_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Primary key for canonical client record"
+    },
+    "display_name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255,
+      "description": "Human-readable display name (full name, entity name, or trust title)"
+    },
+    "client_type": {
+      "type": "string",
+      "enum": [
+        "individual",
+        "entity",
+        "trust"
+      ],
+      "description": "Legal classification"
+    },
+    "first_name": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 100,
+      "description": "Given name (individual only)"
+    },
+    "last_name": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 100,
+      "description": "Family name (individual only)"
+    },
+    "email": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "email",
+      "x-pii": true,
+      "description": "Client email. PII \u2014 M4 strips for non-authorized roles"
+    },
+    "phone": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "x-pii": true,
+      "description": "Client phone. PII \u2014 M4 strips for non-authorized roles"
+    },
+    "date_of_birth": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date",
+      "description": "PII \u2014 M4 strips for non-authorized roles",
+      "x-pii": true
+    },
+    "ssn_last_four": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^[0-9]{4}$",
+      "description": "Last four SSN digits. PII \u2014 M4 strips for non-authorized roles",
+      "x-pii": true
+    },
+    "tax_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "EIN for entities/trusts. PII.",
+      "x-pii": true
+    },
+    "risk_tolerance": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "conservative",
+        "moderate_conservative",
+        "moderate",
+        "moderate_aggressive",
+        "aggressive",
+        null
+      ],
+      "description": "Suitability questionnaire result"
+    },
+    "investment_objectives": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "growth",
+          "income",
+          "capital_preservation",
+          "speculation",
+          "balanced"
+        ]
+      },
+      "uniqueItems": true,
+      "description": "Investment objectives: growth, income, capital_preservation, speculation, balanced"
+    },
+    "time_horizon": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "short_term",
+        "medium_term",
+        "long_term",
+        null
+      ],
+      "description": "short_term: <3y, medium_term: 3-10y, long_term: >10y"
+    },
+    "annual_income_range": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Self-reported income bracket"
+    },
+    "net_worth_range": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Self-reported total net worth bracket"
+    },
+    "liquid_net_worth_range": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Excludes primary residence"
+    },
+    "tax_bracket": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Client tax bracket"
+    },
+    "advisor_ref": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid",
+      "description": "Canonical Advisor ID"
+    },
+    "firm_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Canonical Firm ID"
+    },
+    "household_ref": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid",
+      "description": "Canonical Household ID"
+    },
+    "archetype": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Client segmentation: mass_affluent, hnw, uhnw"
+    },
+    "jurisdiction": {
+      "type": "string",
+      "description": "Primary regulatory jurisdiction (US, US-CA, UK, EU, SG, HK)"
+    },
+    "accounts": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "description": "Canonical Account IDs linked to this client"
+    },
+    "kyc_status": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "pending",
+        "verified",
+        "expired",
+        "failed",
+        null
+      ],
+      "description": "KYC verification status for BSA/AML (Onboarding Specialist)"
+    },
+    "kyc_verified_date": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date",
+      "description": "Date KYC was last verified"
+    },
+    "pii_classification": {
+      "type": "string",
+      "enum": [
+        "public",
+        "internal",
+        "confidential",
+        "restricted"
+      ],
+      "description": "Data classification for access controls"
+    },
+    "vendor_mappings": {
+      "type": "object",
+      "description": "Preserves vendor-specific client identifiers",
+      "properties": {
+        "salesforce_fsc": {
+          "type": "object",
+          "properties": {
+            "account_id": {
+              "type": "string",
+              "description": "SF Account Record ID"
+            },
+            "contact_id": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "SF Contact Record ID"
+            },
+            "person_account": {
+              "type": "boolean",
+              "description": "True if SF Person Account model"
+            }
+          },
+          "description": "Salesforce FSC client mapping"
+        },
+        "orion": {
+          "type": "object",
+          "properties": {
+            "client_id": {
+              "type": "string",
+              "description": "Orion Client ID"
+            },
+            "representative_id": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Orion Representative (advisor) ID"
+            }
+          },
+          "description": "Orion client mapping"
+        },
+        "schwab": {
+          "type": "object",
+          "properties": {
+            "account_holder_id": {
+              "type": "string",
+              "description": "Schwab account holder ID"
+            }
+          },
+          "description": "Schwab client mapping"
+        },
+        "fidelity": {
+          "type": "object",
+          "properties": {
+            "customer_id": {
+              "type": "string",
+              "description": "Fidelity customer ID"
+            }
+          },
+          "description": "Fidelity client mapping"
+        }
+      }
+    },
+    "reconciliation": {
+      "type": "object",
+      "properties": {
+        "sources_agree": {
+          "type": "boolean",
+          "description": "True if all vendor sources agree on client data"
+        },
+        "discrepancies": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "List of disagreements between sources \u2014 flagged for SME review"
+        },
+        "last_reconciled": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When reconciliation last ran"
+        }
+      },
+      "description": "Cross-vendor agreement tracking"
+    },
+    "source_system": {
+      "type": "string",
+      "enum": [
+        "salesforce_fsc",
+        "orion",
+        "schwab",
+        "fidelity",
+        "pershing",
+        "wealthbox",
+        "redtail",
+        "manual"
+      ],
+      "description": "Source system that provided this client record"
+    },
+    "source_id": {
+      "type": "string",
+      "description": "Vendor-specific client ID"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Record creation timestamp"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Record last update timestamp"
+    }
+  }
+}

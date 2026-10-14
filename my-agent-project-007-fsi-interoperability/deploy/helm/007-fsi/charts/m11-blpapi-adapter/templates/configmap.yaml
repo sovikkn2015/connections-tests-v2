@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "007.fullname" . }}-config
+  labels:
+    {{- include "007.labels" . | nindent 4 }}
+data:
+  # Non-secret configuration. Secret material (UUID + serial) flows via the
+  # ExternalSecret -- this ConfigMap is safe to expose.
+  LOG_LEVEL: {{ .Values.log_level | default "info" | quote }}
+  ADAPTER_NAME: "m11-blpapi-adapter"
+  VENDOR: "bloomberg"

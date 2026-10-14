@@ -1,0 +1,14 @@
+subjectType: AGENT
+subjectName: Hello_World_Agent
+description: "Test cases for Hello World Agent"
+testCases:
+  - utterance: "Hello, my name is Sam"
+    expectedTopic: greeting
+    expectedActions:
+      - get_greeting
+    expectedOutcome: "The agent calls get_greeting and returns a personalized greeting mentioning Sam"
+  - utterance: "I want to talk to a real person"
+    expectedTopic: escalation
+    expectedActions:
+      - escalate_to_human
+    expectedOutcome: "The agent escalates the conversation to a human agent"

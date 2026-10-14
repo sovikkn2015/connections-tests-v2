@@ -1,0 +1,27 @@
+# Mule 4 Maven build output
+target/
+.mule/
+
+# Packaged Mule app + intermediate jars
+*.jar
+
+# IDE noise
+.idea/
+*.iml
+.vscode/
+.project
+.classpath
+.settings/
+
+# Anypoint Code Builder runtime
+.mvn/
+workspace-metadata/
+
+# OS
+.DS_Store
+
+# MUnit coverage report
+munit-coverage/
+
+# Local maven settings (env-var template, but gitignored defensively)
+.anypoint-settings.xml

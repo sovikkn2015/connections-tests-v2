@@ -1,0 +1,14 @@
+target/
+.mule/
+*.jar
+.idea/
+*.iml
+.vscode/
+.project
+.classpath
+.settings/
+.mvn/
+workspace-metadata/
+.DS_Store
+munit-coverage/
+.anypoint-settings.xml

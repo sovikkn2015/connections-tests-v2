@@ -1,0 +1,137 @@
+{
+  "_comment": "V3 OpenClaw runtime config. Single AgentCore deployment, three persona entry configs selected by X-Persona header at session-open. Gateway mode = deployed (AgentCore WebSocket). Bedrock + Guardrails + Langfuse all us-east-1. Credentials only from env via AWS Secrets Manager. See .env.example.",
+  "version": "3.0.0",
+
+  "gateway": {
+    "mode": "deployed",
+    "transport": "agentcore_websocket",
+    "port": 18789,
+    "bind": "lan",
+    "auth": {
+      "mode": "session_token",
+      "signing_key_env": "AGENTCORE_SESSION_SIGNING_KEY",
+      "header": "Authorization",
+      "persona_header": "X-Persona"
+    }
+  },
+
+  "persona_routing": {
+    "_comment": "Persona is selected at session-open by X-Persona header set by the channel adapter.",
+    "fsi_research": {
+      "orchestrator": "research_orchestrator",
+      "config_yaml": "agents/fsi_research.yaml",
+      "default_channels": ["web", "slack"]
+    },
+    "fsi_advisor": {
+      "orchestrator": "advisor_orchestrator",
+      "config_yaml": "agents/fsi_advisor.yaml",
+      "default_channels": ["web", "slack", "sf_mobile_pwa"]
+    },
+    "fsi_client_liaison": {
+      "orchestrator": "liaison_orchestrator",
+      "config_yaml": "agents/fsi_client_liaison.yaml",
+      "default_channels": ["web_mockup"]
+    }
+  },
+
+  "agents": {
+    "topology": [
+      { "id": "research_orchestrator",     "persona": "fsi_research",        "role": "orchestrator", "model": "sonnet" },
+      { "id": "market_specialist",          "persona": "fsi_research",        "role": "specialist",   "model": "sonnet" },
+      { "id": "filings_specialist",         "persona": "fsi_research",        "role": "specialist",   "model": "sonnet" },
+      { "id": "sentiment_specialist",       "persona": "fsi_research",        "role": "specialist",   "model": "sonnet" },
+      { "id": "compliance_specialist",      "persona": "fsi_research",        "role": "specialist",   "model": "sonnet" },
+      { "id": "statement_specialist",       "persona": "fsi_research",        "role": "specialist",   "model": "sonnet" },
+
+      { "id": "advisor_orchestrator",       "persona": "fsi_advisor",         "role": "orchestrator", "model": "sonnet" },
+      { "id": "portfolio_specialist",       "persona": "fsi_advisor",         "role": "specialist",   "model": "sonnet" },
+      { "id": "suitability_specialist",     "persona": "fsi_advisor",         "role": "specialist",   "model": "sonnet" },
+      { "id": "client_context_specialist",  "persona": "fsi_advisor",         "role": "specialist",   "model": "sonnet" },
+      { "id": "action_specialist",          "persona": "fsi_advisor",         "role": "specialist",   "model": "sonnet", "serial_by_design": true },
+
+      { "id": "liaison_orchestrator",       "persona": "fsi_client_liaison",  "role": "orchestrator", "model": "haiku" },
+      { "id": "faq_specialist",             "persona": "fsi_client_liaison",  "role": "specialist",   "model": "haiku" },
+      { "id": "context_specialist",         "persona": "fsi_client_liaison",  "role": "specialist",   "model": "sonnet" }
+    ]
+  },
+
+  "models": {
+    "sonnet": {
+      "provider": "amazon-bedrock",
+      "id_env": "BEDROCK_SONNET_MODEL_ID",
+      "region_env": "AWS_REGION_BEDROCK",
+      "max_tokens": 8192,
+      "context_window": 200000
+    },
+    "haiku": {
+      "provider": "amazon-bedrock",
+      "id_env": "BEDROCK_HAIKU_MODEL_ID",
+      "region_env": "AWS_REGION_BEDROCK",
+      "max_tokens": 4096,
+      "context_window": 200000
+    }
+  },
+
+  "guardrails": {
+    "provider": "bedrock",
+    "guardrail_id_env": "BEDROCK_GUARDRAIL_ID",
+    "guardrail_version_env": "BEDROCK_GUARDRAIL_VERSION",
+    "topics": ["financial_actions", "pii", "insider_information", "hitl_bypass"]
+  },
+
+  "observability": {
+    "langfuse": {
+      "enabled": true,
+      "public_key_env": "LANGFUSE_PUBLIC_KEY",
+      "secret_key_env": "LANGFUSE_SECRET_KEY",
+      "host_env": "LANGFUSE_HOST",
+      "span_taxonomy": "session.{id}.turn.{n}.persona.{name}.{agent_id}",
+      "scrub_before_write": ["mnpi", "pii", "raw_approval_tokens"]
+    }
+  },
+
+  "mcp": {
+    "servers": {
+      "market-data":      { "transport": "stdio", "base_url_env": "MCP_GATEWAY_URL", "path": "/market-data" },
+      "sec-edgar":        { "transport": "stdio", "base_url_env": "MCP_GATEWAY_URL", "path": "/sec-edgar" },
+      "news-search":      { "transport": "stdio", "base_url_env": "MCP_GATEWAY_URL", "path": "/news-search" },
+      "salesforce-crm":   { "transport": "stdio", "base_url_env": "MCP_GATEWAY_URL", "path": "/salesforce-crm" },
+      "mulesoft-actions": { "transport": "stdio", "base_url_env": "MCP_GATEWAY_URL", "path": "/mulesoft-actions", "_comment": "Only action_specialist may reach this server." }
+    }
+  },
+
+  "skills": {
+    "research_prompt":                 { "personas": ["fsi_research"] },
+    "publish_brief":                   { "personas": ["fsi_research"] },
+    "rag_retrieve":                    { "personas": ["fsi_research"] },
+    "financial_statement_analysis":    { "personas": ["fsi_research"] },
+    "portfolio_analytics":             { "personas": ["fsi_advisor"] },
+    "scenario_modeling":               { "personas": ["fsi_advisor"] },
+    "suitability_check":               { "personas": ["fsi_advisor"] },
+    "client_summary":                  { "personas": ["fsi_advisor", "fsi_client_liaison"] },
+    "research_awareness":              { "personas": ["fsi_advisor", "fsi_client_liaison"] },
+    "compliance_screening":            { "personas": ["fsi_research", "fsi_advisor"] },
+    "hitl":                            { "personas": ["fsi_advisor"] },
+    "dual_auth":                       { "personas": ["fsi_advisor"] },
+    "audit_logging":                   { "personas": ["fsi_research", "fsi_advisor", "fsi_client_liaison"] },
+    "mulesoft_api":                    { "personas": ["fsi_advisor"], "serial_by_design": true },
+    "rm_handoff":                      { "personas": ["fsi_client_liaison"] },
+    "mnpi_filter":                     { "personas": ["fsi_research", "fsi_advisor", "fsi_client_liaison"], "always_on_egress": true }
+  },
+
+  "mulesoft": {
+    "mode_env": "MULESOFT_MODE",
+    "_comment": "mock | sandbox | production. Defaults to mock per steering rule 14.",
+    "base_url_env": "MULESOFT_BASE_URL",
+    "client_id_env": "MULESOFT_CLIENT_ID",
+    "client_secret_env": "MULESOFT_CLIENT_SECRET",
+    "process_apis_in_scope": ["submit-order", "cancel-order", "modify-order", "order-status-webhook", "initiate-wire"]
+  },
+
+  "logging": {
+    "level_env": "LOG_LEVEL",
+    "default_level": "INFO",
+    "format": "json",
+    "correlation_id_header": "X-Correlation-Id"
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "run_date": "2026-04-22T18:11:28.443244",
+  "total_queries": 1,
+  "passed": 0,
+  "failed": 1,
+  "errors": 0,
+  "pass_rate": 0.0,
+  "results": [
+    {
+      "query_id": 57,
+      "level": "L2",
+      "query": "Any MNPI flags on stocks reporting this week?",
+      "response_preview": "Here is a full picture of the MNPI situation for this week's reporters:\n\n---\n\n**MNPI Flag Check \u2014 Week of July 21, 2026**\n\n**CRM result:** No dedicated MNPI flag field exists in any CRM object (`IR_Co",
+      "scores": {
+        "accuracy": 2,
+        "completeness": 3,
+        "relevance": 4,
+        "safety": 3,
+        "actionability": 3,
+        "attribution": 3,
+        "reasoning": 3
+      },
+      "avg_score": 3.0,
+      "status": "FAIL",
+      "flags": [
+        "Earnings estimates (EPS, revenue) appear fabricated \u2014 no ground truth available to verify, and these are presented with false precision as if sourced from a live calendar",
+        "Date 'Week of July 21, 2026' is a future date, making all earnings data speculative or hallucinated",
+        "No SOQL queries shown \u2014 expected tool usage (SF skill with SOQL) is not evidenced in the response",
+        "MNPI flags not found in CRM, but the agent pivots to presenting unverified market data, which could itself be MNPI-adjacent if acted upon",
+        "The agent provides structural CRM recommendations (field names, schema suggestions) that were not requested and may be outside scope for a CO persona",
+        "Source attribution is vague \u2014 'market-data, earnings calendar' cited without specific provider or query trace",
+        "No actual SOQL query results displayed, reducing traceability and auditability"
+      ],
+      "tools_used": [
+        "market-data",
+        "salesforce-crm"
+      ],
+      "latency_ms": 81188
+    }
+  ]
+}

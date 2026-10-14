@@ -1,0 +1,19 @@
+apiVersion: v2
+name: m11-blpapi-adapter
+description: |
+  M11 BLPAPI Adapter -- Bloomberg Terminal Data License (binary protocol).
+  Phase 4 institutional tier (Tier 2 asset managers, Tier 5 hedge funds).
+  Disabled by default in values-cloud.yaml; enable via the umbrella values
+  when the tenant has a Bloomberg Terminal seat and has supplied the blpapi
+  wheel at image build time.
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords:
+  - fsi
+  - mcp-adapter
+  - bloomberg
+  - blpapi
+maintainers:
+  - name: Project 007 Platform Team
+    email: platform@example.invalid

@@ -1,0 +1,30 @@
+# Header-injection PolicyBinding — injects the V2 MCP x-api-key on every
+# inbound request.
+#
+# IMPORTANT: This cannot rewrite the Host header. Flex Gateway's wasm
+# header-injection filter and DataWeave headers-transformation policy
+# both respect Envoy's reserved-header list — neither can override the
+# :authority / Host pseudo-header on the upstream request.
+#
+# For our V2 upstream (EDGE-optimized API Gateway fronted by CloudFront),
+# the missing Host rewrite is what causes every Flex-proxied request to
+# be rejected with HTTP 400 by CloudFront before it reaches API Gateway
+# itself. See docs/v3-b-infra-debug-findings.md for full analysis and
+# remediation options.
+#
+# The x-api-key VALUE is fetched at render time from API Gateway by
+# scripts/apply-flex-config-v2.sh and NEVER committed.
+apiVersion: gateway.mulesoft.com/v1alpha1
+kind: PolicyBinding
+metadata:
+  name: v2-api-key-injection
+spec:
+  targetRef:
+    kind: ApiInstance
+    name: fsi-mcp-servers
+  policyRef:
+    name: header-injection-flex
+  config:
+    inboundHeaders:
+      - key: "x-api-key"
+        value: "__V2_API_KEY_PLACEHOLDER__"

@@ -1,0 +1,38 @@
+{
+  "run_date": "2026-04-22T17:18:22.376357",
+  "total_queries": 1,
+  "passed": 0,
+  "failed": 1,
+  "errors": 0,
+  "pass_rate": 0.0,
+  "results": [
+    {
+      "query_id": 17,
+      "level": "L1",
+      "query": "How many research notes have we published this quarter?",
+      "response_preview": "**7 research notes** have been published this quarter, per the CRM.\n\nSource: salesforce-crm, as of query execution this session. If you'd like a breakdown by analyst, ticker, or rating, just ask and I",
+      "scores": {
+        "accuracy": 2,
+        "completeness": 3,
+        "relevance": 4,
+        "safety": 5,
+        "actionability": 4,
+        "attribution": 3,
+        "reasoning": 2
+      },
+      "avg_score": 3.3,
+      "status": "FAIL",
+      "flags": [
+        "No ground truth available to verify the count of 7",
+        "SOQL query not shown or referenced \u2014 cannot confirm tool was actually executed",
+        "Quarter boundaries not defined (fiscal vs calendar, start/end dates)",
+        "Number could be fabricated or hallucinated without visible query execution proof",
+        "Attribution says 'salesforce-crm' but no SOQL query displayed for auditability"
+      ],
+      "tools_used": [
+        "salesforce-crm"
+      ],
+      "latency_ms": 52184
+    }
+  ]
+}

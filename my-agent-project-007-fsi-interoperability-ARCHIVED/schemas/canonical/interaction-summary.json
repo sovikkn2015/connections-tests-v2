@@ -1,0 +1,372 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://007.fsi/schemas/canonical/interaction-summary/v0.1.0",
+  "title": "InteractionSummary",
+  "description": "Canonical meeting/interaction summary. Client Service Specialist output. Write-back to CRM. Maps to SF FSC Event/Task, Orion notes, Wealthbox activities.",
+  "type": "object",
+  "required": [
+    "canonical_id",
+    "client_ref",
+    "advisor_ref",
+    "interaction_type",
+    "date",
+    "summary",
+    "source_system"
+  ],
+  "properties": {
+    "canonical_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Primary key for this interaction summary"
+    },
+    "client_ref": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Canonical Client ID"
+    },
+    "household_ref": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid",
+      "description": "Canonical Household ID"
+    },
+    "advisor_ref": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Canonical Advisor ID (from M1 AID)"
+    },
+    "interaction_type": {
+      "type": "string",
+      "enum": [
+        "meeting_in_person",
+        "meeting_virtual",
+        "phone_call",
+        "email",
+        "chat",
+        "review_annual",
+        "review_quarterly",
+        "onboarding_session",
+        "service_request"
+      ],
+      "description": "Type of client interaction"
+    },
+    "date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date of the interaction"
+    },
+    "start_time": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time",
+      "description": "Interaction start time"
+    },
+    "end_time": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time",
+      "description": "Interaction end time"
+    },
+    "duration_minutes": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0,
+      "description": "Duration in minutes"
+    },
+    "summary": {
+      "type": "string",
+      "description": "Agent-generated summary of the interaction (MNPI-filtered before storage)"
+    },
+    "topics_discussed": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "portfolio_review",
+          "financial_plan",
+          "tax_planning",
+          "estate_planning",
+          "insurance",
+          "retirement",
+          "education_funding",
+          "risk_tolerance",
+          "rebalancing",
+          "new_account",
+          "withdrawal",
+          "contribution",
+          "beneficiary_change",
+          "life_event",
+          "market_outlook",
+          "other"
+        ]
+      },
+      "description": "Topics discussed"
+    },
+    "action_items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "description",
+          "assigned_to",
+          "status"
+        ],
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "assigned_to": {
+            "type": "string",
+            "description": "Canonical ID of assignee"
+          },
+          "due_date": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "in_progress",
+              "completed",
+              "cancelled"
+            ]
+          }
+        }
+      },
+      "description": "Action items from the interaction"
+    },
+    "attendees": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "client",
+              "spouse",
+              "advisor",
+              "associate",
+              "specialist",
+              "attorney",
+              "cpa",
+              "other"
+            ]
+          },
+          "canonical_ref": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          }
+        }
+      },
+      "description": "People who attended"
+    },
+    "sentiment": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "positive",
+        "neutral",
+        "concerned",
+        "negative",
+        null
+      ],
+      "description": "Agent-assessed client sentiment"
+    },
+    "next_meeting_date": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date",
+      "description": "Scheduled next meeting date"
+    },
+    "crm_write_back": {
+      "type": "object",
+      "description": "Status of write-back to CRM systems",
+      "properties": {
+        "salesforce_fsc": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "properties": {
+            "event_id": {
+              "type": "string",
+              "description": "SF Event/Task Record ID"
+            },
+            "written_at": {
+              "type": "string",
+              "format": "date-time",
+              "description": "When the write-back occurred"
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "pending",
+                "written",
+                "failed"
+              ],
+              "description": "Write-back status: pending, written, failed"
+            }
+          },
+          "description": "Salesforce FSC write-back status"
+        },
+        "wealthbox": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "properties": {
+            "activity_id": {
+              "type": "string",
+              "description": "Wealthbox activity record ID"
+            },
+            "written_at": {
+              "type": "string",
+              "format": "date-time",
+              "description": "When the write-back occurred"
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "pending",
+                "written",
+                "failed"
+              ],
+              "description": "Write-back status: pending, written, failed"
+            }
+          },
+          "description": "Wealthbox write-back status"
+        },
+        "redtail": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "properties": {
+            "activity_id": {
+              "type": "string",
+              "description": "Redtail activity record ID"
+            },
+            "written_at": {
+              "type": "string",
+              "format": "date-time",
+              "description": "When the write-back occurred"
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "pending",
+                "written",
+                "failed"
+              ],
+              "description": "Write-back status: pending, written, failed"
+            }
+          },
+          "description": "Redtail write-back status"
+        }
+      }
+    },
+    "compliance_review": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "description": "If BD, principal review status (FINRA 2210)",
+      "properties": {
+        "required": {
+          "type": "boolean",
+          "description": "True if principal review required (BD under FINRA 2210)"
+        },
+        "review_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Review record ID"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "not_required",
+            "pending",
+            "approved",
+            "rejected"
+          ],
+          "description": "Review status: not_required, pending, approved, rejected"
+        }
+      }
+    },
+    "channel": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "slack",
+        "teams",
+        "whatsapp",
+        "web",
+        "email",
+        "phone",
+        "in_person",
+        null
+      ],
+      "description": "OpenClaw channel where interaction occurred"
+    },
+    "trace_id": {
+      "type": "string",
+      "description": "Links to M10 audit trail"
+    },
+    "source_system": {
+      "type": "string",
+      "enum": [
+        "salesforce_fsc",
+        "wealthbox",
+        "redtail",
+        "orion",
+        "agent_generated",
+        "manual"
+      ],
+      "description": "Source system"
+    },
+    "source_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Vendor-specific interaction ID"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Record creation timestamp"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Record last update timestamp"
+    }
+  }
+}

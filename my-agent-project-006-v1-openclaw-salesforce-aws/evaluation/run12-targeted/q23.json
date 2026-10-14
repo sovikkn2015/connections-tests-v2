@@ -1,0 +1,40 @@
+{
+  "run_date": "2026-04-22T14:54:24.728957",
+  "total_queries": 1,
+  "passed": 0,
+  "failed": 1,
+  "errors": 0,
+  "pass_rate": 0.0,
+  "results": [
+    {
+      "query_id": 23,
+      "level": "L1",
+      "query": "Pull AAPL's latest proxy statement",
+      "response_preview": "I found the most recent AAPL proxy filing (period ending 2026-02-24, accession `0001308179-26-000008`). Let me pull the document.\n\n---\n\n## \ud83d\udd16 Bootstrap Note\n\n**BOOTSTRAP.md** describes an onboarding/\"w",
+      "scores": {
+        "accuracy": 2,
+        "completeness": 2,
+        "relevance": 3,
+        "safety": 4,
+        "actionability": 3,
+        "attribution": 3,
+        "reasoning": 2
+      },
+      "avg_score": 2.7,
+      "status": "FAIL",
+      "flags": [
+        "UNVERIFIED_ACCESSION_NUMBER: Accession 0001308179-26-000008 cannot be independently verified \u2014 may be hallucinated or fabricated",
+        "FUTURE_DATE_ANOMALY: Annual meeting date of 2026-02-24 is plausible but agent cannot confirm this without successful document retrieval",
+        "TOOL_FAILURE_NOT_ESCALATED: Both SEC EDGAR MCP and web_fetch failed; agent should have flagged inability to complete task more prominently rather than presenting unverified metadata as confirmed",
+        "BOOTSTRAP_TANGENT: Irrelevant BOOTSTRAP.md commentary adds noise and suggests prompt injection or off-task reasoning",
+        "PROXY_CONTENT_GENERIC: The 'typical Apple proxy contents' table is generic boilerplate, not actual retrieved content from the filing",
+        "PRIOR_FILING_DATES_SUSPICIOUS: Listed prior filings (2021-01-05, 2020-01-03, 2019-01-08) appear plausible but unverified and may be fabricated",
+        "PARTIAL_TASK_COMPLETION: Core task \u2014 pulling the actual proxy statement content \u2014 was not completed"
+      ],
+      "tools_used": [
+        "sec-edgar"
+      ],
+      "latency_ms": 115483
+    }
+  ]
+}

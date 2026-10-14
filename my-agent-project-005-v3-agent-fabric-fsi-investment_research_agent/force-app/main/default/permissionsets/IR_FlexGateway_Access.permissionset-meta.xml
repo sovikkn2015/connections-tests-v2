@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label>IR Flex Gateway Access</label>
+    <description>Grants access to the IR_FlexGateway_EC external credential principal for V3 gateway callouts.</description>
+    <hasActivationRequired>false</hasActivationRequired>
+    <externalCredentialPrincipalAccesses>
+        <externalCredentialPrincipal>IR_FlexGateway_EC-IR_FlexGateway_EC_Principal</externalCredentialPrincipal>
+        <enabled>true</enabled>
+    </externalCredentialPrincipalAccesses>
+</PermissionSet>

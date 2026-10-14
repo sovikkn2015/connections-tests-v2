@@ -1,0 +1,76 @@
+{
+  "name": "market-data-mcp-server",
+  "description": "MCP server for real-time stock quotes, price history, analyst consensus, and options data via Alpha Vantage API.",
+  "version": "1.0.0",
+  "tools": [
+    {
+      "name": "get_quote",
+      "description": "Fetch the current stock quote for a ticker — price, change, volume, day range.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "ticker": {
+            "type": "string",
+            "description": "Stock ticker symbol (e.g. AAPL, NVDA, MSFT)"
+          }
+        },
+        "required": ["ticker"]
+      }
+    },
+    {
+      "name": "get_price_history",
+      "description": "Fetch historical daily prices for a ticker over a specified period.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "ticker": {
+            "type": "string",
+            "description": "Stock ticker symbol (e.g. AAPL, NVDA, MSFT)"
+          },
+          "period": {
+            "type": "integer",
+            "description": "Number of days of history to return (default: 30)",
+            "default": 30
+          }
+        },
+        "required": ["ticker"]
+      }
+    },
+    {
+      "name": "get_analyst_consensus",
+      "description": "Fetch analyst consensus estimates — target price, P/E, EPS, profit margin, beta, 52-week range.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "ticker": {
+            "type": "string",
+            "description": "Stock ticker symbol (e.g. AAPL, NVDA, MSFT)"
+          }
+        },
+        "required": ["ticker"]
+      }
+    },
+    {
+      "name": "get_options_chain",
+      "description": "Fetch options-related data summary — beta, moving averages, short interest, 52-week range.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "ticker": {
+            "type": "string",
+            "description": "Stock ticker symbol (e.g. AAPL, NVDA, MSFT)"
+          }
+        },
+        "required": ["ticker"]
+      }
+    }
+  ],
+  "transport": {
+    "type": "http",
+    "baseUrl": "${API_GATEWAY_URL}/market-data",
+    "headers": {
+      "x-api-key": "${API_KEY}",
+      "Content-Type": "application/json"
+    }
+  }
+}

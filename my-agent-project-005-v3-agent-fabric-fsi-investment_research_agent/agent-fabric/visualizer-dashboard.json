@@ -1,0 +1,191 @@
+{
+  "_comment_schema": "Anypoint Platform — Agent Visualizer dashboard. Best-effort schema based on the public MuleSoft Agent Fabric beta docs (April 2026). Fields flagged 'TBD: confirm exact field name' should be validated against the current Anypoint Platform API before first deploy.",
+  "apiVersion": "visualizer.anypoint.mulesoft.com/v1",
+  "kind": "Dashboard",
+  "metadata": {
+    "name": "fsi-ir-v3-dashboard",
+    "displayName": "005 V3 — IR Agent Fabric",
+    "description": "Primary operating dashboard for the FSI Investment Research multi-agent network. Tracks agent invocations, gateway policy hits, latency per query complexity tier, error rate, and MNPI redactions.",
+    "labels": {
+      "project": "005-v3",
+      "domain": "fsi",
+      "owner": "ir-platform-team"
+    },
+    "agentNetworkRef": "fsi-investment-research-v3"
+  },
+  "spec": {
+    "refreshIntervalSeconds": 30,
+    "defaultTimeRange": "PT1H",
+    "panels": [
+      {
+        "id": "agent-invocation-heatmap",
+        "title": "Agent Invocation Heat Map",
+        "description": "Invocations per agent and MCP server over the selected time window. All 4 agents plus the 3 MCP servers tracked separately.",
+        "type": "heatmap",
+        "position": { "x": 0, "y": 0, "w": 12, "h": 6 },
+        "query": {
+          "source": "agent-visualizer.invocations",
+          "groupBy": ["agent.id"],
+          "metric": "count",
+          "timeBucket": "PT1M"
+        },
+        "dimensions": {
+          "y": [
+            "ir-research-orchestrator",
+            "ir-compliance-agent",
+            "financial-analysis-agent",
+            "sentiment-analysis-agent",
+            "mcp:sec-edgar",
+            "mcp:market-data",
+            "mcp:news-search"
+          ]
+        },
+        "colorScale": {
+          "type": "sequential",
+          "palette": "green-yellow-red",
+          "min": 0,
+          "max": "auto"
+        }
+      },
+      {
+        "id": "policy-trigger-counts",
+        "title": "Flex Gateway Policy Triggers",
+        "description": "Per-policy fire counts. MNPI and circuit-breaker are the high-signal counters — any non-zero MNPI value means a holdings field was blocked from leaving the gateway.",
+        "type": "stacked-bar",
+        "position": { "x": 0, "y": 6, "w": 6, "h": 5 },
+        "query": {
+          "source": "flex-gateway.policy-events",
+          "groupBy": ["policy.name", "outcome"],
+          "metric": "count",
+          "timeBucket": "PT5M"
+        },
+        "series": [
+          { "policy": "mnpi-content-filter", "outcome": "redacted", "color": "#c23b22", "label": "MNPI redactions" },
+          { "policy": "rate-limit",          "outcome": "throttled", "color": "#e8a33d", "label": "Rate-limit throttles" },
+          { "policy": "circuit-breaker",     "outcome": "opened",    "color": "#8b0000", "label": "Circuit-breaker opens" },
+          { "policy": "finra-audit-logging", "outcome": "written",   "color": "#2a7ab0", "label": "FINRA audit writes" },
+          { "policy": "mtls-auth",           "outcome": "handshake", "color": "#6aa84f", "label": "mTLS handshakes" }
+        ],
+        "alerts": [
+          {
+            "id": "cb-open-alert",
+            "when": "circuit-breaker.opened > 0",
+            "severity": "critical",
+            "notify": "ir-platform-oncall"
+          }
+        ]
+      },
+      {
+        "id": "latency-by-tier",
+        "title": "End-to-End Latency p50 / p95 / p99 by Query Complexity",
+        "description": "Percentiles grouped by query complexity tier. L1-L2 expected < 3s p95. L3-L4 expected < 15s p95 (Strands agents use Sonnet).",
+        "type": "timeseries",
+        "position": { "x": 6, "y": 6, "w": 6, "h": 5 },
+        "query": {
+          "source": "agent-visualizer.traces",
+          "groupBy": ["query.tier"],
+          "metric": "latency.endToEndMs",
+          "aggregations": ["p50", "p95", "p99"],
+          "timeBucket": "PT1M"
+        },
+        "dimensions": {
+          "tier": [
+            { "id": "L1", "label": "L1 — CRM lookup",      "expectedP95Ms": 2000 },
+            { "id": "L2", "label": "L2 — MCP tool call",   "expectedP95Ms": 5000 },
+            { "id": "L3", "label": "L3 — Strands analysis","expectedP95Ms": 12000 },
+            { "id": "L4", "label": "L4 — Research brief",  "expectedP95Ms": 20000 }
+          ]
+        },
+        "thresholds": [
+          { "tier": "L2", "p95Ms": 5000,  "severity": "warn" },
+          { "tier": "L3", "p95Ms": 15000, "severity": "warn" },
+          { "tier": "L4", "p95Ms": 25000, "severity": "warn" }
+        ]
+      },
+      {
+        "id": "error-rate-by-tool",
+        "title": "Error Rate by Tool",
+        "description": "Rolling 5-minute error rate for each MCP tool and Strands agent tool. A sustained non-zero rate on a tool will trip the circuit breaker.",
+        "type": "multi-line",
+        "position": { "x": 0, "y": 11, "w": 12, "h": 5 },
+        "query": {
+          "source": "flex-gateway.requests",
+          "groupBy": ["tool.name"],
+          "metric": "error.rate",
+          "aggregations": ["rate5m"],
+          "timeBucket": "PT1M"
+        },
+        "dimensions": {
+          "tool": [
+            "market-data.get_quote",
+            "market-data.get_price_history",
+            "market-data.get_analyst_consensus",
+            "market-data.get_options_chain",
+            "sec-edgar.get_10k",
+            "sec-edgar.get_10q",
+            "sec-edgar.get_8k",
+            "sec-edgar.get_insider_transactions",
+            "news-search.search_financial_news",
+            "news-search.get_headlines",
+            "news-search.get_news_sentiment",
+            "financial-analysis-agent.run_dcf",
+            "financial-analysis-agent.run_comps",
+            "financial-analysis-agent.monte_carlo",
+            "financial-analysis-agent.fair_value",
+            "sentiment-analysis-agent.analyze_transcript",
+            "sentiment-analysis-agent.score_news_sentiment",
+            "sentiment-analysis-agent.detect_tone_shifts",
+            "sentiment-analysis-agent.aggregate_sentiment"
+          ]
+        },
+        "thresholds": [
+          { "severity": "warn",     "errorRate": 0.02, "description": "2% over 5 min" },
+          { "severity": "critical", "errorRate": 0.05, "description": "5% over 5 min — close to CB trip" }
+        ]
+      },
+      {
+        "id": "mnpi-redactions",
+        "title": "MNPI Redaction Events",
+        "description": "Every redaction event with field name and originating agent ID. VALUES ARE NEVER DISPLAYED — that would defeat the purpose of the policy. Correlation ID links back to the source request for compliance review.",
+        "type": "event-log",
+        "position": { "x": 0, "y": 16, "w": 12, "h": 5 },
+        "query": {
+          "source": "flex-gateway.policy-events",
+          "filter": "policy.name = 'mnpi-content-filter' AND outcome = 'redacted'",
+          "sortBy": "timestamp",
+          "sortOrder": "desc",
+          "limit": 200
+        },
+        "columns": [
+          { "field": "timestamp",     "label": "When",           "width": 160 },
+          { "field": "agent.id",      "label": "Agent",          "width": 200 },
+          { "field": "tool.name",     "label": "Tool",           "width": 220 },
+          { "field": "field.name",    "label": "Field redacted", "width": 200 },
+          { "field": "correlationId", "label": "Correlation ID", "width": 260 }
+        ],
+        "_comment_privacy": "Deliberately omits field.value. The mnpi-filter.yaml policy redacts values before they are logged; the Visualizer schema never resurfaces them.",
+        "export": {
+          "format": "csv",
+          "permissions": ["ir-compliance-team"]
+        }
+      }
+    ],
+    "_comment_totalPanels": "5 panels — matches the task spec: (1) agent heat map, (2) policy counts, (3) latency by tier, (4) error rate by tool, (5) MNPI events."
+  },
+  "dataSources": [
+    {
+      "id": "agent-visualizer",
+      "type": "anypoint-agent-visualizer",
+      "description": "Built-in trace store for every agent-to-agent and agent-to-tool call."
+    },
+    {
+      "id": "flex-gateway",
+      "type": "anypoint-flex-gateway-telemetry",
+      "description": "Policy and request events streamed from Flex Gateway. Includes policy.name, outcome, field.name for MNPI events."
+    }
+  ],
+  "permissions": {
+    "view": ["ir-platform-team", "ir-compliance-team", "ir-analysts-readonly"],
+    "edit": ["ir-platform-team"]
+  }
+}

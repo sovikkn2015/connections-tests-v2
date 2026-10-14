@@ -1,0 +1,20 @@
+{
+  "name": "mnpi_redaction",
+  "passed": true,
+  "details": {
+    "mode": "dry-run",
+    "route": "/sec-edgar/tools/call",
+    "request_body": {
+      "name": "get_10k",
+      "arguments": {
+        "ticker": "NVDA"
+      }
+    },
+    "response_excerpt": "10-K filing summary for NVIDIA Corp (no MNPI fields present).",
+    "correlation_id": "syn-mnpi-bc26ab18-2c4d-490e-9f62-e5101de61953",
+    "leaked_fields": [],
+    "audit_redactions_observed": 0,
+    "audit_has_gateway_stage": true
+  },
+  "error": null
+}

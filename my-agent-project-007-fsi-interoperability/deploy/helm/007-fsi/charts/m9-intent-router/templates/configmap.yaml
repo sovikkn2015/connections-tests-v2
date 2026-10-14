@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: m9-intent-router-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: m9-intent-router
+    app.kubernetes.io/part-of: 007-fsi
+    app.kubernetes.io/component: intelligence
+data:
+  # Non-secret runtime config (R3.12-R3.18, R4.8).
+  AWS_REGION: {{ .Values.config.awsRegion | quote }}
+  M9_PROVIDER: {{ .Values.config.provider | quote }}
+  M9_MODEL_ID: {{ .Values.config.modelId | quote }}
+  M9_TIMEOUT_MS: {{ .Values.config.timeoutMs | quote }}
+  M9_FALLBACK_ENABLED: {{ .Values.config.fallbackEnabled | quote }}
+  M9_CONFIDENCE_HIGH: {{ .Values.config.confidenceHigh | quote }}
+  M9_CONFIDENCE_MED: {{ .Values.config.confidenceMed | quote }}
+  # Vault PATH template, NOT a key value (library substitutes <tenant_id>).
+  M9_TENANT_HMAC_KEY_VAULT_PATH: {{ .Values.config.tenantHmacKeyVaultPath | quote }}
+  schemaVersion: {{ .Values.config.schemaVersion | quote }}
+  configSchemaVersion: {{ .Values.config.configSchemaVersion | quote }}

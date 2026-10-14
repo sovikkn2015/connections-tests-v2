@@ -1,0 +1,24 @@
+{
+  "minMuleVersion": "4.9.0",
+  "name": "submit-order-process-api",
+  "configs": [
+    "submit-order.xml"
+  ],
+  "redeploymentEnabled": true,
+  "secureProperties": [
+    "mule.secure.properties.key"
+  ],
+  "requiredProduct": "MULE_EE",
+  "supportedJavaVersions": ["17"],
+  "classLoaderModelLoaderDescriptor": {
+    "id": "mule",
+    "attributes": {
+      "exportedResources": [
+        "config.yaml",
+        "transforms/alpaca-request.dwl",
+        "transforms/alpaca-response.dwl",
+        "api/submit-order.raml"
+      ]
+    }
+  }
+}

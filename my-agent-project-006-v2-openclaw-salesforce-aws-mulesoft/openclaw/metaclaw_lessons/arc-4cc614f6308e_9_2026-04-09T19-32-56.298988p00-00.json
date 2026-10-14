@@ -1,0 +1,9 @@
+{
+  "run_id": "arc-4cc614f6308e",
+  "stage": 9,
+  "lesson_type": "failure",
+  "detail": "Stage 9 failed permanently: DCF model error: revenue_ttm must be positive",
+  "severity": "error",
+  "ticker": "NVDA",
+  "timestamp": "2026-04-09T19:32:56.298988+00:00"
+}

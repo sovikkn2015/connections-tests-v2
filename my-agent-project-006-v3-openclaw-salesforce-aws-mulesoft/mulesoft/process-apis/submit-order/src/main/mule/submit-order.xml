@@ -1,0 +1,512 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core"
+      xmlns:http="http://www.mulesoft.org/schema/mule/http"
+      xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+      xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="
+        http://www.mulesoft.org/schema/mule/core
+        http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+        http://www.mulesoft.org/schema/mule/http
+        http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+        http://www.mulesoft.org/schema/mule/ee/core
+        http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+
+    <!--
+      Project 006 v3 - submit-order Process API.
+      Three POST endpoints, all validate + forward to Alpaca:
+        POST /api/orders                    -> POST /v2/orders
+        POST /api/orders/{orderId}/cancel   -> DELETE /v2/orders/{orderId}
+        POST /api/orders/{orderId}/modify   -> PATCH  /v2/orders/{orderId}
+      + GET /api/health.
+
+      V3 validation:
+        - 403 if approval_token_hash OR plan_hash missing (HITL gate mimic).
+        - 400 on missing/invalid shape.
+        - 502 on Alpaca 4xx/5xx; 504 on timeout/connectivity.
+
+      Zero creds in this XML - Alpaca key_id/secret come from CloudHub
+      Runtime Manager secure properties at boot time. Referenced directly
+      as ${alpaca.key_id} / ${alpaca.secret}. No YAML secrets file.
+
+      This flow does NOT write IR_Audit_Log__c. The upstream Lambda does that
+      after we return, per steering rule 10.
+    -->
+
+    <configuration-properties file="config.yaml"/>
+
+    <http:listener-config name="submit-order-http-listener-config">
+        <http:listener-connection host="0.0.0.0" port="8081"/>
+    </http:listener-config>
+
+    <http:request-config name="alpaca-paper-api-config"
+                         basePath="${alpaca.endpoint_path}"
+                         responseTimeout="15000">
+        <http:request-connection protocol="HTTPS"
+                                 host="${alpaca.endpoint_host}"
+                                 port="443"/>
+    </http:request-config>
+
+    <!-- ================================================================ -->
+    <!-- POST /api/orders  (submit)                                       -->
+    <!-- ================================================================ -->
+    <flow name="submit-order-main-flow">
+        <http:listener config-ref="submit-order-http-listener-config"
+                       path="/api/orders"
+                       allowedMethods="POST">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[{'Content-Type': 'application/json'}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:headers>#[{'Content-Type': 'application/json'}]</http:headers>
+            </http:error-response>
+        </http:listener>
+
+        <logger level="INFO"
+                message='#["[submit-order] inbound ticker=" ++ (payload.ticker default "?") ++ " side=" ++ (payload.side default "?") ++ " qty=" ++ ((payload.quantity default "?") as String) ++ " plan_hash_prefix=" ++ (if ((payload.plan_hash default "") == "") "NONE" else ((payload.plan_hash as String)[0 to 7])) ++ " token_hash_prefix=" ++ (if ((payload.approval_token_hash default "") == "") "NONE" else ((payload.approval_token_hash as String)[0 to 7]))]'/>
+
+        <choice>
+            <when expression="#[isEmpty(payload.approval_token_hash default '') or isEmpty(payload.plan_hash default '')]">
+                <set-variable variableName="httpStatus" value="403"/>
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  error: "approval_required",
+  message: "plan_hash and approval_token_hash are required (HITL gate mimic)"
+}]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+            </when>
+
+            <when expression='#[
+                isEmpty(payload.ticker default "")
+                or isEmpty(payload.side default "")
+                or (payload.quantity default 0) &lt;= 0
+                or isEmpty(payload.account_id default "")
+            ]'>
+                <set-variable variableName="httpStatus" value="400"/>
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  error: "missing_fields",
+  message: "One or more required fields are missing",
+  missing_fields: [
+    if (isEmpty(payload.ticker default "")) "ticker" else null,
+    if (isEmpty(payload.side default "")) "side" else null,
+    if ((payload.quantity default 0) <= 0) "quantity" else null,
+    if (isEmpty(payload.account_id default "")) "account_id" else null
+  ] filter ($ != null)
+}]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+            </when>
+
+            <otherwise>
+                <ee:transform>
+                    <ee:variables>
+                        <ee:set-variable variableName="normalized"><![CDATA[%dw 2.0
+output application/json
+---
+{
+  ticker: payload.ticker,
+  side: payload.side,
+  quantity: payload.quantity,
+  order_type: payload.order_type default "market",
+  limit_price: payload.limit_price default null,
+  account_id: payload.account_id,
+  plan_hash: payload.plan_hash,
+  approval_token_hash: payload.approval_token_hash
+}]]></ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+
+                <choice>
+                    <when expression="#[(p('mock_mode') default 'false') == 'true']">
+                        <ee:transform>
+                            <ee:message>
+                                <ee:set-payload><![CDATA[%dw 2.0
+import * from dw::Runtime
+output application/json
+var uuid = randomUUID() replace "-" with ""
+---
+{
+  order_id: "MULE-ORDER-" ++ (uuid[0 to 7]),
+  status: "accepted",
+  ticker: vars.normalized.ticker,
+  side: vars.normalized.side,
+  quantity: vars.normalized.quantity,
+  submitted_at: (now() as Number {unit: "seconds"}) as Number {format: "#"},
+  mulesoft_reference: "MS-REF-" ++ (uuid[0 to 11])
+}]]></ee:set-payload>
+                            </ee:message>
+                        </ee:transform>
+                    </when>
+
+                    <otherwise>
+                        <ee:transform>
+                            <ee:message>
+                                <ee:set-payload resource="transforms/alpaca-request.dwl"/>
+                            </ee:message>
+                        </ee:transform>
+
+                        <try>
+                            <http:request method="POST"
+                                          config-ref="alpaca-paper-api-config"
+                                          path="/orders">
+                                <http:headers>#[{
+                                    "APCA-API-KEY-ID": p("alpaca.key_id"),
+                                    "APCA-API-SECRET-KEY": p("alpaca.secret"),
+                                    "Content-Type": "application/json",
+                                    "Accept": "application/json"
+                                }]</http:headers>
+                            </http:request>
+
+                            <error-handler>
+                                <on-error-continue type="HTTP:TIMEOUT, HTTP:CONNECTIVITY">
+                                    <set-variable variableName="httpStatus" value="504"/>
+                                    <logger level="ERROR"
+                                            message='#["[submit-order] Alpaca timeout/connectivity 504. err=" ++ (error.description default "?")]'/>
+                                    <ee:transform>
+                                        <ee:message>
+                                            <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{ error: "upstream_timeout", message: "Downstream broker did not respond in time" }]]></ee:set-payload>
+                                        </ee:message>
+                                    </ee:transform>
+                                </on-error-continue>
+                                <on-error-continue type="ANY">
+                                    <set-variable variableName="httpStatus" value="502"/>
+                                    <logger level="ERROR"
+                                            message='#["[submit-order] Alpaca error 502. err=" ++ (error.description default "?")]'/>
+                                    <ee:transform>
+                                        <ee:message>
+                                            <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{ error: "upstream_error", message: "Downstream broker returned an error" }]]></ee:set-payload>
+                                        </ee:message>
+                                    </ee:transform>
+                                </on-error-continue>
+                            </error-handler>
+                        </try>
+
+                        <choice>
+                            <when expression="#[(vars.httpStatus default 200) == 200]">
+                                <ee:transform>
+                                    <ee:message>
+                                        <ee:set-payload resource="transforms/alpaca-response.dwl"/>
+                                    </ee:message>
+                                </ee:transform>
+                            </when>
+                            <otherwise>
+                                <logger level="DEBUG" message='#["[submit-order] error passthrough status=" ++ ((vars.httpStatus default 500) as String)]'/>
+                            </otherwise>
+                        </choice>
+                    </otherwise>
+                </choice>
+
+                <logger level="INFO"
+                        message='#["[submit-order] SUBMITTED order_id=" ++ (payload.order_id default "?") ++ " ref=" ++ (payload.mulesoft_reference default "?") ++ " status=" ++ (payload.status default "?")]'/>
+            </otherwise>
+        </choice>
+    </flow>
+
+    <!-- ================================================================ -->
+    <!-- POST /api/orders/{orderId}/cancel                                -->
+    <!-- ================================================================ -->
+    <flow name="cancel-order-flow">
+        <http:listener config-ref="submit-order-http-listener-config"
+                       path="/api/orders/{orderId}/cancel"
+                       allowedMethods="POST">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[{'Content-Type': 'application/json'}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:headers>#[{'Content-Type': 'application/json'}]</http:headers>
+            </http:error-response>
+        </http:listener>
+
+        <set-variable variableName="orderId" value="#[attributes.uriParams.orderId]"/>
+
+        <choice>
+            <when expression="#[isEmpty(payload.approval_token_hash default '') or isEmpty(payload.plan_hash default '')]">
+                <set-variable variableName="httpStatus" value="403"/>
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{ error: "approval_required", message: "plan_hash and approval_token_hash are required" }]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+            </when>
+
+            <otherwise>
+                <choice>
+                    <when expression="#[(p('mock_mode') default 'false') == 'true']">
+                        <ee:transform>
+                            <ee:message>
+                                <ee:set-payload><![CDATA[%dw 2.0
+import * from dw::Runtime
+output application/json
+var uuid = randomUUID() replace "-" with ""
+---
+{
+  order_id: vars.orderId,
+  status: "canceled",
+  ticker: "UNKNOWN",
+  side: "buy",
+  quantity: 0,
+  submitted_at: (now() as Number {unit: "seconds"}) as Number {format: "#"},
+  mulesoft_reference: "MS-REF-" ++ (uuid[0 to 11])
+}]]></ee:set-payload>
+                            </ee:message>
+                        </ee:transform>
+                    </when>
+
+                    <otherwise>
+                        <try>
+                            <http:request method="DELETE"
+                                          config-ref="alpaca-paper-api-config"
+                                          path="#['/orders/' ++ vars.orderId]">
+                                <http:headers>#[{
+                                    "APCA-API-KEY-ID": p("alpaca.key_id"),
+                                    "APCA-API-SECRET-KEY": p("alpaca.secret"),
+                                    "Accept": "application/json"
+                                }]</http:headers>
+                            </http:request>
+                            <error-handler>
+                                <on-error-continue type="HTTP:TIMEOUT, HTTP:CONNECTIVITY">
+                                    <set-variable variableName="httpStatus" value="504"/>
+                                    <ee:transform>
+                                        <ee:message>
+                                            <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{ error: "upstream_timeout", message: "Downstream broker did not respond in time" }]]></ee:set-payload>
+                                        </ee:message>
+                                    </ee:transform>
+                                </on-error-continue>
+                                <on-error-continue type="ANY">
+                                    <set-variable variableName="httpStatus" value="502"/>
+                                    <ee:transform>
+                                        <ee:message>
+                                            <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{ error: "upstream_error", message: "Downstream broker returned an error" }]]></ee:set-payload>
+                                        </ee:message>
+                                    </ee:transform>
+                                </on-error-continue>
+                            </error-handler>
+                        </try>
+
+                        <choice>
+                            <when expression="#[(vars.httpStatus default 200) == 200]">
+                                <ee:transform>
+                                    <ee:message>
+                                        <ee:set-payload><![CDATA[%dw 2.0
+import * from dw::Runtime
+import * from dw::Crypto
+output application/json
+var uuid = dw::Crypto::SHA1((now() as String) as Binary) replace "-" with ""
+---
+{
+  order_id: "ALPACA-" ++ vars.orderId,
+  status: "canceled",
+  ticker: payload.symbol default "UNKNOWN",
+  side: payload.side default "buy",
+  quantity: (payload.qty default "0") as Number,
+  submitted_at: (now() as Number {unit: "seconds"}) as Number {format: "#"},
+  mulesoft_reference: "MS-REF-" ++ (uuid[0 to 11])
+}]]></ee:set-payload>
+                                    </ee:message>
+                                </ee:transform>
+                            </when>
+                            <otherwise>
+                                <logger level="DEBUG" message="#['[cancel-order] error passthrough']"/>
+                            </otherwise>
+                        </choice>
+                    </otherwise>
+                </choice>
+            </otherwise>
+        </choice>
+    </flow>
+
+    <!-- ================================================================ -->
+    <!-- POST /api/orders/{orderId}/modify                                -->
+    <!-- ================================================================ -->
+    <flow name="modify-order-flow">
+        <http:listener config-ref="submit-order-http-listener-config"
+                       path="/api/orders/{orderId}/modify"
+                       allowedMethods="POST">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[{'Content-Type': 'application/json'}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:headers>#[{'Content-Type': 'application/json'}]</http:headers>
+            </http:error-response>
+        </http:listener>
+
+        <set-variable variableName="orderId" value="#[attributes.uriParams.orderId]"/>
+
+        <choice>
+            <when expression="#[isEmpty(payload.approval_token_hash default '') or isEmpty(payload.plan_hash default '')]">
+                <set-variable variableName="httpStatus" value="403"/>
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{ error: "approval_required", message: "plan_hash and approval_token_hash are required" }]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+            </when>
+
+            <when expression="#[(payload.limit_price default 0) &lt;= 0]">
+                <set-variable variableName="httpStatus" value="400"/>
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{ error: "missing_fields", message: "limit_price required and must be > 0", missing_fields: ["limit_price"] }]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+            </when>
+
+            <otherwise>
+                <choice>
+                    <when expression="#[(p('mock_mode') default 'false') == 'true']">
+                        <ee:transform>
+                            <ee:message>
+                                <ee:set-payload><![CDATA[%dw 2.0
+import * from dw::Runtime
+output application/json
+var uuid = randomUUID() replace "-" with ""
+---
+{
+  order_id: vars.orderId,
+  status: "new",
+  ticker: "UNKNOWN",
+  side: "buy",
+  quantity: 0,
+  submitted_at: (now() as Number {unit: "seconds"}) as Number {format: "#"},
+  mulesoft_reference: "MS-REF-" ++ (uuid[0 to 11])
+}]]></ee:set-payload>
+                            </ee:message>
+                        </ee:transform>
+                    </when>
+
+                    <otherwise>
+                        <set-variable variableName="newLimitPrice" value="#[payload.limit_price]"/>
+                        <ee:transform>
+                            <ee:message>
+                                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{ limit_price: vars.newLimitPrice as String }]]></ee:set-payload>
+                            </ee:message>
+                        </ee:transform>
+                        <try>
+                            <http:request method="PATCH"
+                                          config-ref="alpaca-paper-api-config"
+                                          path="#['/orders/' ++ vars.orderId]">
+                                <http:headers>#[{
+                                    "APCA-API-KEY-ID": p("alpaca.key_id"),
+                                    "APCA-API-SECRET-KEY": p("alpaca.secret"),
+                                    "Content-Type": "application/json",
+                                    "Accept": "application/json"
+                                }]</http:headers>
+                            </http:request>
+                            <error-handler>
+                                <on-error-continue type="HTTP:TIMEOUT, HTTP:CONNECTIVITY">
+                                    <set-variable variableName="httpStatus" value="504"/>
+                                    <ee:transform>
+                                        <ee:message>
+                                            <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{ error: "upstream_timeout", message: "Downstream broker did not respond in time" }]]></ee:set-payload>
+                                        </ee:message>
+                                    </ee:transform>
+                                </on-error-continue>
+                                <on-error-continue type="ANY">
+                                    <set-variable variableName="httpStatus" value="502"/>
+                                    <ee:transform>
+                                        <ee:message>
+                                            <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{ error: "upstream_error", message: "Downstream broker returned an error" }]]></ee:set-payload>
+                                        </ee:message>
+                                    </ee:transform>
+                                </on-error-continue>
+                            </error-handler>
+                        </try>
+                        <choice>
+                            <when expression="#[(vars.httpStatus default 200) == 200]">
+                                <ee:transform>
+                                    <ee:message>
+                                        <ee:set-payload><![CDATA[%dw 2.0
+import * from dw::Runtime
+import * from dw::Crypto
+output application/json
+var uuid = dw::Crypto::SHA1((now() as String) as Binary) replace "-" with ""
+---
+{
+  order_id: "ALPACA-" ++ (payload.id default vars.orderId),
+  status: payload."status" default "new",
+  ticker: payload.symbol default "UNKNOWN",
+  side: payload.side default "buy",
+  quantity: (payload.qty default "0") as Number,
+  submitted_at: (now() as Number {unit: "seconds"}) as Number {format: "#"},
+  mulesoft_reference: "MS-REF-" ++ (uuid[0 to 11])
+}]]></ee:set-payload>
+                                    </ee:message>
+                                </ee:transform>
+                            </when>
+                            <otherwise>
+                                <logger level="DEBUG" message="#['[modify-order] error passthrough']"/>
+                            </otherwise>
+                        </choice>
+                    </otherwise>
+                </choice>
+            </otherwise>
+        </choice>
+    </flow>
+
+    <!-- ================================================================ -->
+    <!-- GET /api/health                                                  -->
+    <!-- ================================================================ -->
+    <flow name="submit-order-health-flow">
+        <http:listener config-ref="submit-order-http-listener-config"
+                       path="/api/health"
+                       allowedMethods="GET">
+            <http:response statusCode="200">
+                <http:headers>#[{'Content-Type': 'application/json'}]</http:headers>
+            </http:response>
+        </http:listener>
+        <ee:transform>
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  status: "ok",
+  mode: if ((p('mock_mode') default 'false') == 'true') "mock" else "alpaca-paper",
+  api: "submit-order-process-api",
+  version: "v3"
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+    </flow>
+
+</mule>

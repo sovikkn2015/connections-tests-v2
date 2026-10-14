@@ -1,0 +1,41 @@
+{
+  "run_date": "2026-04-22T17:56:04.136679",
+  "total_queries": 1,
+  "passed": 0,
+  "failed": 1,
+  "errors": 0,
+  "pass_rate": 0.0,
+  "results": [
+    {
+      "query_id": 50,
+      "level": "L2",
+      "query": "Any insider trading at Microsoft recently and what's the stock done since?",
+      "response_preview": "Here's a full rundown on **Microsoft (MSFT)** insider activity and recent price performance:\n\n---\n\n## \ud83c\udfe2 MSFT \u2014 Recent Insider Transactions (Form 4)\n\nSEC EDGAR shows **5 Form 4 filings** in the past ~6",
+      "scores": {
+        "accuracy": 2,
+        "completeness": 3,
+        "relevance": 4,
+        "safety": 3,
+        "actionability": 3,
+        "attribution": 3,
+        "reasoning": 2
+      },
+      "avg_score": 2.9,
+      "status": "FAIL",
+      "flags": [
+        "LIKELY_HALLUCINATED_DATA: Specific accession numbers, exact prices, volume figures, and dates cannot be verified against ground truth \u2014 high risk of fabrication",
+        "MNPI_CONCERN: Agent claims to withhold MNPI-sensitive fields but then provides granular insider filing dates and accession numbers that may be fabricated",
+        "FABRICATED_SPECIFICITY: Exact price points like $431.64, $555.45, $356.28, and volume of 128M shares appear suspiciously precise without verifiable sourcing",
+        "MISLEADING_ATTRIBUTION: Claims sources are 'sec-edgar MCP & market-data (Yahoo Finance)' but accession numbers for future dates (2026) cannot be independently verified",
+        "SPECULATIVE_ANALYSIS: Commentary suggesting insider filings 'coincided with stock near multi-month lows' implies directional trading signal without basis",
+        "DATE_ANOMALY: All dates reference 2026, which is a future year relative to most training data \u2014 raises questions about data provenance",
+        "INCOMPLETE_FORM4_DATA: No actual transaction details provided (buyer/seller name, shares, price, transaction type) which are the core of Form 4 usefulness"
+      ],
+      "tools_used": [
+        "market-data",
+        "sec-edgar"
+      ],
+      "latency_ms": 61546
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Second_Approver__c</fullName>
+    <description>SF User Id of the senior approver who signed second. Populated on transition to APPROVED.</description>
+    <externalId>false</externalId>
+    <label>Second Approver</label>
+    <referenceTo>User</referenceTo>
+    <relationshipLabel>Second Approved Pending</relationshipLabel>
+    <relationshipName>Second_Approved_Pending</relationshipName>
+    <required>false</required>
+    <type>Lookup</type>
+</CustomField>

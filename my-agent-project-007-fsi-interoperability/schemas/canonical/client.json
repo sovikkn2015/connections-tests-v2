@@ -1,0 +1,576 @@
+{
+  "$defs": {
+    "ClientVendorFidelity": {
+      "description": "Fidelity client identifiers.",
+      "properties": {
+        "customer_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Fidelity customer ID.",
+          "title": "Customer Id"
+        }
+      },
+      "title": "ClientVendorFidelity",
+      "type": "object"
+    },
+    "ClientVendorMappings": {
+      "description": "Preserves vendor-specific client identifiers across 4 vendors.",
+      "properties": {
+        "salesforce_fsc": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ClientVendorSalesforceFSC"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Salesforce FSC mapping."
+        },
+        "orion": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ClientVendorOrion"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Orion mapping."
+        },
+        "schwab": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ClientVendorSchwab"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Schwab mapping."
+        },
+        "fidelity": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ClientVendorFidelity"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Fidelity mapping."
+        }
+      },
+      "title": "ClientVendorMappings",
+      "type": "object"
+    },
+    "ClientVendorOrion": {
+      "description": "Orion client identifiers.",
+      "properties": {
+        "client_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Orion client ID.",
+          "title": "Client Id"
+        },
+        "representative_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Orion representative ID.",
+          "title": "Representative Id"
+        }
+      },
+      "title": "ClientVendorOrion",
+      "type": "object"
+    },
+    "ClientVendorSalesforceFSC": {
+      "description": "Salesforce FSC client identifiers.",
+      "properties": {
+        "account_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "SF FSC Account ID.",
+          "title": "Account Id"
+        },
+        "contact_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "SF FSC Contact ID.",
+          "title": "Contact Id"
+        },
+        "person_account": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "True if Person Account model.",
+          "title": "Person Account"
+        }
+      },
+      "title": "ClientVendorSalesforceFSC",
+      "type": "object"
+    },
+    "ClientVendorSchwab": {
+      "description": "Schwab client identifiers.",
+      "properties": {
+        "account_holder_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Schwab account holder ID.",
+          "title": "Account Holder Id"
+        }
+      },
+      "title": "ClientVendorSchwab",
+      "type": "object"
+    },
+    "Reconciliation": {
+      "description": "Tracks cross-vendor agreement for types with multiple vendor sources.",
+      "properties": {
+        "sources_agree": {
+          "description": "True if all vendor sources agree on data.",
+          "title": "Sources Agree",
+          "type": "boolean"
+        },
+        "discrepancies": {
+          "description": "List of disagreements between sources \u2014 flagged for SME review.",
+          "items": {
+            "type": "string"
+          },
+          "title": "Discrepancies",
+          "type": "array"
+        },
+        "last_reconciled": {
+          "description": "When reconciliation last ran (ISO 8601).",
+          "format": "date-time",
+          "title": "Last Reconciled",
+          "type": "string"
+        }
+      },
+      "required": [
+        "sources_agree",
+        "last_reconciled"
+      ],
+      "title": "Reconciliation",
+      "type": "object"
+    }
+  },
+  "description": "Canonical FSI client profile. PII fields marked with x-pii for M4 MNPI filtering.",
+  "properties": {
+    "canonical_id": {
+      "description": "Primary key for canonical client record.",
+      "format": "uuid",
+      "title": "Canonical Id",
+      "type": "string"
+    },
+    "display_name": {
+      "description": "Human-readable display name.",
+      "maxLength": 255,
+      "minLength": 1,
+      "title": "Display Name",
+      "type": "string"
+    },
+    "client_type": {
+      "description": "Legal classification: individual, entity, trust.",
+      "title": "Client Type",
+      "type": "string"
+    },
+    "first_name": {
+      "anyOf": [
+        {
+          "maxLength": 100,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Given name (individual only). Excludes entity names.",
+      "title": "First Name"
+    },
+    "last_name": {
+      "anyOf": [
+        {
+          "maxLength": 100,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Family name (individual only). Excludes entity names.",
+      "title": "Last Name"
+    },
+    "email": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Client email address. PII \u2014 M4 strips for non-authorized roles.",
+      "title": "Email",
+      "x-pii": true
+    },
+    "phone": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Client phone number. PII \u2014 M4 strips for non-authorized roles.",
+      "title": "Phone",
+      "x-pii": true
+    },
+    "date_of_birth": {
+      "anyOf": [
+        {
+          "format": "date",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Date of birth. PII \u2014 M4 strips for non-authorized roles.",
+      "title": "Date Of Birth",
+      "x-pii": true
+    },
+    "ssn_last_four": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Last four SSN digits only. Full SSN never stored. PII.",
+      "title": "Ssn Last Four",
+      "x-pii": true
+    },
+    "tax_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "EIN for entities/trusts. PII \u2014 M4 strips.",
+      "title": "Tax Id",
+      "x-pii": true
+    },
+    "risk_tolerance": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Suitability result: conservative, moderately_conservative, moderate, moderately_aggressive, aggressive.",
+      "title": "Risk Tolerance"
+    },
+    "investment_objectives": {
+      "description": "Objectives: growth, income, capital_preservation, speculation, balanced.",
+      "items": {
+        "type": "string"
+      },
+      "title": "Investment Objectives",
+      "type": "array"
+    },
+    "time_horizon": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Investment time horizon: short_term (<3y), medium_term (3-10y), long_term (>10y).",
+      "title": "Time Horizon"
+    },
+    "annual_income_range": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Self-reported income bracket.",
+      "title": "Annual Income Range"
+    },
+    "net_worth_range": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Self-reported total net worth bracket.",
+      "title": "Net Worth Range"
+    },
+    "liquid_net_worth_range": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Liquid net worth \u2014 excludes primary residence.",
+      "title": "Liquid Net Worth Range"
+    },
+    "tax_bracket": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Client tax bracket.",
+      "title": "Tax Bracket"
+    },
+    "advisor_ref": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Canonical Advisor ID.",
+      "title": "Advisor Ref"
+    },
+    "firm_id": {
+      "description": "Canonical Firm ID.",
+      "format": "uuid",
+      "title": "Firm Id",
+      "type": "string"
+    },
+    "household_ref": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Canonical Household ID.",
+      "title": "Household Ref"
+    },
+    "archetype": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Client segmentation: mass_affluent, hnw, uhnw.",
+      "title": "Archetype"
+    },
+    "jurisdiction": {
+      "description": "Primary regulatory jurisdiction (US, US-CA, UK, EU, SG, HK).",
+      "title": "Jurisdiction",
+      "type": "string"
+    },
+    "accounts": {
+      "description": "Canonical Account IDs linked to this client.",
+      "items": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "title": "Accounts",
+      "type": "array"
+    },
+    "kyc_status": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "KYC verification status: pending, verified, expired, failed.",
+      "title": "Kyc Status"
+    },
+    "kyc_verified_date": {
+      "anyOf": [
+        {
+          "format": "date",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Date KYC was last verified.",
+      "title": "Kyc Verified Date"
+    },
+    "pii_classification": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": "confidential",
+      "description": "Data classification: public, internal, confidential, restricted.",
+      "title": "Pii Classification"
+    },
+    "vendor_mappings": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ClientVendorMappings"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Preserves vendor-specific client identifiers."
+    },
+    "reconciliation": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Reconciliation"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Cross-vendor agreement tracking."
+    },
+    "source_system": {
+      "description": "Source system that provided this client record.",
+      "title": "Source System",
+      "type": "string"
+    },
+    "source_id": {
+      "description": "Vendor-specific client ID.",
+      "title": "Source Id",
+      "type": "string"
+    },
+    "created_at": {
+      "description": "Record creation timestamp.",
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "updated_at": {
+      "description": "Record last update timestamp.",
+      "format": "date-time",
+      "title": "Updated At",
+      "type": "string"
+    }
+  },
+  "required": [
+    "canonical_id",
+    "display_name",
+    "client_type",
+    "firm_id",
+    "jurisdiction",
+    "source_system",
+    "source_id",
+    "created_at",
+    "updated_at"
+  ],
+  "title": "Client",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://007.fsi/schemas/canonical/client/v0.1.0"
+}

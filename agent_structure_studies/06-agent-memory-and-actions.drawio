@@ -1,0 +1,99 @@
+<mxfile host="draw.io" modified="2026-04-05T00:00:00.000Z" agent="draw.io" version="24.0.0" type="device">
+  <diagram id="memory-actions-06" name="Agent Memory &amp; Actions">
+    <mxGraphModel dx="1400" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="1000" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- TITLE -->
+        <mxCell id="title" value="&lt;b style=&quot;font-size:16px;&quot;&gt;Agent Memory, Actions &amp; Function-Calling Architecture&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="350" y="10" width="700" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- MEMORY SYSTEM -->
+        <mxCell id="mem" value="&lt;b&gt;Session Memory System&lt;/b&gt;" style="swimlane;startSize=25;fillColor=#DAE8FC;fontColor=#333333;strokeColor=#6C8EBF;strokeWidth=2;rounded=1;arcSize=5;shadow=1;html=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="30" y="50" width="650" height="250" as="geometry" />
+        </mxCell>
+        <mxCell id="m1" value="&lt;b&gt;Context Variables&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px;&quot;&gt;(Auto-populated)&lt;/font&gt;&lt;br&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px;&quot;&gt;• Logged-in user identity&lt;br&gt;• User permissions&lt;br&gt;• Account details&lt;br&gt;• No extra queries needed&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#6C8EBF;strokeWidth=2;fontSize=10;shadow=1;" vertex="1" parent="mem">
+          <mxGeometry x="20" y="40" width="190" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="m2" value="&lt;b&gt;Custom Variables&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px;&quot;&gt;(Flexible containers)&lt;/font&gt;&lt;br&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px;&quot;&gt;• Store action outputs&lt;br&gt;• Pass data between actions&lt;br&gt;• Inputs/outputs for future&lt;br&gt;• No preset mappings&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#6C8EBF;strokeWidth=2;fontSize=10;shadow=1;" vertex="1" parent="mem">
+          <mxGeometry x="230" y="40" width="190" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="m3" value="&lt;b&gt;Conversation History&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px;&quot;&gt;(Last 6 turns)&lt;/font&gt;&lt;br&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px;&quot;&gt;• Retained in prompt context&lt;br&gt;• Session ID tracking&lt;br&gt;• Summary on completion&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#6C8EBF;strokeWidth=2;fontSize=10;shadow=1;" vertex="1" parent="mem">
+          <mxGeometry x="440" y="40" width="190" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="m_lifecycle" value="&lt;font style=&quot;font-size:9px;&quot;&gt;&lt;b&gt;Session Lifecycle:&lt;/b&gt; Create → Assign ID → Load memory → Update vars → Generate summary&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E6E6E6;strokeColor=#999999;fontSize=9;" vertex="1" parent="mem">
+          <mxGeometry x="20" y="175" width="610" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- ACTION TYPES -->
+        <mxCell id="actions" value="&lt;b&gt;Action Types&lt;/b&gt;" style="swimlane;startSize=25;fillColor=#FFF2CC;fontColor=#333333;strokeColor=#D6B656;strokeWidth=2;rounded=1;arcSize=5;shadow=1;html=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="710" y="50" width="660" height="250" as="geometry" />
+        </mxCell>
+        <mxCell id="a_std" value="&lt;b&gt;Standard Actions&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px;&quot;&gt;(Pre-configured)&lt;/font&gt;&lt;br&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px;&quot;&gt;• Find records by name&lt;br&gt;• Query data&lt;br&gt;• Summarize records&lt;br&gt;• No setup needed&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#D6B656;strokeWidth=2;fontSize=10;shadow=1;" vertex="1" parent="actions">
+          <mxGeometry x="20" y="40" width="150" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="a_flow" value="&lt;b&gt;Flow Actions&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px;&quot;&gt;Autolaunched Flows&lt;br&gt;Complex business logic&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;fontSize=10;shadow=1;" vertex="1" parent="actions">
+          <mxGeometry x="190" y="40" width="140" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="a_apex" value="&lt;b&gt;Apex Actions&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px;&quot;&gt;@InvocableMethod&lt;br&gt;Sophisticated logic&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1B96FF;strokeColor=#0176D3;fontColor=#FFFFFF;fontSize=10;shadow=1;" vertex="1" parent="actions">
+          <mxGeometry x="350" y="40" width="140" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="a_api" value="&lt;b&gt;API Actions&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px;&quot;&gt;REST / MuleSoft&lt;br&gt;External systems&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8CECC;strokeColor=#B85450;fontSize=10;shadow=1;" vertex="1" parent="actions">
+          <mxGeometry x="510" y="40" width="130" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="a_prompt" value="&lt;b&gt;Prompt Template&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px;&quot;&gt;Prompt Builder&lt;br&gt;Dynamic responses&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1D5E7;strokeColor=#9673A6;fontSize=10;shadow=1;" vertex="1" parent="actions">
+          <mxGeometry x="190" y="105" width="140" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="a_script" value="&lt;b&gt;Agent Script (Beta)&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px;&quot;&gt;YAML deterministic logic&lt;br&gt;Control transitions (v64+)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;fontSize=10;shadow=1;dashed=1;" vertex="1" parent="actions">
+          <mxGeometry x="350" y="105" width="140" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="a_note" value="&lt;font style=&quot;font-size:9px;&quot;&gt;&lt;b&gt;Best practice:&lt;/b&gt; 8-10 actions per topic | 10-15 topics per agent | 1 action per utterance (chaining coming)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E6E6E6;strokeColor=#999999;fontSize=9;" vertex="1" parent="actions">
+          <mxGeometry x="20" y="175" width="620" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- FUNCTION CALLING FLOW -->
+        <mxCell id="fc" value="&lt;b&gt;Function-Calling Orchestration (Runtime)&lt;/b&gt;" style="swimlane;startSize=25;fillColor=#D5E8D4;fontColor=#333333;strokeColor=#82B366;strokeWidth=2;rounded=1;arcSize=5;shadow=1;html=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="30" y="330" width="1340" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="f1" value="&lt;b&gt;1. LLM Analyzes&lt;br&gt;Intent&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:8px;&quot;&gt;Creates structured&lt;br&gt;function call with&lt;br&gt;name + arguments&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#82B366;strokeWidth=2;fontSize=10;shadow=1;" vertex="1" parent="fc">
+          <mxGeometry x="20" y="35" width="170" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="f2" value="&lt;b&gt;2. Orchestration&lt;br&gt;Layer&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:8px;&quot;&gt;Validates function name&lt;br&gt;Checks permissions&lt;br&gt;Validates arguments&lt;br&gt;Applies filters&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#82B366;strokeWidth=2;fontSize=10;shadow=1;" vertex="1" parent="fc">
+          <mxGeometry x="230" y="35" width="170" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="f3" value="&lt;b&gt;3. Action&lt;br&gt;Execution&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:8px;&quot;&gt;Apex/Flow/API invoked&lt;br&gt;with proper security&lt;br&gt;context&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1B96FF;strokeColor=#0176D3;strokeWidth=2;fontSize=10;fontColor=#FFFFFF;shadow=1;" vertex="1" parent="fc">
+          <mxGeometry x="440" y="35" width="170" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="f4" value="&lt;b&gt;4. Result to&lt;br&gt;Context&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:8px;&quot;&gt;Output → custom var&lt;br&gt;Added to conversation&lt;br&gt;May trigger next cycle&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#82B366;strokeWidth=2;fontSize=10;shadow=1;" vertex="1" parent="fc">
+          <mxGeometry x="650" y="35" width="170" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="f5" value="&lt;b&gt;5. Natural Language&lt;br&gt;Response&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:8px;&quot;&gt;LLM generates human-&lt;br&gt;readable response from&lt;br&gt;action results&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;strokeWidth=2;fontSize=10;shadow=1;" vertex="1" parent="fc">
+          <mxGeometry x="860" y="35" width="170" height="85" as="geometry" />
+        </mxCell>
+
+        <!-- FC arrows -->
+        <mxCell id="ff12" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#333333;" edge="1" source="f1" target="f2" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="ff23" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#333333;" edge="1" source="f2" target="f3" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="ff34" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#333333;" edge="1" source="f3" target="f4" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="ff45" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#333333;" edge="1" source="f4" target="f5" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <!-- CONDITIONAL FILTERING -->
+        <mxCell id="cf" value="&lt;b&gt;Conditional Filtering (Topic &amp; Action Gating)&lt;/b&gt;" style="swimlane;startSize=25;fillColor=#E1D5E7;fontColor=#333333;strokeColor=#9673A6;strokeWidth=2;rounded=1;arcSize=5;shadow=1;html=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="30" y="500" width="1340" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="cf1" value="&lt;b&gt;Topic Filters&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px;&quot;&gt;Control which topics are visible&lt;br&gt;&lt;br&gt;Example:&lt;br&gt;authenticationStatus = 'verified'&lt;br&gt;→ Topic available only if user verified&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#9673A6;strokeWidth=2;fontSize=10;shadow=1;" vertex="1" parent="cf">
+          <mxGeometry x="20" y="35" width="300" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="cf2" value="&lt;b&gt;Action Filters&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px;&quot;&gt;Control action sequencing&lt;br&gt;&lt;br&gt;Example:&lt;br&gt;orderNumber != null&lt;br&gt;→ Refund action unlocked after lookup&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#9673A6;strokeWidth=2;fontSize=10;shadow=1;" vertex="1" parent="cf">
+          <mxGeometry x="350" y="35" width="300" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="cf3" value="&lt;b&gt;Key Difference&lt;/b&gt;&lt;br&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;&quot;&gt;&lt;b&gt;Instructions&lt;/b&gt; = guide decisions WITHIN available options&lt;br&gt;&lt;b&gt;Filters&lt;/b&gt; = decide WHICH options appear in the first place&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;strokeWidth=2;fontSize=10;shadow=1;" vertex="1" parent="cf">
+          <mxGeometry x="680" y="35" width="400" height="80" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

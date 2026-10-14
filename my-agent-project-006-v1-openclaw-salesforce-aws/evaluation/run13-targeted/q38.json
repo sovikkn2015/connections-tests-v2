@@ -1,0 +1,38 @@
+{
+  "run_date": "2026-04-22T17:43:42.057822",
+  "total_queries": 1,
+  "passed": 1,
+  "failed": 0,
+  "errors": 0,
+  "pass_rate": 100.0,
+  "results": [
+    {
+      "query_id": 38,
+      "level": "L2",
+      "query": "Which clients hold AAPL and what's their total exposure?",
+      "response_preview": "Here's what the CRM data shows for **Apple Inc. (AAPL)**:\n\n---\n\n### \u26a0\ufe0f Client Holdings Exposure: Not Available in CRM\n\nThe connected Salesforce org uses an **Investor Relations (IR) schema** \u2014 it trac",
+      "scores": {
+        "accuracy": 3,
+        "completeness": 3,
+        "relevance": 4,
+        "safety": 5,
+        "actionability": 4,
+        "attribution": 4,
+        "reasoning": 4
+      },
+      "avg_score": 3.9,
+      "status": "PASS",
+      "flags": [
+        "Cannot verify AAPL market price of $273.51 against ground truth \u2014 may be stale or incorrect",
+        "No ground truth available to confirm Salesforce record IDs or analyst names",
+        "Query could not be fully answered due to schema limitations \u2014 partial response",
+        "Agent assumes IR schema without confirming whether FSC holdings objects exist under different names"
+      ],
+      "tools_used": [
+        "market-data",
+        "salesforce-crm"
+      ],
+      "latency_ms": 93718
+    }
+  ]
+}

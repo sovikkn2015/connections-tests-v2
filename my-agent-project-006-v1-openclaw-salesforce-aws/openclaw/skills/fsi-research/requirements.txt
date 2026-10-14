@@ -1,0 +1,16 @@
+# FSI Research Pipeline — Python dependencies
+# Project 006: OpenClaw + Salesforce + AWS
+
+# HTTP client for MCP tool calls and Salesforce REST API
+requests>=2.31.0,<3.0
+
+# Langfuse observability (dual-write: engineering traces + regulatory audit)
+langfuse>=2.0.0,<3.0
+
+# Financial modeling dependencies (used by sibling skill: financial-analysis)
+numpy>=1.26.0,<2.0
+pandas>=2.1.0,<3.0
+scipy>=1.11.0,<2.0
+
+# YAML config parsing (config.arc.yaml)
+pyyaml>=6.0,<7.0

@@ -1,0 +1,60 @@
+# Flex Gateway self-managed API definition — V3-B committed architecture.
+# Binds a single API instance "fsi-mcp-servers" that proxies the V2 API
+# Gateway via an nginx sidecar, then attaches PolicyBindings from
+# ../policies/ + an inline header-injection policy that injects the V2
+# x-api-key on every outbound request.
+#
+# Self-managed mode means: no Anypoint API Manager registration required.
+# Flex picks this file up from the conf.d/custom/ mount and wires Envoy
+# directly.
+#
+# UPSTREAM: nginx sidecar on 127.0.0.1:8082
+# -----------------------------------------
+# Flex Gateway / Envoy cannot rewrite the outbound Host header / SNI for
+# the V2 API Gateway (og256a1neb), which is EDGE-optimized and fronted
+# by CloudFront. CloudFront returns HTTP 400 to any request whose Host
+# header isn't og256a1neb.execute-api.us-east-1.amazonaws.com.
+#
+# Option C from docs/v3-b-infra-debug-findings.md — an nginx sidecar
+# inside the same ECS task — solves this without modifying V2. The
+# sidecar:
+#   • listens on loopback 127.0.0.1:8082 (no external port mapping)
+#   • rewrites Host to og256a1neb.execute-api.us-east-1.amazonaws.com
+#   • sets SNI correctly for the CloudFront distribution
+#   • enforces proxy_ssl_verify on against the CA bundle
+#   • forwards the x-api-key header that Flex injected inbound
+#
+# See:
+#   • aws/nginx-sidecar/nginx.conf           — upstream rewrite rules
+#   • aws/nginx-sidecar/Dockerfile           — image definition
+#   • scripts/deploy-nginx-sidecar.sh        — deploy pipeline
+#   • docs/v3-b-nginx-sidecar.md             — ops runbook
+#   • docs/v3-b-infra-debug-findings.md      — why Option C
+#
+# Rollback: revert this file's upstream address to
+# https://og256a1neb.execute-api.us-east-1.amazonaws.com/prod/ and run
+# scripts/apply-flex-config-v2.sh. The sidecar will still run (harmless)
+# and Flex will call APIGW directly (returning 400 again).
+apiVersion: gateway.mulesoft.com/v1alpha1
+kind: ApiInstance
+metadata:
+  name: fsi-mcp-servers
+spec:
+  # Flex listens on 8081; the ALB forwards traffic-port to this address.
+  address: http://0.0.0.0:8081
+
+  services:
+    v2-apigw:
+      # nginx sidecar on loopback. Sidecar rewrites Host + SNI to the
+      # V2 APIGW hostname before forwarding over TLS to CloudFront.
+      # DO NOT change to https://og256a1neb... directly — that returns
+      # HTTP 400 from CloudFront (Host mismatch). See comment block above.
+      address: http://127.0.0.1:8082/
+      routes:
+        - config:
+            # {+wildcard} captures everything after the match and preserves
+            # the slashes (vs {wildcard} which URL-encodes them).
+            destinationPath: /{+wildcard}
+          rules:
+            # Capture every path after the root under a named group.
+            - path: /(?P<wildcard>.*)

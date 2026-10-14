@@ -1,0 +1,18 @@
+apiVersion: v2
+name: 007-wedge
+description: |
+  007 Wedge Product — Compliance Proxy for MCP.
+  M1 (AID) + M2/M4 (OPA authority + MNPI) + M6 (Trust Gateway) + M10 (3-tier WORM audit).
+  Sits between any MCP client and any MCP server. Identity verified, authority checked,
+  MNPI filtered, WORM audited. Ships at Phase 1 Week 14-18 per 007-consolidated-design.
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords:
+  - fsi
+  - mcp
+  - trust-layer
+  - compliance-proxy
+  - wedge
+maintainers:
+  - name: 007 Platform Team

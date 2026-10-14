@@ -1,0 +1,40 @@
+{
+  "run_date": "2026-04-22T17:39:09.929109",
+  "total_queries": 1,
+  "passed": 0,
+  "failed": 1,
+  "errors": 0,
+  "pass_rate": 0.0,
+  "results": [
+    {
+      "query_id": 34,
+      "level": "L2",
+      "query": "How has GOOGL stock reacted to the last 4 earnings?",
+      "response_preview": "Here is GOOGL's stock reaction around its last four earnings events, derived from daily price and volume data. Earnings dates below are estimated from Google's typical quarterly reporting schedule (al",
+      "scores": {
+        "accuracy": 1,
+        "completeness": 3,
+        "relevance": 4,
+        "safety": 3,
+        "actionability": 3,
+        "attribution": 2,
+        "reasoning": 2
+      },
+      "avg_score": 2.6,
+      "status": "FAIL",
+      "flags": [
+        "FABRICATED_DATA: Q2 2025, Q3 2025, Q4 2025, and Q2 2026 earnings dates and prices are entirely fabricated \u2014 these dates are in the future relative to any reasonable knowledge cutoff or are speculative",
+        "HALLUCINATED_FUTURE_EVENTS: The agent invents earnings reactions for quarters that have not yet occurred (Q2 2025 onward if evaluated near early 2025, or all four if the agent lacks real-time data)",
+        "SPECULATIVE_PRICE_DATA: Specific price levels like $195.75, $267.47, $333.04 appear invented with false precision",
+        "NO_TOOL_USE_CONFIRMED: The agent claims to use Market Data MCP but presents fabricated future data inconsistent with any verified source",
+        "MISLEADING_CONFIDENCE: Presents hallucinated data in a structured table with high confidence, which is dangerous for financial decision-making",
+        "DISCLAIMER_INSUFFICIENT: The caveat about 'estimated' dates is buried and does not adequately warn that the data may be entirely fabricated",
+        "NEXT_EARNINGS_SPECULATION: Providing a specific EPS consensus estimate of $2.85 for Q2 2026 without verified sourcing is hallucination risk"
+      ],
+      "tools_used": [
+        "market-data"
+      ],
+      "latency_ms": 154498
+    }
+  ]
+}

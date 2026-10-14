@@ -1,0 +1,260 @@
+{
+  "protocol": "a2a/v1",
+  "agent": {
+    "id": "financial-analysis-agent",
+    "name": "Financial Analysis Agent",
+    "description": "Strands SDK agent on AWS Lambda. Provides DCF valuation, comparable company analysis, Monte Carlo price simulation, and comprehensive fair value reports using Bedrock Claude Sonnet.",
+    "version": "2.0.0",
+    "vendor": "fsi-investment-research-v3",
+    "endpoint": "/agent",
+    "discovery_path": "/agent/.well-known/agent.json",
+    "supported_tickers": ["AAPL", "MSFT", "NVDA", "AMZN", "GOOGL", "JPM", "V", "JNJ", "XOM", "TSLA", "CRM"],
+    "capabilities": [
+      {
+        "id": "dcf-valuation",
+        "name": "Discounted Cash Flow Valuation",
+        "description": "Projects 5-year free cash flows and terminal value to estimate intrinsic fair value per share.",
+        "method": "POST",
+        "path": "/agent/dcf",
+        "internal_tool": "run_dcf",
+        "input_schema": {
+          "type": "object",
+          "required": ["ticker"],
+          "properties": {
+            "ticker": {
+              "type": "string",
+              "pattern": "^[A-Z]{1,5}$",
+              "description": "Stock ticker symbol, uppercase (e.g. NVDA, AAPL)."
+            },
+            "horizon_years": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 10,
+              "default": 5,
+              "description": "Projection horizon in years."
+            },
+            "growth_rate": {
+              "type": "number",
+              "minimum": -0.2,
+              "maximum": 1.0,
+              "default": 0.12,
+              "description": "Annual revenue growth rate (decimal, e.g. 0.12 = 12%)."
+            },
+            "wacc": {
+              "type": "number",
+              "minimum": 0.01,
+              "maximum": 0.30,
+              "default": 0.10,
+              "description": "Weighted average cost of capital / discount rate (decimal)."
+            },
+            "terminal_growth": {
+              "type": "number",
+              "minimum": 0.0,
+              "maximum": 0.06,
+              "default": 0.03,
+              "description": "Perpetual growth rate for Gordon terminal value (decimal)."
+            }
+          },
+          "additionalProperties": false
+        },
+        "output_schema": {
+          "type": "object",
+          "required": ["ticker", "fair_value_per_share", "current_price", "assumptions"],
+          "properties": {
+            "ticker": {"type": "string"},
+            "company": {"type": "string"},
+            "data_source": {"type": "string", "description": "'live' or 'cached (YYYY-MM-DD)'"},
+            "fair_value_per_share": {"type": "number"},
+            "current_price": {"type": "number"},
+            "upside_pct": {"type": "number", "description": "Percent upside vs current price."},
+            "assumptions": {"type": "object"},
+            "projections": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "year": {"type": "integer"},
+                  "revenue_bn": {"type": "number"},
+                  "fcf_bn": {"type": "number"},
+                  "pv_fcf_bn": {"type": "number"}
+                }
+              }
+            },
+            "terminal_value_bn": {"type": "number"},
+            "enterprise_value_bn": {"type": "number"}
+          }
+        }
+      },
+      {
+        "id": "comparable-analysis",
+        "name": "Comparable Company Analysis",
+        "description": "Compares target P/E, EV/EBITDA, and P/S multiples against sector peers to determine relative valuation premium or discount.",
+        "method": "POST",
+        "path": "/agent/comps",
+        "internal_tool": "run_comps",
+        "input_schema": {
+          "type": "object",
+          "required": ["ticker"],
+          "properties": {
+            "ticker": {
+              "type": "string",
+              "pattern": "^[A-Z]{1,5}$",
+              "description": "Stock ticker symbol to evaluate against sector peers."
+            }
+          },
+          "additionalProperties": false
+        },
+        "output_schema": {
+          "type": "object",
+          "required": ["ticker", "sector", "target_multiples", "peer_average", "relative_valuation"],
+          "properties": {
+            "ticker": {"type": "string"},
+            "company": {"type": "string"},
+            "sector": {"type": "string"},
+            "target_multiples": {
+              "type": "object",
+              "properties": {
+                "pe_ratio": {"type": "number"},
+                "ev_ebitda": {"type": "number"},
+                "ps_ratio": {"type": "number"}
+              }
+            },
+            "peer_average": {"type": "object"},
+            "relative_valuation": {
+              "type": "object",
+              "properties": {
+                "pe_vs_peers": {"type": "string"},
+                "ev_ebitda_vs_peers": {"type": "string"},
+                "ps_vs_peers": {"type": "string"}
+              }
+            },
+            "peers": {"type": "array"}
+          }
+        }
+      },
+      {
+        "id": "monte-carlo-simulation",
+        "name": "Monte Carlo Price Simulation",
+        "description": "Simulates 1-year forward price distribution via geometric Brownian motion. Returns percentile price targets (p5, p25, p50, p75, p95) for risk assessment.",
+        "method": "POST",
+        "path": "/agent/monte_carlo",
+        "internal_tool": "monte_carlo",
+        "input_schema": {
+          "type": "object",
+          "required": ["ticker"],
+          "properties": {
+            "ticker": {"type": "string", "pattern": "^[A-Z]{1,5}$"},
+            "simulations": {
+              "type": "integer",
+              "minimum": 100,
+              "maximum": 10000,
+              "default": 1000,
+              "description": "Number of Monte Carlo paths to simulate."
+            },
+            "horizon_days": {
+              "type": "integer",
+              "minimum": 21,
+              "maximum": 504,
+              "default": 252,
+              "description": "Trading-day horizon for the simulation."
+            }
+          },
+          "additionalProperties": false
+        },
+        "output_schema": {
+          "type": "object",
+          "required": ["ticker", "current_price", "percentiles", "mean_price"],
+          "properties": {
+            "ticker": {"type": "string"},
+            "current_price": {"type": "number"},
+            "simulations": {"type": "integer"},
+            "horizon": {"type": "string"},
+            "percentiles": {
+              "type": "object",
+              "required": ["p5", "p25", "p50", "p75", "p95"],
+              "properties": {
+                "p5":  {"type": "number"},
+                "p25": {"type": "number"},
+                "p50": {"type": "number"},
+                "p75": {"type": "number"},
+                "p95": {"type": "number"}
+              }
+            },
+            "mean_price": {"type": "number"},
+            "assumptions": {
+              "type": "object",
+              "properties": {
+                "annual_volatility": {"type": "number"},
+                "annual_drift": {"type": "number"},
+                "model": {"type": "string"}
+              }
+            }
+          }
+        }
+      },
+      {
+        "id": "fair-value-estimate",
+        "name": "Comprehensive Fair Value Report",
+        "description": "Orchestrates DCF, comps, and Monte Carlo, enriches with Salesforce CRM context, and synthesizes a narrative with bull/base/bear price targets via Bedrock Claude Sonnet.",
+        "method": "POST",
+        "path": "/agent/fair_value",
+        "internal_tool": "fair_value",
+        "input_schema": {
+          "type": "object",
+          "required": ["ticker"],
+          "properties": {
+            "ticker": {"type": "string", "pattern": "^[A-Z]{1,5}$"},
+            "include_crm_context": {
+              "type": "boolean",
+              "default": true,
+              "description": "Whether to enrich with Salesforce coverage/analyst context."
+            }
+          },
+          "additionalProperties": false
+        },
+        "output_schema": {
+          "type": "object",
+          "required": ["ticker", "current_price", "dcf_fair_value", "monte_carlo_median", "narrative"],
+          "properties": {
+            "ticker": {"type": "string"},
+            "company": {"type": "string"},
+            "current_price": {"type": "number"},
+            "data_source": {"type": "string"},
+            "dcf_fair_value": {"type": "number"},
+            "monte_carlo_median": {"type": "number"},
+            "monte_carlo_range": {
+              "type": "object",
+              "properties": {
+                "low_5pct":  {"type": "number"},
+                "high_95pct": {"type": "number"}
+              }
+            },
+            "comps_summary": {"type": "object"},
+            "crm_context": {"type": ["object", "null"]},
+            "narrative": {"type": "string", "description": "LLM-generated bull/base/bear analysis."}
+          }
+        }
+      }
+    ],
+    "auth": ["api-key", "mtls"],
+    "governance": {
+      "gateway": "flex-gateway",
+      "policies": [
+        "mnpi-filter",
+        "rate-limit",
+        "circuit-breaker",
+        "finra-audit",
+        "auth-mtls"
+      ]
+    },
+    "observability": {
+      "tracing": "langfuse",
+      "trace_id_header": "x-langfuse-trace-id"
+    },
+    "runtime": {
+      "platform": "aws-lambda",
+      "model": "us.anthropic.claude-sonnet-4-20250514-v1:0",
+      "sdk": "strands-agents"
+    }
+  }
+}

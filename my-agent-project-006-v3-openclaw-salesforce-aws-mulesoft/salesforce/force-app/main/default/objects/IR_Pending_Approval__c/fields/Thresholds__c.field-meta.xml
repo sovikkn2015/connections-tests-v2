@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Thresholds__c</fullName>
+    <label>Thresholds Triggered</label>
+    <description>Comma-separated list of DualAuthThreshold names (e.g. WIRE_OVER_100K,TRADE_OVER_500K).</description>
+    <type>Text</type>
+    <length>255</length>
+    <required>false</required>
+    <externalId>false</externalId>
+    <trackTrending>false</trackTrending>
+</CustomField>

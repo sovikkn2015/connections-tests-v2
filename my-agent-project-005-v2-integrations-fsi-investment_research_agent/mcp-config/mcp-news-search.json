@@ -1,0 +1,57 @@
+{
+  "name": "news-search-mcp-server",
+  "description": "MCP server for financial news search, headlines, and sentiment analysis via Tavily API.",
+  "version": "1.0.0",
+  "tools": [
+    {
+      "name": "search_financial_news",
+      "description": "Search for recent financial news articles about a company or ticker.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "ticker": {
+            "type": "string",
+            "description": "Stock ticker symbol (e.g. AAPL, NVDA, MSFT)"
+          }
+        },
+        "required": ["ticker"]
+      }
+    },
+    {
+      "name": "get_headlines",
+      "description": "Fetch top financial headlines for a company or ticker.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "ticker": {
+            "type": "string",
+            "description": "Stock ticker symbol (e.g. AAPL, NVDA, MSFT)"
+          }
+        },
+        "required": ["ticker"]
+      }
+    },
+    {
+      "name": "get_news_sentiment",
+      "description": "Analyze news sentiment for a ticker — returns bullish/bearish/neutral with supporting articles.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "ticker": {
+            "type": "string",
+            "description": "Stock ticker symbol (e.g. AAPL, NVDA, MSFT)"
+          }
+        },
+        "required": ["ticker"]
+      }
+    }
+  ],
+  "transport": {
+    "type": "http",
+    "baseUrl": "${API_GATEWAY_URL}/news-search",
+    "headers": {
+      "x-api-key": "${API_KEY}",
+      "Content-Type": "application/json"
+    }
+  }
+}

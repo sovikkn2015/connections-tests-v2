@@ -1,0 +1,128 @@
+<mxfile host="draw.io" modified="2026-04-05T00:00:00.000Z" agent="draw.io" version="24.0.0" type="device">
+  <diagram id="trust-layer-03" name="Einstein Trust Layer">
+    <mxGraphModel dx="1400" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="1000" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- TITLE -->
+        <mxCell id="title" value="&lt;b style=&quot;font-size:16px;&quot;&gt;Einstein Trust Layer — Security Data Flow&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="430" y="10" width="540" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- SALESFORCE TRUST BOUNDARY (OUTBOUND) -->
+        <mxCell id="boundary_out" value="&lt;b&gt;Salesforce Trust Boundary (Outbound)&lt;/b&gt;" style="swimlane;startSize=28;fillColor=#DAE8FC;fontColor=#333333;strokeColor=#6C8EBF;strokeWidth=2;rounded=1;arcSize=5;shadow=1;html=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="30" y="50" width="900" height="350" as="geometry" />
+        </mxCell>
+
+        <!-- Step 1 -->
+        <mxCell id="t1" value="&lt;b&gt;1. Prompt &amp; Secure&lt;br&gt;Data Retrieval&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px;&quot;&gt;CRM data pulled securely&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#6C8EBF;strokeWidth=2;fontSize=11;shadow=1;" vertex="1" parent="boundary_out">
+          <mxGeometry x="30" y="50" width="180" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- Step 2 -->
+        <mxCell id="t2" value="&lt;b&gt;2. Dynamic&lt;br&gt;Grounding&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px;&quot;&gt;SF data added to prompt&lt;br&gt;for personalized response&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#6C8EBF;strokeWidth=2;fontSize=11;shadow=1;" vertex="1" parent="boundary_out">
+          <mxGeometry x="250" y="50" width="180" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- Step 3 -->
+        <mxCell id="t3" value="&lt;b&gt;3. Data Masking&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px;&quot;&gt;PII detected &amp; masked:&lt;br&gt;emails, phones, names,&lt;br&gt;account numbers&lt;br&gt;[email] → [MASKED_001]&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;strokeWidth=2;fontSize=11;shadow=1;" vertex="1" parent="boundary_out">
+          <mxGeometry x="470" y="50" width="180" height="90" as="geometry" />
+        </mxCell>
+
+        <!-- Step 4 -->
+        <mxCell id="t4" value="&lt;b&gt;4. Secure LLM&lt;br&gt;Gateway&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px;&quot;&gt;Encrypted transport&lt;br&gt;to external LLM&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FF6B6B;strokeColor=#CC3333;strokeWidth=2;fontSize=11;fontColor=#FFFFFF;shadow=1;" vertex="1" parent="boundary_out">
+          <mxGeometry x="690" y="50" width="180" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- Return path steps -->
+        <mxCell id="t5" value="&lt;b&gt;5. Data Demasking&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px;&quot;&gt;[MASKED_001] → [email]&lt;br&gt;Original values restored&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#6C8EBF;strokeWidth=2;fontSize=11;shadow=1;" vertex="1" parent="boundary_out">
+          <mxGeometry x="30" y="200" width="180" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="t6" value="&lt;b&gt;6. Toxicity&lt;br&gt;Detection&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px;&quot;&gt;Harmful content check&lt;br&gt;Policy violation scan&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8CECC;strokeColor=#B85450;strokeWidth=2;fontSize=11;shadow=1;" vertex="1" parent="boundary_out">
+          <mxGeometry x="250" y="200" width="180" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="t7" value="&lt;b&gt;7. Audit Trail&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px;&quot;&gt;Every interaction logged:&lt;br&gt;prompt, response, actions,&lt;br&gt;masking, toxicity scores&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;strokeWidth=2;fontSize=11;shadow=1;" vertex="1" parent="boundary_out">
+          <mxGeometry x="470" y="200" width="180" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="t8" value="&lt;b&gt;Response&lt;br&gt;to User&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;strokeWidth=2;fontSize=12;fontStyle=1;shadow=1;" vertex="1" parent="boundary_out">
+          <mxGeometry x="690" y="210" width="180" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- EXTERNAL LLM BOX -->
+        <mxCell id="llm" value="&lt;b style=&quot;font-size:13px;&quot;&gt;External LLM Providers&lt;/b&gt;" style="swimlane;startSize=28;fillColor=#F8CECC;fontColor=#333333;strokeColor=#B85450;strokeWidth=2;rounded=1;arcSize=5;shadow=1;html=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="980" y="50" width="380" height="350" as="geometry" />
+        </mxCell>
+        <mxCell id="llm1" value="OpenAI" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#B85450;fontSize=11;" vertex="1" parent="llm">
+          <mxGeometry x="20" y="45" width="100" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="llm2" value="Anthropic" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#B85450;fontSize=11;" vertex="1" parent="llm">
+          <mxGeometry x="140" y="45" width="100" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="llm3" value="Others" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#B85450;fontSize=11;" vertex="1" parent="llm">
+          <mxGeometry x="260" y="45" width="100" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="zdr" value="&lt;b style=&quot;font-size:14px;color:#CC3333;&quot;&gt;ZERO DATA RETENTION&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;&quot;&gt;• Data is NOT stored by LLM provider&lt;br&gt;• Data is NOT used for model training&lt;br&gt;• Data forgotten after response generated&lt;br&gt;• Contractual agreements in place&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#CC3333;strokeWidth=3;fontSize=11;shadow=1;" vertex="1" parent="llm">
+          <mxGeometry x="30" y="110" width="320" height="100" as="geometry" />
+        </mxCell>
+
+        <!-- GUARDRAILS STACK -->
+        <mxCell id="guard" value="&lt;b&gt;5-Layer Guardrails&lt;/b&gt;" style="swimlane;startSize=25;fillColor=#E6E6E6;fontColor=#333333;strokeColor=#999999;strokeWidth=2;rounded=1;arcSize=5;shadow=1;html=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="30" y="430" width="1330" height="160" as="geometry" />
+        </mxCell>
+        <mxCell id="g1" value="&lt;b&gt;L1: Topic Boundaries&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px;&quot;&gt;Off-topic fallback&lt;br&gt;Conditional filters&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=10;shadow=1;" vertex="1" parent="guard">
+          <mxGeometry x="10" y="35" width="240" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="g2" value="&lt;b&gt;L2: Action Restrictions&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px;&quot;&gt;8-10 per topic max&lt;br&gt;Input instructions&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;fontSize=10;shadow=1;" vertex="1" parent="guard">
+          <mxGeometry x="270" y="35" width="240" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="g3" value="&lt;b&gt;L3: Grounding Validation&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px;&quot;&gt;Hallucination detection&lt;br&gt;Retry loop on failure&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;fontSize=10;shadow=1;" vertex="1" parent="guard">
+          <mxGeometry x="530" y="35" width="240" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="g4" value="&lt;b&gt;L4: Einstein Trust Layer&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px;&quot;&gt;PII masking, toxicity,&lt;br&gt;zero retention, audit&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8CECC;strokeColor=#B85450;fontSize=10;shadow=1;" vertex="1" parent="guard">
+          <mxGeometry x="790" y="35" width="240" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="g5" value="&lt;b&gt;L5: Hyperforce Security&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px;&quot;&gt;Auth, containers,&lt;br&gt;SOC2/HIPAA compliance&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E6E6E6;strokeColor=#666666;fontSize=10;shadow=1;" vertex="1" parent="guard">
+          <mxGeometry x="1050" y="35" width="260" height="55" as="geometry" />
+        </mxCell>
+
+        <!-- ARROWS -->
+        <mxCell id="a12" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#0176D3;" edge="1" source="t1" target="t2" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a23" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#0176D3;" edge="1" source="t2" target="t3" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a34" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#0176D3;" edge="1" source="t3" target="t4" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a4l" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=3;strokeColor=#CC3333;" edge="1" source="t4" target="llm" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="al5" value="Response" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=3;strokeColor=#82B366;" edge="1" source="llm" target="t5" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="960" y="450" />
+              <mxPoint x="960" y="160" />
+              <mxPoint x="20" y="160" />
+              <mxPoint x="20" y="435" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="a56" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#82B366;" edge="1" source="t5" target="t6" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a67" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#82B366;" edge="1" source="t6" target="t7" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a78" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#82B366;" edge="1" source="t7" target="t8" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

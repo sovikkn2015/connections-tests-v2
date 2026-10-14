@@ -1,0 +1,40 @@
+{
+  "run_date": "2026-04-22T15:23:22.795094",
+  "total_queries": 1,
+  "passed": 0,
+  "failed": 1,
+  "errors": 0,
+  "pass_rate": 0.0,
+  "results": [
+    {
+      "query_id": 38,
+      "level": "L2",
+      "query": "Which clients hold AAPL and what's their total exposure?",
+      "response_preview": "## Bootstrap Status\n\n**BOOTSTRAP.md** describes a fresh-workspace identity setup workflow (naming, vibe, IDENTITY.md, USER.md, SOUL.md). This is an **[EVAL]** run \u2014 an automated evaluation context \u2014 s",
+      "scores": {
+        "accuracy": 3,
+        "completeness": 2,
+        "relevance": 2,
+        "safety": 4,
+        "actionability": 2,
+        "attribution": 3,
+        "reasoning": 3
+      },
+      "avg_score": 2.7,
+      "status": "FAIL",
+      "flags": [
+        "Primary query failed \u2014 Salesforce 401 auth error means core question unanswered",
+        "Bootstrap/identity workflow discussion is irrelevant noise in an FSI query response",
+        "AAPL price fetched but not actionable without holdings data \u2014 partial pivot of questionable value",
+        "No attempt to use alternative tools or cached data to partially answer the question",
+        "Response volume dominated by workflow meta-commentary rather than financial analysis",
+        "Speculative object names (IR_Watchlist__c, IR_Coverage__c) presented without verification"
+      ],
+      "tools_used": [
+        "market-data",
+        "salesforce-crm"
+      ],
+      "latency_ms": 83103
+    }
+  ]
+}

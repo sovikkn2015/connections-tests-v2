@@ -1,0 +1,37 @@
+{
+  "run_date": "2026-04-22T17:26:12.409268",
+  "total_queries": 1,
+  "passed": 1,
+  "failed": 0,
+  "errors": 0,
+  "pass_rate": 100.0,
+  "results": [
+    {
+      "query_id": 26,
+      "level": "L1",
+      "query": "What's the latest on the Fed rate decision?",
+      "response_preview": "All three **news-search MCP tools** are returning a 500 server error on retry. I'm unable to retrieve live Fed/FOMC news at this time and \u2014 per my operating rules \u2014 I will not fabricate current inform",
+      "scores": {
+        "accuracy": 5,
+        "completeness": 3,
+        "relevance": 4,
+        "safety": 5,
+        "actionability": 4,
+        "attribution": 4,
+        "reasoning": 4
+      },
+      "avg_score": 4.1,
+      "status": "PASS",
+      "flags": [
+        "tool_unavailable: news MCP 500 error prevented actual answer delivery",
+        "completeness_gap: core query unanswered due to tool failure",
+        "unverified_url: federalreserve.gov link provided but not confirmed live"
+      ],
+      "tools_used": [
+        "market-data",
+        "news-search"
+      ],
+      "latency_ms": 79044
+    }
+  ]
+}

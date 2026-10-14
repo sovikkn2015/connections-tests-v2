@@ -1,0 +1,41 @@
+{
+  "run_date": "2026-04-22T15:27:57.933174",
+  "total_queries": 1,
+  "passed": 0,
+  "failed": 1,
+  "errors": 0,
+  "pass_rate": 0.0,
+  "results": [
+    {
+      "query_id": 45,
+      "level": "L2",
+      "query": "Compare analyst consensus on NVDA vs AMD vs INTC",
+      "response_preview": "Let me retry the consensus data via an alternative approach while I handle bootstrap.\n\n---\n\n## \ud83d\ude80 Bootstrap Note\n\nHey \u2014 I just came online in a fresh workspace. No identity set yet per **BOOTSTRAP.md**",
+      "scores": {
+        "accuracy": 3,
+        "completeness": 2,
+        "relevance": 3,
+        "safety": 5,
+        "actionability": 2,
+        "attribution": 3,
+        "reasoning": 3
+      },
+      "avg_score": 3.0,
+      "status": "FAIL",
+      "flags": [
+        "Primary task unfulfilled: no analyst consensus data (Buy/Hold/Sell counts, price targets, EPS estimates) delivered",
+        "Price data cannot be verified against ground truth \u2014 figures may be stale or incorrect",
+        "Bootstrap/identity preamble is unprofessional noise for a financial query response",
+        "Contextual notes draw on pre-training knowledge (Lip-Bu Tan, MI300X, AI datacenter) despite explicitly claiming not to substitute pre-training knowledge \u2014 internal contradiction",
+        "INTC 52-week range and recovery percentages appear inconsistent with known data ranges (INTC was not trading at $18.97 low in recent history at ~$66 current price \u2014 figures seem implausible)",
+        "No SOQL/Salesforce skill used as expected per persona tools",
+        "Analyst consensus comparison is the core ask; delivering only price data is a significant gap"
+      ],
+      "tools_used": [
+        "market-data",
+        "news-search"
+      ],
+      "latency_ms": 126973
+    }
+  ]
+}

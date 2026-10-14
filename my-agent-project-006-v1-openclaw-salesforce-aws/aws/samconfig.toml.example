@@ -1,0 +1,22 @@
+# samconfig.toml — copy to samconfig.toml and fill in values
+# Deploy with: sam deploy (no --guided needed after first setup)
+
+version = 0.1
+
+[default.deploy.parameters]
+stack_name = "openclaw-mcp-006"
+resolve_s3 = true
+s3_prefix = "openclaw-mcp-006"
+region = "us-east-1"
+confirm_changeset = true
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = [
+    "AlphaVantageApiKey=YOUR_ALPHA_VANTAGE_KEY",
+    "FinnhubApiKey=YOUR_FINNHUB_KEY",
+    "TavilyApiKey=YOUR_TAVILY_KEY",
+    "LangfuseSecretKey=YOUR_LANGFUSE_SECRET_KEY",
+    "LangfusePublicKey=YOUR_LANGFUSE_PUBLIC_KEY",
+    "LangfuseBaseUrl=https://us.cloud.langfuse.com",
+    "FrontendOrigin=http://localhost:5173",
+]
+tags = "Project=\"006-fsi\" Environment=\"production\""

@@ -1,0 +1,88 @@
+# -----------------------------------------------------------------------------
+# M13 FIX Bridge -- disabled by default.
+#
+# Steering Rule 11 invariant: replicaCount is HARD-CODED to 1. FIX sessions
+# are stateful; two pods would race the same sequence numbers and corrupt the
+# counterparty connection. Operators MUST NOT override replicaCount. Scaling
+# to multiple venues is done by deploying multiple instances per venue (each
+# with its own release name) OR by multi-session-in-one-pod config.
+# -----------------------------------------------------------------------------
+
+enabled: false
+
+# DO NOT OVERRIDE.
+replicaCount: 1
+
+image:
+  repository: 007-fsi/m13-fix-bridge
+  tag: latest
+  pullPolicy: Always
+
+service:
+  appPort: 8443
+  probePort: 8080
+
+# PVC for /var/lib/m13 -- seqnum files + kill-switch state.
+persistence:
+  storageClassName: ""   # "" → cluster default
+  accessMode: ReadWriteOnce
+  size: 10Gi
+
+resources:
+  requests:
+    cpu: 200m
+    memory: 256Mi
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+  seccompProfile:
+    type: RuntimeDefault
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  # readOnlyRootFilesystem is NOT enabled here: seqnum store under
+  # /var/lib/m13 is backed by a PVC mount which is writable regardless,
+  # but some kernels require the process to touch /tmp for FIX heartbeat
+  # timers. Operators wanting read-only can switch to true + add
+  # emptyDir /tmp.
+  readOnlyRootFilesystem: false
+  runAsNonRoot: true
+  runAsUser: 1000
+  capabilities:
+    drop:
+      - ALL
+
+# Stateful single-replica -- PDB maxUnavailable=0 prevents voluntary
+# disruption from drawing a pod into a Pending state mid-FIX-session.
+podDisruptionBudget:
+  maxUnavailable: 0
+
+tmpVolumes:
+  - name: tmp
+    mountPath: /tmp
+
+# M13 FIX engine toggles. Actual SenderCompID / TargetCompID / mTLS / AID
+# secret values live in Vault referenced by FIX_*_VAULT_PATH env vars.
+fix:
+  enabled: false
+  dropCopyEnabled: true
+  seqnumStoreDir: /var/lib/m13/seqnums
+  killSwitchStatePath: /var/lib/m13/kill_switch.json
+  aidVerifyMode: hmac   # static / hmac / rsa
+  sessionsConfigVaultPath: "secret/data/007/m13/sessions"
+  accountHashSaltVaultPath: "secret/data/007/m13/account_hash_salt"
+  aidVerifySharedSecretVaultPath: "secret/data/007/m13/aid_verify_secret"
+
+# Vault root for the ExternalSecret.
+externalSecretPath: secret/data/007/m13-fix-bridge
+
+# Wave 4 egress allowlist -- operator populates per FIX venue.
+egressAllowlist: []
+
+log_level: info

@@ -1,0 +1,21 @@
+{
+  "data": {
+    "ReferenceDataResponse": {
+      "securityData": [
+        {
+          "security": "MSFT US Equity",
+          "fieldData": {
+            "DVD_HIST_ALL": [
+              {"Ex-Date": "2023-02-15", "Amount": 0.68, "Type": "DVD_CASH"},
+              {"Ex-Date": "2023-05-17", "Amount": 0.68, "Type": "DVD_CASH"},
+              {"Ex-Date": "2023-08-16", "Amount": 0.68, "Type": "DVD_CASH"},
+              {"Ex-Date": "2023-11-15", "Amount": 0.75, "Type": "DVD_CASH"}
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "partial": false,
+  "vendor_response_code": 0
+}

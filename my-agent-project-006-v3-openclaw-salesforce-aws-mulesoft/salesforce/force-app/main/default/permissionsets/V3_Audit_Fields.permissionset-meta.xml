@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label>V3 Audit Fields</label>
+    <description>Grants read+edit on the 11 V3-new IR_Audit_Log__c fields. Assign to any integration user or persona that writes audit rows so the REST API accepts the fields instead of silently dropping them.</description>
+    <hasActivationRequired>false</hasActivationRequired>
+    <license>Salesforce</license>
+    <objectPermissions>
+        <allowCreate>true</allowCreate>
+        <allowDelete>false</allowDelete>
+        <allowEdit>true</allowEdit>
+        <allowRead>true</allowRead>
+        <modifyAllRecords>false</modifyAllRecords>
+        <object>IR_Audit_Log__c</object>
+        <viewAllRecords>true</viewAllRecords>
+    </objectPermissions>
+    <fieldPermissions><editable>true</editable><field>IR_Audit_Log__c.Agent_Id__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>IR_Audit_Log__c.Session_Id__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>IR_Audit_Log__c.Correlation_Id__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>IR_Audit_Log__c.Research_Brief_Id__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>IR_Audit_Log__c.Linked_Trade_Id__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>IR_Audit_Log__c.Linked_Wire_Id__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>IR_Audit_Log__c.Approval_Token_Hash__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>IR_Audit_Log__c.Approved_By__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>IR_Audit_Log__c.Mulesoft_Reference__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>IR_Audit_Log__c.Payload__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>IR_Audit_Log__c.Client_Contact_Id__c</field><readable>true</readable></fieldPermissions>
+</PermissionSet>

@@ -1,0 +1,252 @@
+{
+  "description": "Canonical price quote. is_delayed is REQUIRED for compliance disclosure.",
+  "properties": {
+    "canonical_id": {
+      "description": "Primary key for this quote.",
+      "format": "uuid",
+      "title": "Canonical Id",
+      "type": "string"
+    },
+    "security_ref": {
+      "description": "Canonical SecurityProfile ID.",
+      "format": "uuid",
+      "title": "Security Ref",
+      "type": "string"
+    },
+    "ticker": {
+      "description": "Ticker for quick reference.",
+      "title": "Ticker",
+      "type": "string"
+    },
+    "price": {
+      "description": "Last traded or latest quoted price.",
+      "title": "Price",
+      "type": "number"
+    },
+    "bid": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Current bid price.",
+      "title": "Bid"
+    },
+    "ask": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Current ask price.",
+      "title": "Ask"
+    },
+    "bid_size": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Bid size in lots.",
+      "title": "Bid Size"
+    },
+    "ask_size": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Ask size in lots.",
+      "title": "Ask Size"
+    },
+    "volume": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Session trading volume.",
+      "title": "Volume"
+    },
+    "open": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Session open price.",
+      "title": "Open"
+    },
+    "high": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Session high price.",
+      "title": "High"
+    },
+    "low": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Session low price.",
+      "title": "Low"
+    },
+    "previous_close": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Previous session close price.",
+      "title": "Previous Close"
+    },
+    "change": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Absolute change from previous close.",
+      "title": "Change"
+    },
+    "change_pct": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Percentage change.",
+      "title": "Change Pct"
+    },
+    "vwap": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Volume-weighted average price.",
+      "title": "Vwap"
+    },
+    "as_of_timestamp": {
+      "description": "Timestamp of this quote.",
+      "format": "date-time",
+      "title": "As Of Timestamp",
+      "type": "string"
+    },
+    "is_delayed": {
+      "description": "True if delayed quote. Compliance must disclose to clients. REQUIRED.",
+      "title": "Is Delayed",
+      "type": "boolean"
+    },
+    "delay_minutes": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Minutes delayed (null if real-time).",
+      "title": "Delay Minutes"
+    },
+    "market_status": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Market status: pre_market, open, post_market, closed.",
+      "title": "Market Status"
+    },
+    "currency": {
+      "description": "ISO 4217 currency code.",
+      "title": "Currency",
+      "type": "string"
+    },
+    "source_system": {
+      "description": "Source system.",
+      "title": "Source System",
+      "type": "string"
+    },
+    "source_id": {
+      "description": "Vendor-specific quote ID.",
+      "title": "Source Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "canonical_id",
+    "security_ref",
+    "ticker",
+    "price",
+    "as_of_timestamp",
+    "is_delayed",
+    "currency",
+    "source_system",
+    "source_id"
+  ],
+  "title": "Quote",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://007.fsi/schemas/canonical/quote/v0.1.0"
+}

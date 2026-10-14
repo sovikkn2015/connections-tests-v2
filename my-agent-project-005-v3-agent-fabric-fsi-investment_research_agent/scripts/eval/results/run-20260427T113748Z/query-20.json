@@ -1,0 +1,26 @@
+{
+  "id": 20,
+  "text": "DCF valuation for NVDA",
+  "expected_category": "valuation",
+  "expected_path": "ORCH->GW->STRANDS:financial-analysis-agent",
+  "judge_pass": false,
+  "judge_score": 0.0,
+  "judge_reason": "",
+  "response_excerpt": "",
+  "latency_ms": 3362,
+  "http_status": 500,
+  "status_verdict": "FAIL",
+  "skip_reason": null,
+  "tool_calls": [
+    "financial-analysis.run_dcf"
+  ],
+  "langfuse_trace_id": "22ec9c95-e619-4fbd-9d09-034fe2d3125e",
+  "audit_records_found": 0,
+  "audit_has_gateway_stage": false,
+  "mnpi_redactions_observed": 0,
+  "circuit_breaker_tripped": false,
+  "v2_status": "PASS",
+  "error": "http 500: {\"error\": \"unknown url type: 'CONFIGURE_AFTER_DEPLOY/api/public/ingestion'\"}",
+  "mcp_direct_route": "/financial-analysis/run_dcf",
+  "mcp_direct_correlation_id": "22ec9c95-e619-4fbd-9d09-034fe2d3125e"
+}

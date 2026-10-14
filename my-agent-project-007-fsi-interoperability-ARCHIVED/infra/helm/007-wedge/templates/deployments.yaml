@@ -1,0 +1,252 @@
+{{- /* Deployments + Services for the 4 trust-layer modules + Redis */ -}}
+
+{{- if .Values.m1.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "007-wedge.fullname" . }}-m1-identity
+  labels: {{- include "007-wedge.labels" . | nindent 4 }}
+    component: m1-identity
+spec:
+  replicas: {{ .Values.m1.replicas }}
+  selector:
+    matchLabels: {{- include "007-wedge.selectorLabels" . | nindent 6 }}
+      component: m1-identity
+  template:
+    metadata:
+      labels: {{- include "007-wedge.selectorLabels" . | nindent 8 }}
+        component: m1-identity
+    spec:
+      serviceAccountName: {{ include "007-wedge.serviceAccountName" . }}
+      containers:
+        - name: m1-identity
+          image: "{{ .Values.global.imageRegistry }}/{{ .Values.m1.image.repository }}:{{ .Values.m1.image.tag }}"
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          ports: [{containerPort: 8001}]
+          resources: {{- toYaml .Values.m1.resources | nindent 12 }}
+          env:
+            - name: M1_PRIVATE_KEY_PEM
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.m1.env.M1_KEYS_SECRET_NAME }}
+                  key: private.pem
+            - name: M1_PUBLIC_KEY_PEM
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.m1.env.M1_KEYS_SECRET_NAME }}
+                  key: public.pem
+          readinessProbe: {httpGet: {path: /health, port: 8001}, periodSeconds: 10}
+          livenessProbe:  {httpGet: {path: /health, port: 8001}, periodSeconds: 30}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "007-wedge.fullname" . }}-m1-identity
+  labels: {{- include "007-wedge.labels" . | nindent 4 }}
+spec:
+  selector: {{- include "007-wedge.selectorLabels" . | nindent 4 }}
+    component: m1-identity
+  ports: [{port: {{ .Values.m1.service.port }}, targetPort: 8001, name: http}]
+---
+{{- end }}
+
+{{- if .Values.m2m4.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "007-wedge.fullname" . }}-m2-m4-policy
+  labels: {{- include "007-wedge.labels" . | nindent 4 }}
+    component: m2-m4-policy
+spec:
+  replicas: {{ .Values.m2m4.replicas }}
+  selector:
+    matchLabels: {{- include "007-wedge.selectorLabels" . | nindent 6 }}
+      component: m2-m4-policy
+  template:
+    metadata:
+      labels: {{- include "007-wedge.selectorLabels" . | nindent 8 }}
+        component: m2-m4-policy
+    spec:
+      serviceAccountName: {{ include "007-wedge.serviceAccountName" . }}
+      containers:
+        - name: policy-engine
+          image: "{{ .Values.global.imageRegistry }}/{{ .Values.m2m4.image.repository }}:{{ .Values.m2m4.image.tag }}"
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          ports: [{containerPort: 8002}]
+          resources: {{- toYaml .Values.m2m4.resources | nindent 12 }}
+          env:
+            - name: OPA_URL
+              value: "http://localhost:8181"
+            - name: USE_LOCAL_EVALUATOR
+              value: "{{ .Values.m2m4.env.USE_LOCAL_EVALUATOR }}"
+          readinessProbe: {httpGet: {path: /health, port: 8002}, periodSeconds: 10}
+          livenessProbe:  {httpGet: {path: /health, port: 8002}, periodSeconds: 30}
+        - name: opa
+          image: "{{ .Values.m2m4.opa.image }}"
+          args:
+            - "run"
+            - "--server"
+            - "--addr=0.0.0.0:8181"
+            - "--log-level={{ .Values.m2m4.opa.logLevel }}"
+          ports: [{containerPort: 8181}]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "007-wedge.fullname" . }}-m2-m4-policy
+  labels: {{- include "007-wedge.labels" . | nindent 4 }}
+spec:
+  selector: {{- include "007-wedge.selectorLabels" . | nindent 4 }}
+    component: m2-m4-policy
+  ports: [{port: {{ .Values.m2m4.service.port }}, targetPort: 8002, name: http}]
+---
+{{- end }}
+
+{{- if .Values.m10.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "007-wedge.fullname" . }}-m10-audit-logger
+  labels: {{- include "007-wedge.labels" . | nindent 4 }}
+    component: m10-audit-logger
+spec:
+  replicas: {{ .Values.m10.replicas }}
+  selector:
+    matchLabels: {{- include "007-wedge.selectorLabels" . | nindent 6 }}
+      component: m10-audit-logger
+  template:
+    metadata:
+      labels: {{- include "007-wedge.selectorLabels" . | nindent 8 }}
+        component: m10-audit-logger
+    spec:
+      serviceAccountName: {{ include "007-wedge.serviceAccountName" . }}
+      containers:
+        - name: m10-audit-logger
+          image: "{{ .Values.global.imageRegistry }}/{{ .Values.m10.image.repository }}:{{ .Values.m10.image.tag }}"
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          ports: [{containerPort: 8010}]
+          resources: {{- toYaml .Values.m10.resources | nindent 12 }}
+          env:
+            {{- range $k, $v := .Values.m10.env }}
+            - name: {{ $k }}
+              value: {{ $v | quote }}
+            {{- end }}
+          readinessProbe: {httpGet: {path: /health, port: 8010}, periodSeconds: 10}
+          livenessProbe:  {httpGet: {path: /health, port: 8010}, periodSeconds: 30}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "007-wedge.fullname" . }}-m10-audit-logger
+  labels: {{- include "007-wedge.labels" . | nindent 4 }}
+spec:
+  selector: {{- include "007-wedge.selectorLabels" . | nindent 4 }}
+    component: m10-audit-logger
+  ports: [{port: {{ .Values.m10.service.port }}, targetPort: 8010, name: http}]
+---
+{{- end }}
+
+{{- if .Values.m6.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "007-wedge.fullname" . }}-m6-gateway
+  labels: {{- include "007-wedge.labels" . | nindent 4 }}
+    component: m6-gateway
+spec:
+  replicas: {{ .Values.m6.replicas }}
+  selector:
+    matchLabels: {{- include "007-wedge.selectorLabels" . | nindent 6 }}
+      component: m6-gateway
+  template:
+    metadata:
+      labels: {{- include "007-wedge.selectorLabels" . | nindent 8 }}
+        component: m6-gateway
+    spec:
+      serviceAccountName: {{ include "007-wedge.serviceAccountName" . }}
+      containers:
+        - name: m6-gateway
+          image: "{{ .Values.global.imageRegistry }}/{{ .Values.m6.image.repository }}:{{ .Values.m6.image.tag }}"
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          ports: [{containerPort: 8006}]
+          resources: {{- toYaml .Values.m6.resources | nindent 12 }}
+          env:
+            {{- range $k, $v := .Values.m6.env }}
+            - name: {{ $k }}
+              value: {{ $v | quote }}
+            {{- end }}
+          readinessProbe: {httpGet: {path: /health, port: 8006}, periodSeconds: 10}
+          livenessProbe:  {httpGet: {path: /health, port: 8006}, periodSeconds: 30}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "007-wedge.fullname" . }}-m6-gateway
+  labels: {{- include "007-wedge.labels" . | nindent 4 }}
+spec:
+  selector: {{- include "007-wedge.selectorLabels" . | nindent 4 }}
+    component: m6-gateway
+  ports: [{port: {{ .Values.m6.service.port }}, targetPort: 8006, name: http}]
+---
+{{- if .Values.m6.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "007-wedge.fullname" . }}-m6-gateway
+  labels: {{- include "007-wedge.labels" . | nindent 4 }}
+  annotations:
+    {{- toYaml .Values.m6.ingress.annotations | nindent 4 }}
+spec:
+  ingressClassName: {{ .Values.m6.ingress.className }}
+  rules:
+    {{- range .Values.m6.ingress.hosts }}
+    - host: {{ .host }}
+      http:
+        paths:
+          {{- range .paths }}
+          - path: {{ .path }}
+            pathType: {{ .pathType }}
+            backend:
+              service:
+                name: {{ include "007-wedge.fullname" $ }}-m6-gateway
+                port:
+                  number: {{ $.Values.m6.service.port }}
+          {{- end }}
+    {{- end }}
+---
+{{- end }}
+{{- end }}
+
+{{- if .Values.redis.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "007-wedge.fullname" . }}-redis
+  labels: {{- include "007-wedge.labels" . | nindent 4 }}
+    component: redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {{- include "007-wedge.selectorLabels" . | nindent 6 }}
+      component: redis
+  template:
+    metadata:
+      labels: {{- include "007-wedge.selectorLabels" . | nindent 8 }}
+        component: redis
+    spec:
+      containers:
+        - name: redis
+          image: "{{ .Values.redis.image.repository }}:{{ .Values.redis.image.tag }}"
+          ports: [{containerPort: 6379}]
+          resources: {{- toYaml .Values.redis.resources | nindent 12 }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "007-wedge.fullname" . }}-redis
+  labels: {{- include "007-wedge.labels" . | nindent 4 }}
+spec:
+  selector: {{- include "007-wedge.selectorLabels" . | nindent 4 }}
+    component: redis
+  ports: [{port: 6379, targetPort: 6379, name: redis}]
+{{- end }}

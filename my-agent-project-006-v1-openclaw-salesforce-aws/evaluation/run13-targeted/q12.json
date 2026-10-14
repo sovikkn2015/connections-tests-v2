@@ -1,0 +1,39 @@
+{
+  "run_date": "2026-04-22T17:13:36.170513",
+  "total_queries": 1,
+  "passed": 0,
+  "failed": 1,
+  "errors": 0,
+  "pass_rate": 0.0,
+  "results": [
+    {
+      "query_id": 12,
+      "level": "L1",
+      "query": "When does JPMorgan report earnings?",
+      "response_preview": "JPMorgan Chase (JPM) is next scheduled to report earnings on **July 13, 2026** (Q2 2026).\n\n- **EPS Estimate:** $5.46\n- **Revenue Estimate:** ~$49.4B\n- **Report Hour:** Not yet specified\n\nSource: marke",
+      "scores": {
+        "accuracy": 1,
+        "completeness": 3,
+        "relevance": 4,
+        "safety": 4,
+        "actionability": 3,
+        "attribution": 2,
+        "reasoning": 2
+      },
+      "avg_score": 2.7,
+      "status": "FAIL",
+      "flags": [
+        "DATE UNVERIFIABLE: July 13, 2026 cannot be confirmed \u2014 JPMorgan typically reports Q2 earnings in mid-July, but this specific 2026 date is a forward projection that may be fabricated or hallucinated",
+        "EPS ESTIMATE UNVERIFIABLE: $5.46 EPS estimate cannot be cross-checked against ground truth; likely hallucinated analyst consensus",
+        "REVENUE ESTIMATE UNVERIFIABLE: ~$49.4B revenue estimate cannot be verified and may be fabricated",
+        "WRONG TOOL USED: Query expected SF skill (SOQL) per persona ERA; agent cited 'market-data, earnings calendar lookup' \u2014 no SOQL query evidence",
+        "REPORT HOUR NOT SPECIFIED: Incomplete \u2014 pre-market vs post-market matters for trading decisions",
+        "SOURCE VAGUE: 'market-data, earnings calendar lookup' is not a traceable or auditable source"
+      ],
+      "tools_used": [
+        "market-data"
+      ],
+      "latency_ms": 53108
+    }
+  ]
+}

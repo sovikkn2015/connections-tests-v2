@@ -1,0 +1,26 @@
+{
+  "id": 13,
+  "text": "Microsoft 8-K filings",
+  "expected_category": "sec_filing",
+  "expected_path": "ORCH->GW->MCP:sec-edgar.get_8k",
+  "judge_pass": true,
+  "judge_score": 1.0,
+  "judge_reason": "Response correctly references the filing type (8-K) and company (MICROSOFT CORP). Multiple 8-K filings are provided with accession numbers, ",
+  "response_excerpt": "{\"tool\": \"get_8k\", \"ticker\": \"MSFT\", \"filings\": [{\"accession_number\": \"0001193125-26-027198\", \"filing_date\": \"2026-01-28\", \"form_type\": \"8-K\", \"company_name\": \"MICROSOFT CORP\", \"description\": \"8-K\"}, {\"accession_number\": \"0001193125-25-3111",
+  "latency_ms": 1464,
+  "http_status": 200,
+  "status_verdict": "PASS",
+  "skip_reason": null,
+  "tool_calls": [
+    "sec-edgar.get_8k"
+  ],
+  "langfuse_trace_id": "1eb1683b-bb12-4819-9261-a65b4b7511fd",
+  "audit_records_found": 0,
+  "audit_has_gateway_stage": false,
+  "mnpi_redactions_observed": 0,
+  "circuit_breaker_tripped": false,
+  "v2_status": "PASS",
+  "error": null,
+  "mcp_direct_route": "/sec-edgar/tools/call",
+  "mcp_direct_correlation_id": "1eb1683b-bb12-4819-9261-a65b4b7511fd"
+}

@@ -1,0 +1,688 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  006 V3 MCP servers + SF Auth Proxy. Five MCP Lambdas behind API Gateway
+  REST, plus a sibling SF Auth Proxy for per-principal OBO. Only the
+  mulesoft-actions Lambda runs inside a VPC (steering rule 19).
+
+Parameters:
+  EnvName:
+    Type: String
+    Default: v3
+  McpApiKeyParam:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /006-v3/mcp/api-key
+    NoEcho: true
+  FinnhubApiKeyParam:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /006-v3/vendors/finnhub
+    NoEcho: true
+  AlphaVantageApiKeyParam:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /006-v3/vendors/alpha-vantage
+    NoEcho: true
+  TavilyApiKeyParam:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /006-v3/vendors/tavily
+    NoEcho: true
+  SfAuthProxyKeyParam:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /006-v3/sf/auth-proxy-key
+    NoEcho: true
+  AgentcoreSessionSigningKeyParam:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /006-v3/agentcore/session-signing-key
+    NoEcho: true
+  MulesoftModeParam:
+    Type: String
+    Default: sandbox
+    AllowedValues: [mock, sandbox, production]
+  MulesoftClientIdParamName:
+    Type: String
+    Default: /006-v3/mulesoft/client-id
+    Description: SSM parameter name for MuleSoft client ID (resolved at Lambda runtime).
+  MulesoftClientSecretParamName:
+    Type: String
+    Default: /006-v3/mulesoft/client-secret
+    Description: SSM parameter name for MuleSoft client secret (resolved at Lambda runtime).
+  SfBootstrapSecretName:
+    Type: String
+    Default: /006-v3/sf/bootstrap-creds
+  CorsAllowOrigin:
+    Type: String
+    Default: "https://agentcore.local"
+  BedrockRegion:
+    Type: String
+    Default: us-east-1
+  SonnetModelId:
+    Type: String
+    Default: anthropic.claude-sonnet-4-5-20250929-v1:0
+  BedrockKbIdParam:
+    Type: String
+    Default: "NBR5AFTREI"
+    Description: Bedrock KB id for semantic retrieval.
+  KbChunksBucketParam:
+    Type: String
+    Default: "openclaw006v3-kb-chunksbucketa7972c90-hhhf52iniof0"
+    Description: S3 bucket holding KB chunk JSON blobs.
+  AgentCoreRuntimeArnParam:
+    Type: String
+    Default: "arn:aws:bedrock-agentcore:us-east-1:875460787302:runtime/openclaw_v3_agent-o72dx396I0"
+    Description: V3 AgentCore runtime ARN. Use for agent-proxy to invoke.
+  CognitoUserPoolIdParam:
+    Type: String
+    Default: ""
+    Description: Cognito User Pool ID. Empty disables JWT verification (dev-bootstrap mode).
+  CognitoAppClientIdParam:
+    Type: String
+    Default: ""
+    Description: Cognito App Client ID for audience claim check.
+
+Globals:
+  Function:
+    Runtime: python3.12
+    MemorySize: 512
+    Timeout: 30
+    Architectures: [arm64]
+    Tracing: Active
+    Environment:
+      Variables:
+        MCP_API_KEY: !Ref McpApiKeyParam
+        CORS_ALLOW_ORIGIN: !Ref CorsAllowOrigin
+        LOG_LEVEL: INFO
+
+Resources:
+  # Shared base layer (mounted into every MCP Lambda)
+  McpBaseLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: !Sub "006-${EnvName}-mcp-base"
+      Description: Shared MCP server base (_base/ + schemas/ + errors/).
+      ContentUri: ./mcp-servers/_layer/
+      CompatibleRuntimes: [python3.12]
+      CompatibleArchitectures: [arm64]
+      RetentionPolicy: Retain
+
+  # VPC — only mulesoft-actions runs here
+  McpVpc:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.101.0.0/16
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+      Tags:
+        - {Key: Name, Value: !Sub "006-${EnvName}-mcp-vpc"}
+
+  McpPublicSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref McpVpc
+      CidrBlock: 10.101.1.0/24
+      MapPublicIpOnLaunch: true
+      AvailabilityZone: !Select [0, !GetAZs ""]
+
+  McpPrivateSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref McpVpc
+      CidrBlock: 10.101.2.0/24
+      AvailabilityZone: !Select [0, !GetAZs ""]
+
+  McpIgw:
+    Type: AWS::EC2::InternetGateway
+
+  McpIgwAttach:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref McpVpc
+      InternetGatewayId: !Ref McpIgw
+
+  McpNatEip:
+    Type: AWS::EC2::EIP
+    DependsOn: McpIgwAttach
+    Properties:
+      Domain: vpc
+
+  McpNatGateway:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt McpNatEip.AllocationId
+      SubnetId: !Ref McpPublicSubnet
+
+  McpPublicRt:
+    Type: AWS::EC2::RouteTable
+    Properties: {VpcId: !Ref McpVpc}
+
+  McpPublicRoute:
+    Type: AWS::EC2::Route
+    DependsOn: McpIgwAttach
+    Properties:
+      RouteTableId: !Ref McpPublicRt
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref McpIgw
+
+  McpPublicRtAssoc:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref McpPublicSubnet
+      RouteTableId: !Ref McpPublicRt
+
+  McpPrivateRt:
+    Type: AWS::EC2::RouteTable
+    Properties: {VpcId: !Ref McpVpc}
+
+  McpPrivateRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref McpPrivateRt
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref McpNatGateway
+
+  McpPrivateRtAssoc:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref McpPrivateSubnet
+      RouteTableId: !Ref McpPrivateRt
+
+  McpLambdaSg:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: mulesoft-actions egress to Anypoint
+      VpcId: !Ref McpVpc
+      SecurityGroupEgress:
+        - {IpProtocol: tcp, FromPort: 443, ToPort: 443, CidrIp: 0.0.0.0/0}
+
+  # VPC endpoints - Secrets Manager + SSM (P2.13). Interface endpoints so the
+  # mulesoft-actions Lambda can pull client-id/client-secret from SSM without
+  # traversing the NAT / public internet. Acceptable for SOC2 review.
+  McpVpcEndpointSg:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: HTTPS-only inbound from McpLambdaSg for VPC endpoints
+      VpcId: !Ref McpVpc
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          SourceSecurityGroupId: !Ref McpLambdaSg
+
+  McpSecretsManagerVpcEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      VpcId: !Ref McpVpc
+      VpcEndpointType: Interface
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.secretsmanager"
+      SubnetIds: [!Ref McpPrivateSubnet]
+      SecurityGroupIds: [!Ref McpVpcEndpointSg]
+      PrivateDnsEnabled: true
+
+  McpSsmVpcEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      VpcId: !Ref McpVpc
+      VpcEndpointType: Interface
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.ssm"
+      SubnetIds: [!Ref McpPrivateSubnet]
+      SecurityGroupIds: [!Ref McpVpcEndpointSg]
+      PrivateDnsEnabled: true
+
+  # API Gateway — single REST API, one stage, all MCP servers behind it.
+  McpApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Sub "006-${EnvName}-mcp-api"
+      StageName: !Ref EnvName
+      EndpointConfiguration: {Type: REGIONAL}
+      Cors:
+        AllowMethods: "'GET,POST,OPTIONS'"
+        AllowHeaders: "'Content-Type,Authorization,X-MCP-API-Key,X-Principal-Id,X-Agent-Id,X-Persona,X-Session-Id,X-Session-Token'"
+        AllowOrigin: "'*'"
+      MethodSettings:
+        - HttpMethod: "*"
+          ResourcePath: "/*"
+          LoggingLevel: INFO
+          DataTraceEnabled: false
+          MetricsEnabled: true
+
+  # Log groups — 30 day retention for every Lambda
+  MarketDataLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties: {LogGroupName: !Sub "/aws/lambda/006-${EnvName}-market-data", RetentionInDays: 30}
+  SecEdgarLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties: {LogGroupName: !Sub "/aws/lambda/006-${EnvName}-sec-edgar", RetentionInDays: 30}
+  NewsSearchLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties: {LogGroupName: !Sub "/aws/lambda/006-${EnvName}-news-search", RetentionInDays: 30}
+  SalesforceCrmLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties: {LogGroupName: !Sub "/aws/lambda/006-${EnvName}-salesforce-crm", RetentionInDays: 30}
+  MulesoftActionsLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties: {LogGroupName: !Sub "/aws/lambda/006-${EnvName}-mulesoft-actions", RetentionInDays: 30}
+  SfAuthProxyLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties: {LogGroupName: !Sub "/aws/lambda/006-${EnvName}-sf-auth-proxy", RetentionInDays: 30}
+
+  # market-data
+  MarketDataFunction:
+    Type: AWS::Serverless::Function
+    DependsOn: MarketDataLogGroup
+    Properties:
+      FunctionName: !Sub "006-${EnvName}-market-data"
+      CodeUri: ./mcp-servers/market-data/
+      Handler: app.lambda_handler
+      Layers: [!Ref McpBaseLayer]
+      Environment:
+        Variables:
+          FINNHUB_API_KEY: !Ref FinnhubApiKeyParam
+          ALPHA_VANTAGE_API_KEY: !Ref AlphaVantageApiKeyParam
+          MARKET_DATA_MODE: live
+      Policies: [AWSLambdaBasicExecutionRole]
+      Events:
+        Root: {Type: Api, Properties: {RestApiId: !Ref McpApi, Method: GET, Path: /mcp/market-data}}
+        ToolsList: {Type: Api, Properties: {RestApiId: !Ref McpApi, Method: POST, Path: /mcp/market-data/tools/list}}
+        ToolsCall: {Type: Api, Properties: {RestApiId: !Ref McpApi, Method: POST, Path: /mcp/market-data/tools/call}}
+
+  # sec-edgar
+  SecEdgarFunction:
+    Type: AWS::Serverless::Function
+    DependsOn: SecEdgarLogGroup
+    Properties:
+      FunctionName: !Sub "006-${EnvName}-sec-edgar"
+      CodeUri: ./mcp-servers/sec-edgar/
+      Handler: app.lambda_handler
+      Layers: [!Ref McpBaseLayer]
+      MemorySize: 1024
+      Timeout: 60
+      Environment:
+        Variables:
+          SEC_EDGAR_UA: !Sub "006-${EnvName} research-agent platform-ops@example.com"
+          SEC_EDGAR_MODE: live
+          BEDROCK_KB_ID: !Ref BedrockKbIdParam
+          KB_CHUNKS_BUCKET: !Ref KbChunksBucketParam
+          KB_CHUNKS_PREFIX: "kb-chunks/"
+          AWS_REGION_BEDROCK: !Ref BedrockRegion
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - Statement:
+            - Effect: Allow
+              Action:
+                - bedrock:Retrieve
+              Resource:
+                - !Sub "arn:aws:bedrock:${BedrockRegion}:${AWS::AccountId}:knowledge-base/*"
+            - Effect: Allow
+              Action:
+                - s3:GetObject
+                - s3:ListBucket
+              Resource:
+                - !Sub "arn:aws:s3:::${KbChunksBucketParam}"
+                - !Sub "arn:aws:s3:::${KbChunksBucketParam}/*"
+      Events:
+        Root: {Type: Api, Properties: {RestApiId: !Ref McpApi, Method: GET, Path: /mcp/sec-edgar}}
+        ToolsList: {Type: Api, Properties: {RestApiId: !Ref McpApi, Method: POST, Path: /mcp/sec-edgar/tools/list}}
+        ToolsCall: {Type: Api, Properties: {RestApiId: !Ref McpApi, Method: POST, Path: /mcp/sec-edgar/tools/call}}
+
+  # news-search
+  NewsSearchFunction:
+    Type: AWS::Serverless::Function
+    DependsOn: NewsSearchLogGroup
+    Properties:
+      FunctionName: !Sub "006-${EnvName}-news-search"
+      CodeUri: ./mcp-servers/news-search/
+      Handler: app.lambda_handler
+      Layers: [!Ref McpBaseLayer]
+      Timeout: 60
+      Environment:
+        Variables:
+          TAVILY_API_KEY: !Ref TavilyApiKeyParam
+          FINNHUB_API_KEY: !Ref FinnhubApiKeyParam
+          NEWS_SEARCH_MODE: live
+          AWS_REGION_BEDROCK: !Ref BedrockRegion
+          BEDROCK_SONNET_MODEL_ID: !Ref SonnetModelId
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - Statement:
+            - Effect: Allow
+              Action:
+                - bedrock:InvokeModel
+                - bedrock:Converse
+              Resource:
+                - !Sub "arn:aws:bedrock:${BedrockRegion}::foundation-model/${SonnetModelId}"
+      Events:
+        Root: {Type: Api, Properties: {RestApiId: !Ref McpApi, Method: GET, Path: /mcp/news-search}}
+        ToolsList: {Type: Api, Properties: {RestApiId: !Ref McpApi, Method: POST, Path: /mcp/news-search/tools/list}}
+        ToolsCall: {Type: Api, Properties: {RestApiId: !Ref McpApi, Method: POST, Path: /mcp/news-search/tools/call}}
+
+  # salesforce-crm
+  SalesforceCrmFunction:
+    Type: AWS::Serverless::Function
+    DependsOn: SalesforceCrmLogGroup
+    Properties:
+      FunctionName: !Sub "006-${EnvName}-salesforce-crm"
+      CodeUri: ./mcp-servers/salesforce-crm/
+      Handler: app.lambda_handler
+      Layers: [!Ref McpBaseLayer]
+      Timeout: 30
+      Environment:
+        Variables:
+          # NOTE: SF_AUTH_PROXY_URL cannot reference ${McpApi} here — it creates
+          # a circular dependency (Function -> McpApi -> Stage -> Deployment ->
+          # this function's permissions -> Function). Deployed as a placeholder,
+          # then patched post-deploy with the real API URL via
+          # `aws lambda update-function-configuration`.
+          SF_AUTH_PROXY_URL: "__POPULATED_POST_DEPLOY__"
+          SF_AUTH_PROXY_KEY: !Ref SfAuthProxyKeyParam
+          SALESFORCE_CRM_MODE: live
+          SF_API_VERSION: v60.0
+      Policies: [AWSLambdaBasicExecutionRole]
+      Events:
+        Root: {Type: Api, Properties: {RestApiId: !Ref McpApi, Method: GET, Path: /mcp/salesforce-crm}}
+        ToolsList: {Type: Api, Properties: {RestApiId: !Ref McpApi, Method: POST, Path: /mcp/salesforce-crm/tools/list}}
+        ToolsCall: {Type: Api, Properties: {RestApiId: !Ref McpApi, Method: POST, Path: /mcp/salesforce-crm/tools/call}}
+
+  # sf-auth-proxy — internal, no shared base layer (simpler deps)
+  SfAuthProxyFunction:
+    Type: AWS::Serverless::Function
+    DependsOn: SfAuthProxyLogGroup
+    Properties:
+      FunctionName: !Sub "006-${EnvName}-sf-auth-proxy"
+      CodeUri: ./mcp-servers/sf-auth-proxy/
+      Handler: app.lambda_handler
+      Timeout: 15
+      Environment:
+        Variables:
+          SF_BOOTSTRAP_SECRET: !Ref SfBootstrapSecretName
+          SF_AUTH_PROXY_KEY: !Ref SfAuthProxyKeyParam
+          SF_AUTH_PROXY_MODE: live
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - Statement:
+            - Effect: Allow
+              Action: secretsmanager:GetSecretValue
+              Resource: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${SfBootstrapSecretName}*"
+      Events:
+        Invoke: {Type: Api, Properties: {RestApiId: !Ref McpApi, Method: POST, Path: /internal/sf-auth}}
+
+  # mulesoft-actions — VPC + NAT egress only
+  MulesoftActionsFunction:
+    Type: AWS::Serverless::Function
+    DependsOn: MulesoftActionsLogGroup
+    Properties:
+      FunctionName: !Sub "006-${EnvName}-mulesoft-actions"
+      CodeUri: ./mcp-servers/mulesoft-actions/
+      Handler: app.lambda_handler
+      Layers: [!Ref McpBaseLayer]
+      Timeout: 60
+      VpcConfig:
+        SubnetIds: [!Ref McpPrivateSubnet]
+        SecurityGroupIds: [!Ref McpLambdaSg]
+      Environment:
+        Variables:
+          MULESOFT_MODE: !Ref MulesoftModeParam
+          MULESOFT_CLIENT_ID_PARAM: !Ref MulesoftClientIdParamName
+          MULESOFT_CLIENT_SECRET_PARAM: !Ref MulesoftClientSecretParamName
+          MULESOFT_PROCESS_API_BASE: "https://openclaw-v3-submit-order-q73tdv.5sc6y6-3.usa-e2.cloudhub.io/api"
+          MULESOFT_WIRE_API_BASE: "https://openclaw-v3-initiate-wire-q73tdv.5sc6y6-1.usa-e2.cloudhub.io/api"
+          MCP_API_KEY: !Ref McpApiKeyParam
+          CORS_ALLOW_ORIGIN: "*"
+          LOG_LEVEL: "INFO"
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - AWSLambdaVPCAccessExecutionRole
+        - Statement:
+            - Effect: Allow
+              Action: ssm:GetParameter
+              Resource:
+                - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/006-v3/mulesoft/client-id"
+                - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/006-v3/mulesoft/client-secret"
+      Events:
+        Root: {Type: Api, Properties: {RestApiId: !Ref McpApi, Method: GET, Path: /mcp/mulesoft-actions}}
+        ToolsList: {Type: Api, Properties: {RestApiId: !Ref McpApi, Method: POST, Path: /mcp/mulesoft-actions/tools/list}}
+        ToolsCall: {Type: Api, Properties: {RestApiId: !Ref McpApi, Method: POST, Path: /mcp/mulesoft-actions/tools/call}}
+
+  # BFF (Backend-For-Frontend) — 4 REST endpoints the React SPA polls.
+  BffLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties: {LogGroupName: !Sub "/aws/lambda/006-${EnvName}-bff", RetentionInDays: 30}
+
+  BffFunction:
+    Type: AWS::Serverless::Function
+    DependsOn: BffLogGroup
+    Properties:
+      FunctionName: !Sub "006-${EnvName}-bff"
+      CodeUri: ./mcp-servers/bff/
+      Handler: app.lambda_handler
+      Layers: [!Ref McpBaseLayer]
+      Timeout: 15
+      Environment:
+        Variables:
+          AGENTCORE_SESSION_SIGNING_KEY: !Ref AgentcoreSessionSigningKeyParam
+          MCP_DEV_MODE: "true"
+      Policies: [AWSLambdaBasicExecutionRole]
+      Events:
+        InquiriesList:
+          Type: Api
+          Properties:
+            RestApiId: !Ref McpApi
+            Method: GET
+            Path: /api/inquiries
+        SourceTable:
+          Type: Api
+          Properties:
+            RestApiId: !Ref McpApi
+            Method: GET
+            Path: "/api/source_tables/{sourceId}"
+        SourceChunk:
+          Type: Api
+          Properties:
+            RestApiId: !Ref McpApi
+            Method: GET
+            Path: "/api/source_chunk/{sourceId}"
+        SessionWarm:
+          Type: Api
+          Properties:
+            RestApiId: !Ref McpApi
+            Method: POST
+            Path: /api/session/warm
+
+  # agent-proxy — browser REST shim to AgentCore runtime
+  AgentProxyLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties: {LogGroupName: !Sub "/aws/lambda/006-${EnvName}-agent-proxy", RetentionInDays: 30}
+
+  AgentProxyFunction:
+    Type: AWS::Serverless::Function
+    DependsOn: AgentProxyLogGroup
+    Properties:
+      FunctionName: !Sub "006-${EnvName}-agent-proxy"
+      CodeUri: ./mcp-servers/agent-proxy/
+      Handler: app.lambda_handler
+      Timeout: 120
+      MemorySize: 512
+      Environment:
+        Variables:
+          AGENTCORE_RUNTIME_ARN: !Ref AgentCoreRuntimeArnParam
+          AGENTCORE_REGION: !Ref BedrockRegion
+          MCP_DEV_MODE: "true"
+          MCP_API_URL: ""
+          MCP_API_KEY: !Sub "{{resolve:ssm:/006-${EnvName}/mcp/api-key}}"
+          HITL_SIGNING_KEY_SSM: !Sub "/006-${EnvName}/hitl/signing_key"
+          CORS_ALLOW_ORIGIN: "*"
+          COGNITO_USER_POOL_ID: !Ref CognitoUserPoolIdParam
+          COGNITO_APP_CLIENT_ID: !Ref CognitoAppClientIdParam
+          COGNITO_REGION: !Ref BedrockRegion
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - Statement:
+            - Effect: Allow
+              Action:
+                - bedrock-agentcore:InvokeAgentRuntime
+              Resource:
+                - !Sub "arn:aws:bedrock-agentcore:${BedrockRegion}:${AWS::AccountId}:runtime/*"
+            - Effect: Allow
+              Action:
+                - ssm:GetParameter
+              Resource:
+                - !Sub "arn:aws:ssm:${BedrockRegion}:${AWS::AccountId}:parameter/006-${EnvName}/hitl/*"
+      Events:
+        Invoke:
+          Type: Api
+          Properties:
+            RestApiId: !Ref McpApi
+            Method: POST
+            Path: /agent/invoke
+        InvokeCors:
+          Type: Api
+          Properties:
+            RestApiId: !Ref McpApi
+            Method: OPTIONS
+            Path: /agent/invoke
+        Approve:
+          Type: Api
+          Properties:
+            RestApiId: !Ref McpApi
+            Method: POST
+            Path: /agent/approve
+        ApproveCors:
+          Type: Api
+          Properties:
+            RestApiId: !Ref McpApi
+            Method: OPTIONS
+            Path: /agent/approve
+
+  # agent-proxy-async — submit-and-poll for long-running advisor action_write.
+  # API Gateway REST has a 29s integration timeout; advisor 7-gate serial
+  # spine typically runs 40-90s. POST /agent/invoke-long returns a turn_id
+  # in <1s and fire-and-forgets a self-invoke (InvocationType=Event). The
+  # worker writes the envelope to S3. Frontend polls
+  # GET /agent/invoke-long/status/{turn_id} every 500ms until status != pending.
+  AgentResultsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "006-${EnvName}-agent-async-results-${AWS::AccountId}"
+      LifecycleConfiguration:
+        Rules:
+          - Id: ExpireTurnsAfter1Day
+            Status: Enabled
+            ExpirationInDays: 1
+            Prefix: turns/
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  AgentProxyAsyncLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/006-${EnvName}-agent-proxy-async"
+      RetentionInDays: 30
+
+  AgentProxyAsyncFunction:
+    Type: AWS::Serverless::Function
+    DependsOn: AgentProxyAsyncLogGroup
+    Properties:
+      FunctionName: !Sub "006-${EnvName}-agent-proxy-async"
+      CodeUri: ./mcp-servers/agent-proxy-stream/
+      Handler: app.lambda_handler
+      Timeout: 300       # 5 min — covers advisor action_write worst case
+      MemorySize: 512
+      Environment:
+        Variables:
+          AGENTCORE_RUNTIME_ARN: !Ref AgentCoreRuntimeArnParam
+          AGENTCORE_REGION: !Ref BedrockRegion
+          MCP_DEV_MODE: "true"
+          CORS_ALLOW_ORIGIN: "*"
+          RESULTS_BUCKET: !Ref AgentResultsBucket
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - Statement:
+            - Effect: Allow
+              Action:
+                - bedrock-agentcore:InvokeAgentRuntime
+              Resource:
+                - !Sub "arn:aws:bedrock-agentcore:${BedrockRegion}:${AWS::AccountId}:runtime/*"
+            - Effect: Allow
+              Action:
+                - s3:PutObject
+                - s3:GetObject
+              Resource:
+                - !Sub "arn:aws:s3:::${AgentResultsBucket}/turns/*"
+            - Effect: Allow
+              Action:
+                - lambda:InvokeFunction
+              Resource:
+                - !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:006-${EnvName}-agent-proxy-async"
+      Events:
+        Submit:
+          Type: Api
+          Properties:
+            RestApiId: !Ref McpApi
+            Method: POST
+            Path: /agent/invoke-long
+        SubmitCors:
+          Type: Api
+          Properties:
+            RestApiId: !Ref McpApi
+            Method: OPTIONS
+            Path: /agent/invoke-long
+        Status:
+          Type: Api
+          Properties:
+            RestApiId: !Ref McpApi
+            Method: GET
+            Path: /agent/invoke-long/status/{turn_id}
+        StatusCors:
+          Type: Api
+          Properties:
+            RestApiId: !Ref McpApi
+            Method: OPTIONS
+            Path: /agent/invoke-long/status/{turn_id}
+
+  # compliance-trigger — scheduled sweep for Narrative 3 (Risk Alert).
+  # Runs every 15 min during US market hours. Queries concentrated positions
+  # via salesforce-crm MCP, writes Client_Inquiry__c alerts for each.
+  ComplianceTriggerLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties: {LogGroupName: !Sub "/aws/lambda/006-${EnvName}-compliance-trigger", RetentionInDays: 30}
+
+  ComplianceTriggerFunction:
+    Type: AWS::Serverless::Function
+    DependsOn: ComplianceTriggerLogGroup
+    Properties:
+      FunctionName: !Sub "006-${EnvName}-compliance-trigger"
+      CodeUri: ./mcp-servers/compliance-trigger/
+      Handler: app.lambda_handler
+      Timeout: 60
+      MemorySize: 256
+      Environment:
+        Variables:
+          MCP_API_URL: !Sub "https://${McpApi}.execute-api.${AWS::Region}.amazonaws.com/${EnvName}"
+          MCP_API_KEY: !Ref McpApiKeyParam
+          CONCENTRATION_THRESHOLD_PCT: "5.0"
+          WATCH_TICKERS: "NVDA,AAPL,MSFT,GOOGL,AMZN,META,TSLA"
+      Policies: [AWSLambdaBasicExecutionRole]
+      Events:
+        MarketHoursSchedule:
+          Type: Schedule
+          Properties:
+            Schedule: "cron(0/15 13-20 ? * MON-FRI *)"
+            Description: "Compliance sweep every 15 min during US market hours (9:30-16:00 ET = 13:30-20:00 UTC)"
+            Enabled: true
+
+Outputs:
+  ApiUrl:
+    Description: MCP REST API base URL
+    Value: !Sub "https://${McpApi}.execute-api.${AWS::Region}.amazonaws.com/${EnvName}"
+  AgentAsyncPath:
+    Description: POST path for async advisor turns (submit-and-poll; bypasses 29s gateway timeout)
+    Value: !Sub "https://${McpApi}.execute-api.${AWS::Region}.amazonaws.com/${EnvName}/agent/invoke-long"
+  McpBaseLayerArn:
+    Description: ARN of the shared MCP base Lambda layer
+    Value: !Ref McpBaseLayer
+  NatEip:
+    Description: NAT EIP to allowlist in Anypoint IP policy
+    Value: !Ref McpNatEip
+  VpcId:
+    Value: !Ref McpVpc

@@ -1,0 +1,101 @@
+# -----------------------------------------------------------------------------
+# Project 007 FSI Interoperability Platform -- ArgoCD ApplicationSet.
+#
+# Wave 4 deliverable. Spec: .kiro/specs/ops-hardening-wave4-argocd-applicationset.md.
+#
+# Iterates over config/tenants/*/values.yaml and provisions one ArgoCD
+# Application per tenant. Steering Rule 26 (GitOps via ArgoCD).
+#
+# Onboarding: a new tenant is added by dropping a values.yaml under
+# config/tenants/<tenant_id>/ and opening a PR. ArgoCD's git-directory
+# generator discovers the new directory on next poll (<3 minutes by
+# default) and the Application is created automatically.
+#
+# Offboarding: rename the tenant directory to `.deprecated-<tenant_id>`
+# first, wait one reconcile cycle, confirm prune is clean, THEN delete
+# the directory. This prevents the "allowEmpty: false" guard from
+# blocking the removal AND gives operators time to catch mistakes.
+# -----------------------------------------------------------------------------
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: 007-fsi-tenants
+  namespace: argocd
+  labels:
+    app.kubernetes.io/part-of: 007-fsi
+    app.kubernetes.io/managed-by: argocd
+  annotations:
+    007.fsi/spec: "ops-hardening-wave4-argocd-applicationset.md"
+spec:
+  goTemplate: true
+  goTemplateOptions:
+    - missingkey=error
+  generators:
+    - git:
+        # OVERRIDE PER FIRM -- the infra repo that holds this chart.
+        repoURL: https://github.com/REPLACE_ME/project-007-infra.git
+        revision: main
+        directories:
+          - path: config/tenants/*
+          # Skip soft-deleted tenant dirs (offboarding window).
+          - path: config/tenants/.deprecated-*
+            exclude: true
+  template:
+    metadata:
+      name: "007-fsi-{{.path.basename}}"
+      labels:
+        app.kubernetes.io/part-of: 007-fsi
+        app.kubernetes.io/managed-by: argocd
+        007.fsi/tenant: "{{.path.basename}}"
+      # Deletion guard: a human must remove this finalizer before
+      # ArgoCD will prune the Application resource itself.
+      finalizers:
+        - resources-finalizer.argocd.argoproj.io
+    spec:
+      project: 007-fsi
+      source:
+        # OVERRIDE PER FIRM.
+        repoURL: https://github.com/REPLACE_ME/project-007-infra.git
+        path: deploy/helm/007-fsi
+        # Pinned release tag. Tenants who want `main` override via
+        # `tenant.allowHead: true` + `tenant.targetRevision: HEAD` in
+        # their own values.yaml (a follow-up wave will plumb the
+        # per-tenant override via a second values-file injection).
+        targetRevision: v0.5.0
+        helm:
+          valueFiles:
+            # Cloud baseline always applied first.
+            - ../../values-cloud.yaml
+            # Tenant-specific overrides. Path is relative to the chart
+            # directory (deploy/helm/007-fsi), so the tenant values
+            # directory (config/tenants/<id>/) is 3 dirs up.
+            - ../../../config/tenants/{{.path.basename}}/values.yaml
+          parameters:
+            - name: tenant.id
+              value: "{{.path.basename}}"
+      destination:
+        server: https://kubernetes.default.svc
+        # Namespace per tenant (Steering Rule 23 isolation).
+        namespace: "{{.path.basename}}"
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+          # Guard against accidental full-prune if values file goes
+          # missing for any reason during sync.
+          allowEmpty: false
+        syncOptions:
+          - CreateNamespace=true
+          - PruneLast=true
+          - ApplyOutOfSyncOnly=true
+          - ServerSideApply=true
+        retry:
+          limit: 5
+          backoff:
+            duration: 5s
+            factor: 2
+            maxDuration: 3m
+      # Drift is auto-corrected by selfHeal above. For safety-sensitive
+      # resources (ExternalSecret, Certificate, NetworkPolicy), we also
+      # wire ignoreDifferences=false so ArgoCD flags any drift.
+      ignoreDifferences: []

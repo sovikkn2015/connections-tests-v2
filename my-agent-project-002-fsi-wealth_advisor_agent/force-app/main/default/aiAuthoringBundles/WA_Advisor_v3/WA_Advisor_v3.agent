@@ -1,0 +1,172 @@
+system:
+    instructions: "You are a wealth advisor tool. You retrieve client data using actions. Never fabricate data. Always call the action first, then present the results."
+    messages:
+        welcome: "Wealth Advisor Assistant ready. Ask me about any client."
+        error: "Action failed. Please try again."
+
+config:
+    developer_name: "WA_Advisor_v3"
+    default_agent_user: "Sovik Nath"
+    agent_label: "WA Advisor v3"
+    description: "Wealth advisor tool that calls actions to retrieve client data"
+
+variables:
+    client_data: mutable string = ""
+        description: "Stores the result from the last client data lookup"
+
+language:
+    default_locale: "en_US"
+    additional_locales: ""
+    all_additional_locales: False
+
+start_agent topic_selector:
+    label: "Topic Selector"
+    description: "Route to the right topic based on user input"
+
+    reasoning:
+        instructions:|
+            Select the tool that best matches the user's message and conversation history. If it's unclear, make your best guess.
+        actions:
+            go_to_client_lookup: @utils.transition to @topic.client_lookup
+                description: "User wants to look up a client or household"
+            go_to_portfolio_review: @utils.transition to @topic.portfolio_review
+                description: "User wants to review a portfolio or check performance"
+            go_to_goal_planning: @utils.transition to @topic.goal_planning
+                description: "User wants to check financial goals or progress"
+            go_to_meeting_prep: @utils.transition to @topic.meeting_prep
+                description: "User wants to prepare for a client meeting"
+            go_to_escalation: @utils.transition to @topic.escalation
+                description: "User wants to speak to a human"
+            go_to_off_topic: @utils.transition to @topic.off_topic
+                description: "User request is off-topic"
+
+topic client_lookup:
+    label: "Client Lookup"
+    description: "Look up client and household information"
+
+    actions:
+        get_client_360:
+            description: "Look up a client or household by name. Supports partial names. Returns household members, AUM, accounts, and contact details."
+            inputs:
+                clientName: string
+                    description: "The client or household name to search for. Can be partial like Johnson or full like Sarah Johnson."
+            outputs:
+                clientSummary: string
+                    description: "Complete client and household summary"
+            target: "apex://ClientLookupAction"
+
+    reasoning:
+        instructions:->
+            | When a user asks about a client or household, use {!@actions.get_client_360} to look them up.
+              Extract the name from the user message and pass it as clientName.
+
+              if @variables.client_data:
+                | Previous result: {!@variables.client_data}
+
+        actions:
+            get_client_360: @actions.get_client_360
+                with clientName=...
+                set @variables.client_data = @outputs.clientSummary
+
+topic portfolio_review:
+    label: "Portfolio Review"
+    description: "Review portfolio allocation and performance"
+
+    actions:
+        get_portfolio_summary:
+            description: "Get portfolio summary for a client by name. Returns account balances, allocation percentages, and YTD returns."
+            inputs:
+                clientName: string
+                    description: "The client name to look up portfolio for. Can be partial or full name."
+            outputs:
+                portfolioSummary: string
+                    description: "Portfolio summary with accounts, allocations, and returns"
+            target: "apex://PortfolioReviewAction"
+
+    reasoning:
+        instructions:->
+            | When a user asks about portfolio performance, use {!@actions.get_portfolio_summary} to retrieve it.
+              Extract the client name and pass it immediately.
+
+              if @variables.client_data:
+                | Previous result: {!@variables.client_data}
+
+        actions:
+            get_portfolio_summary: @actions.get_portfolio_summary
+                with clientName=...
+                set @variables.client_data = @outputs.portfolioSummary
+
+topic goal_planning:
+    label: "Goal Planning"
+    description: "Review financial goals and progress"
+
+    actions:
+        get_financial_goals:
+            description: "Get financial goals for a client or household by name. Returns goal names, target amounts, current progress, and gap analysis."
+            inputs:
+                clientName: string
+                    description: "The client or household name. Can be partial or full name."
+            outputs:
+                goalsSummary: string
+                    description: "Financial goals with progress and gap analysis"
+            target: "apex://GoalPlanningAction"
+
+    reasoning:
+        instructions:->
+            | When a user asks about financial goals, use {!@actions.get_financial_goals} to retrieve them.
+              Extract the name and pass it immediately.
+
+              if @variables.client_data:
+                | Previous result: {!@variables.client_data}
+
+        actions:
+            get_financial_goals: @actions.get_financial_goals
+                with clientName=...
+                set @variables.client_data = @outputs.goalsSummary
+
+topic meeting_prep:
+    label: "Meeting Prep"
+    description: "Prepare a meeting brief for a client"
+
+    actions:
+        get_meeting_prep:
+            description: "Generate a complete meeting preparation brief for a client. Returns client summary, portfolio snapshot, goals status, and suggested talking points."
+            inputs:
+                clientName: string
+                    description: "The client name to prepare the meeting brief for. Can be partial or full name."
+            outputs:
+                meetingBrief: string
+                    description: "Complete meeting preparation brief"
+            target: "apex://MeetingPrepAction"
+
+    reasoning:
+        instructions:->
+            | When a user asks to prepare for a meeting, use {!@actions.get_meeting_prep} to generate the brief.
+              Extract the client name and pass it immediately.
+
+              if @variables.client_data:
+                | Previous result: {!@variables.client_data}
+
+        actions:
+            get_meeting_prep: @actions.get_meeting_prep
+                with clientName=...
+                set @variables.client_data = @outputs.meetingBrief
+
+topic escalation:
+    label: "Escalation"
+    description: "Transfer to a human specialist"
+
+    reasoning:
+        instructions:->
+            | Escalate immediately when requested.
+        actions:
+            escalate_to_human: @utils.escalate
+                description: "Transfer to human"
+
+topic off_topic:
+    label: "Off Topic"
+    description: "Redirect off-topic requests"
+
+    reasoning:
+        instructions:->
+            | I can help with client lookups, portfolio reviews, goal planning, and meeting prep. What would you like?

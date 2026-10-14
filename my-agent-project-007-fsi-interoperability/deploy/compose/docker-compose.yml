@@ -1,0 +1,168 @@
+# -----------------------------------------------------------------------------
+# Project 007 FSI Interoperability Platform -- local dev stack.
+#
+# Wave 1 trust-layer stack: Vault dev + Postgres + M1 + M2/M4 + M6 + M10.
+# mTLS is DISABLED for local laptop development; FAKE_SECRETS=true signals
+# the modules to skip production-grade secret validation.
+#
+# Usage:
+#     docker compose -f deploy/compose/docker-compose.yml up --build
+#
+# Production uses the Helm umbrella at deploy/helm/007-fsi instead --
+# this compose file is laptop-only.
+#
+# Security posture (local-dev only -- NEVER used in prod):
+# * Vault runs in -dev mode. Root token `dev-only-root` is hard-coded
+#   here so `docker compose up` "just works" out of the box. Vault is
+#   exposed only on the compose network, NOT on the host.
+# * Postgres has a non-secret `dev-postgres` password; it is never
+#   exposed outside the compose network.
+# * All four module services run with readOnlyRootFilesystem defaults
+#   from the Dockerfile, USER 1000, and healthchecks on :8080/health.
+# -----------------------------------------------------------------------------
+
+name: 007-fsi-trust-layer
+
+networks:
+  007-trust-layer:
+    driver: bridge
+    name: 007-trust-layer
+
+services:
+
+  # ---------------------------------------------------------------------------
+  # Infrastructure dependencies -- Vault (dev) + Postgres.
+  # ---------------------------------------------------------------------------
+
+  vault-dev:
+    image: hashicorp/vault:1.15
+    container_name: 007-vault-dev
+    command: server -dev -dev-listen-address=0.0.0.0:8200
+    environment:
+      VAULT_DEV_ROOT_TOKEN_ID: dev-only-root
+      VAULT_DEV_LISTEN_ADDRESS: 0.0.0.0:8200
+      VAULT_ADDR: http://127.0.0.1:8200
+    cap_add:
+      - IPC_LOCK
+    networks:
+      - 007-trust-layer
+    # Exposed only to the compose network. No host ports published.
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8200/v1/sys/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: 007-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: dev-postgres
+      POSTGRES_DB: postgres
+    networks:
+      - 007-trust-layer
+    # No host port publish. Reached by later waves' checkpointer service.
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
+  # ---------------------------------------------------------------------------
+  # Trust-layer modules (Wave 1).
+  # ---------------------------------------------------------------------------
+
+  m1-identity:
+    build:
+      context: ../..
+      dockerfile: deploy/docker/m1-identity/Dockerfile
+    container_name: 007-m1-identity
+    environment:
+      ENABLE_MTLS: "false"
+      FAKE_SECRETS: "true"
+      AID_AUDIENCE: 007-mcp-gateway
+      # AID_PRIVATE_KEY_PEM intentionally NOT set -- local dev boots the
+      # app with /ready at 503, which is the correct pod lifecycle
+      # signal. Wire a dev key via `docker compose run -e AID_PRIVATE_KEY_PEM=...`
+      # when testing verify paths.
+    networks:
+      - 007-trust-layer
+    depends_on:
+      vault-dev:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8080/health"]
+      interval: 15s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+
+  m2-m4-policy-engine:
+    build:
+      context: ../..
+      dockerfile: deploy/docker/m2-m4-policy-engine/Dockerfile
+    container_name: 007-m2-m4-policy-engine
+    environment:
+      ENABLE_MTLS: "false"
+      FAKE_SECRETS: "true"
+    networks:
+      - 007-trust-layer
+    depends_on:
+      vault-dev:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8080/health"]
+      interval: 15s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+
+  m6-mcp-gateway:
+    build:
+      context: ../..
+      dockerfile: deploy/docker/m6-mcp-gateway/Dockerfile
+    container_name: 007-m6-mcp-gateway
+    environment:
+      ENABLE_MTLS: "false"
+      FAKE_SECRETS: "true"
+      M1_IDENTITY_URL: http://m1-identity:8080
+      M2_M4_POLICY_URL: http://m2-m4-policy-engine:8080
+      M10_AUDIT_URL: http://m10-audit-logger:8080
+    networks:
+      - 007-trust-layer
+    depends_on:
+      m1-identity:
+        condition: service_healthy
+      m2-m4-policy-engine:
+        condition: service_healthy
+      m10-audit-logger:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8080/health"]
+      interval: 15s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+
+  m10-audit-logger:
+    build:
+      context: ../..
+      dockerfile: deploy/docker/m10-audit-logger/Dockerfile
+    container_name: 007-m10-audit-logger
+    environment:
+      ENABLE_MTLS: "false"
+      FAKE_SECRETS: "true"
+    networks:
+      - 007-trust-layer
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8080/health"]
+      interval: 15s
+      timeout: 3s
+      retries: 5
+      start_period: 10s

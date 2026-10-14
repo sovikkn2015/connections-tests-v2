@@ -1,0 +1,125 @@
+# -----------------------------------------------------------------------------
+# Project 007 FSI Interoperability Platform -- umbrella values (hybrid topology).
+#
+# Phase 4 deliverable -- Tier 2 asset-manager onboarding topology.
+# Spec: .kiro/specs/ops-hardening-wave4-hybrid-topology.md (v2 GO 8.3/10).
+#
+# HYBRID PATTERN
+#   * M6 gateway + M10 audit + the rest of the trust/intelligence layer
+#     live in cloud (AWS / GCP / Azure) -- same contract as values-cloud.yaml.
+#   * M11 REST-family adapters and M7 shim live on-prem, inside the firm's
+#     own Kubernetes cluster, speaking to on-prem vendor systems (internal
+#     trading OMS, private CRM, etc.). On-prem adapters PUSH to a cloud-side
+#     ingest endpoint over mTLS -- the cloud gateway does NOT initiate
+#     connections to on-prem. Removes the need for inbound firewall holes on
+#     the firm side.
+#   * Runtime is Strands SDK (Steering Rule 1 -- Strands is the hybrid /
+#     on-prem runtime; Claude Managed Agents is cloud-only).
+#
+# USAGE
+#   helm install 007-fsi . -f values-cloud.yaml -f values-hybrid.yaml
+#
+# Both files MUST be supplied (values-cloud.yaml carries the production
+# module-level defaults; this file overlays the hybrid deltas).
+#
+# ASSUMPTIONS (not created by this chart)
+#   * Service-mesh cross-cluster bridge -- Istio east-west gateway OR Linkerd
+#     multi-cluster service mirror. See VALUES-HYBRID-README.md §Bridge.
+#   * On-prem mTLS cert bundle provisioned by the firm's PKI and available
+#     as a Kubernetes Secret named `onPrem.certBundle.secretName`. Rotated
+#     by the firm every <= 90 days. cert-manager is NOT used on-prem
+#     (cert-manager cannot run without a cluster; firm PKI handles it).
+#
+# AUDIT BUCKET CONVENTION (operator-enforced, not chart-enforced)
+#   Prefix WORM object keys with `topology=hybrid/` so hybrid records are
+#   identifiable alongside cloud records in the same S3 bucket.
+# -----------------------------------------------------------------------------
+
+global:
+  # R1 topology discriminator.
+  topology: hybrid
+  # R2 runtime discriminator (Steering Rule 1).
+  runtime: strands_sdk
+  # R6 mesh bridge assumption. This chart does NOT install the bridge --
+  # see VALUES-HYBRID-README.md for the two supported stacks.
+  mesh:
+    bridgeAssumed: true
+    # One of: "istio-east-west" | "linkerd-multicluster".
+    bridgeKind: istio-east-west
+  # R1 topology / runtime annotations applied to every pod template via
+  # sub-chart pass-through. Operator is responsible for verifying the
+  # annotations land on sub-charts that don't yet honor the pass-through;
+  # test_helm_template_hybrid.sh asserts on the strands_sdk string.
+  topologyAnnotations:
+    007.fsi/topology: hybrid
+    007.fsi/runtime: strands_sdk
+  # R9 optional node-group knobs. Empty by default; Tier 2 firms that
+  # want a dedicated node group override here.
+  nodeSelector: {}
+  tolerations: []
+
+# R4 on-prem adapter registry (informational, no resources rendered).
+onPrem:
+  enabled: true
+  certBundle:
+    # Firm pre-creates this secret in the cloud cluster from their PKI.
+    # Contents: tls.crt, tls.key, ca.crt. Rotation SLA <= 90 days.
+    secretName: firm-onprem-mtls
+    rotationDays: 90
+  # R5 adapter-tier relay registry. Each entry documents one on-prem M11
+  # REST-family adapter that PUSHES into the cloud gateway.
+  adapters:
+    - name: internal-trading-api
+      # mTLS ingest endpoint -- cloud-side. Adapters initiate the
+      # connection; cloud does NOT initiate inbound to on-prem.
+      ingestEndpoint: adapters.ingest.example-firm.internal:8443
+      description: "Firm's proprietary trading OMS (on-prem)"
+    - name: private-crm
+      ingestEndpoint: adapters.ingest.example-firm.internal:8443
+      description: "Firm's private CRM (on-prem)"
+
+# -----------------------------------------------------------------------------
+# Cloud-side sub-chart overrides. Every key here deltas from values-cloud.yaml.
+# Most are unchanged -- hybrid uses the same cloud contract for M1/M2-M4/M6/M10
+# and the same intelligence-layer contract for M8/M9/M12. The deltas:
+#
+#   * M6 egress allowlist gains the on-prem adapter ingest endpoint. This
+#     key is consumed by the egress-narrowing wave's networkpolicy template.
+#   * Intelligence-layer sub-charts are explicitly enabled (values.yaml
+#     disables them by default; values-cloud.yaml does too).
+# -----------------------------------------------------------------------------
+
+m1-identity:
+  enabled: true
+
+m2-m4-policy-engine:
+  enabled: true
+
+m6-mcp-gateway:
+  enabled: true
+  # The hybrid egress allowlist ADDITION -- does not replace the
+  # cloud-mode allowlist; operator merges both on the CLI via
+  # -f values-cloud.yaml -f values-hybrid.yaml (latter wins). The
+  # egress-narrowing wave's networkpolicy template consumes this.
+  egressAllowlist:
+    - host: adapters.ingest.example-firm.internal
+      port: 8443
+      protocol: TCP
+
+m10-audit-logger:
+  enabled: true
+
+m8-pipeline-engine:
+  enabled: true
+
+m9-intent-router:
+  enabled: true
+
+m12-supervisor:
+  enabled: true
+
+# M13 FIX Bridge -- in hybrid topology M13 runs on-prem (stateful,
+# close to the firm's broker FIX endpoint). The cloud partition
+# of the umbrella chart keeps it disabled.
+m13-fix-bridge:
+  enabled: false

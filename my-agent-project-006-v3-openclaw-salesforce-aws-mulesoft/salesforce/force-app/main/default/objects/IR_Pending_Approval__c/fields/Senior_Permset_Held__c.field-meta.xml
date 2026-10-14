@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Senior_Permset_Held__c</fullName>
+    <label>Senior Permset Held</label>
+    <description>True if the second approver holds Senior_Compliance_Approver permission set at resolve time (belt-and-suspenders over the permset itself).</description>
+    <type>Checkbox</type>
+    <defaultValue>false</defaultValue>
+</CustomField>

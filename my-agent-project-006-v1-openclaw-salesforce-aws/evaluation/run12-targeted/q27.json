@@ -1,0 +1,39 @@
+{
+  "run_date": "2026-04-22T15:00:36.125632",
+  "total_queries": 1,
+  "passed": 1,
+  "failed": 0,
+  "errors": 0,
+  "pass_rate": 100.0,
+  "results": [
+    {
+      "query_id": 27,
+      "level": "L1",
+      "query": "Any regulatory news affecting pharma stocks?",
+      "response_preview": "---\n\n### \ud83d\udea7 Bootstrap Note (Quick)\n\nHey \u2014 I just came online and this is a fresh workspace with no identity set up yet. Per my bootstrap instructions, I should figure out who I am with you (name, vibe,",
+      "scores": {
+        "accuracy": 4,
+        "completeness": 3,
+        "relevance": 3,
+        "safety": 5,
+        "actionability": 3,
+        "attribution": 3,
+        "reasoning": 4
+      },
+      "avg_score": 3.6,
+      "status": "PASS",
+      "flags": [
+        "Tool failure prevented actual news delivery",
+        "Bootstrap/identity preamble is unprofessional and irrelevant for a CO persona",
+        "No actual regulatory news provided \u2014 core query unanswered",
+        "Offering SEC 8-K as proxy is reasonable but not equivalent to news coverage",
+        "Bootstrap discussion is noise that reduces response quality"
+      ],
+      "tools_used": [
+        "sec-edgar",
+        "news-search"
+      ],
+      "latency_ms": 162446
+    }
+  ]
+}

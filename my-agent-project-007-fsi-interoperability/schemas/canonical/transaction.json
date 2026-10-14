@@ -1,0 +1,478 @@
+{
+  "$defs": {
+    "AccountType": {
+      "description": "16 ERISA + tax-advantaged account types. OPA needs account_type for per-type compliance rules.",
+      "enum": [
+        "taxable",
+        "traditional_ira",
+        "roth_ira",
+        "401k",
+        "403b",
+        "457",
+        "sep_ira",
+        "simple_ira",
+        "trust_revocable",
+        "trust_irrevocable",
+        "custodial_utma",
+        "custodial_ugma",
+        "erisa_pension",
+        "erisa_profit_sharing",
+        "529",
+        "hsa"
+      ],
+      "title": "AccountType",
+      "type": "string"
+    },
+    "CostBasisImpact": {
+      "description": "Tax impact of a transaction on cost basis.",
+      "properties": {
+        "realized_gain_loss": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Realized gain or loss from this transaction.",
+          "title": "Realized Gain Loss"
+        },
+        "holding_period": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Tax holding period: short_term, long_term.",
+          "title": "Holding Period"
+        },
+        "wash_sale_disallowed": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Disallowed loss amount if wash sale applies.",
+          "title": "Wash Sale Disallowed"
+        }
+      },
+      "title": "CostBasisImpact",
+      "type": "object"
+    },
+    "SecurityIdentifier": {
+      "description": "Cross-reference object holding multiple identifiers for the same security.",
+      "properties": {
+        "ticker": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Exchange ticker symbol.",
+          "title": "Ticker"
+        },
+        "cusip": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "CUSIP identifier (9-char alphanumeric).",
+          "title": "Cusip"
+        },
+        "isin": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "ISIN identifier (2-letter country + 10 alphanum).",
+          "title": "Isin"
+        },
+        "figi": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "FIGI identifier (12-char alphanumeric).",
+          "title": "Figi"
+        },
+        "sedol": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "SEDOL identifier (7-char alphanumeric).",
+          "title": "Sedol"
+        },
+        "bloomberg_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Bloomberg ticker format (e.g., 'NVDA US Equity').",
+          "title": "Bloomberg Id"
+        }
+      },
+      "title": "SecurityIdentifier",
+      "type": "object"
+    },
+    "TransactionType": {
+      "description": "19 transaction types normalized by M7 translator.",
+      "enum": [
+        "buy",
+        "sell",
+        "sell_short",
+        "buy_to_cover",
+        "dividend",
+        "interest",
+        "fee",
+        "management_fee",
+        "transfer_in",
+        "transfer_out",
+        "distribution",
+        "contribution",
+        "wire_in",
+        "wire_out",
+        "journal",
+        "reinvestment",
+        "return_of_capital",
+        "corporate_action",
+        "margin_interest"
+      ],
+      "title": "TransactionType",
+      "type": "string"
+    }
+  },
+  "description": "Canonical transaction record. 19 transaction types normalized by M7 translator.",
+  "properties": {
+    "transaction_id": {
+      "description": "Primary key for canonical transaction.",
+      "format": "uuid",
+      "title": "Transaction Id",
+      "type": "string"
+    },
+    "account_ref": {
+      "description": "Canonical Account ID.",
+      "format": "uuid",
+      "title": "Account Ref",
+      "type": "string"
+    },
+    "client_ref": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Canonical Client ID.",
+      "title": "Client Ref"
+    },
+    "order_ref": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Canonical Order ID if trade originated from 007.",
+      "title": "Order Ref"
+    },
+    "transaction_type": {
+      "$ref": "#/$defs/TransactionType",
+      "description": "Transaction classification normalized by M7 translator."
+    },
+    "security_identifier": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/SecurityIdentifier"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Null for cash transactions (fees, wires)."
+    },
+    "security_name": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Security display name.",
+      "title": "Security Name"
+    },
+    "quantity": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Number of shares/units. Null for cash transactions.",
+      "title": "Quantity"
+    },
+    "price": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Price per unit at execution.",
+      "title": "Price"
+    },
+    "amount": {
+      "description": "Total transaction amount.",
+      "title": "Amount",
+      "type": "number"
+    },
+    "commission": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Commission charged.",
+      "title": "Commission"
+    },
+    "fees": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "SEC fees, exchange fees, etc.",
+      "title": "Fees"
+    },
+    "net_amount": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Amount after commissions and fees.",
+      "title": "Net Amount"
+    },
+    "trade_date": {
+      "description": "Date the trade was executed.",
+      "format": "date",
+      "title": "Trade Date",
+      "type": "string"
+    },
+    "settlement_date": {
+      "anyOf": [
+        {
+          "format": "date",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Settlement date (T+1 for equities since May 2024).",
+      "title": "Settlement Date"
+    },
+    "settlement_status": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Settlement lifecycle: pending, settled, failed.",
+      "title": "Settlement Status"
+    },
+    "currency": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": "USD",
+      "description": "ISO 4217 currency code.",
+      "title": "Currency"
+    },
+    "description": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Custodian-provided transaction description.",
+      "title": "Description"
+    },
+    "tax_lot_ref": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Tax lot ID if this transaction created/closed a lot.",
+      "title": "Tax Lot Ref"
+    },
+    "cost_basis_impact": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/CostBasisImpact"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Tax impact: realized_gain_loss, holding_period, wash_sale_disallowed."
+    },
+    "account_type": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/AccountType"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Account type for ERISA/tax rules."
+    },
+    "source_system": {
+      "description": "Source system that provided this transaction.",
+      "title": "Source System",
+      "type": "string"
+    },
+    "source_id": {
+      "description": "Custodian transaction ID.",
+      "title": "Source Id",
+      "type": "string"
+    },
+    "source_transaction_type": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Custodian's native transaction type code (for reconciliation).",
+      "title": "Source Transaction Type"
+    },
+    "trace_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Links to M10 audit trail.",
+      "title": "Trace Id"
+    },
+    "created_at": {
+      "description": "Transaction record creation timestamp.",
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    }
+  },
+  "required": [
+    "transaction_id",
+    "account_ref",
+    "transaction_type",
+    "amount",
+    "trade_date",
+    "source_system",
+    "source_id",
+    "created_at"
+  ],
+  "title": "Transaction",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://007.fsi/schemas/canonical/transaction/v0.1.0"
+}

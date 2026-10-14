@@ -1,0 +1,10 @@
+{
+  "timestamp": "2026-04-26T13:53:12.811969Z",
+  "config_bucket": "ir-flex-gateway-config-875460787302",
+  "config_prefix": "v3-b",
+  "running_count": 1,
+  "probe_status": 400,
+  "probe_path": "/sec-edgar/tools/list",
+  "mode": "self-managed-static-config-v2",
+  "notes": "Iterated bundle: named-service routing + header-injection for V2 x-api-key. registration.yaml preserved from prior apply."
+}

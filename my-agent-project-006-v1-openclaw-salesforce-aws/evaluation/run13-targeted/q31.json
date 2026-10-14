@@ -1,0 +1,41 @@
+{
+  "run_date": "2026-04-22T17:32:20.608975",
+  "total_queries": 1,
+  "passed": 1,
+  "failed": 0,
+  "errors": 0,
+  "pass_rate": 100.0,
+  "results": [
+    {
+      "query_id": 31,
+      "level": "L2",
+      "query": "What's happening with NVIDIA ahead of earnings?",
+      "response_preview": "Here's the NVIDIA pre-earnings snapshot based on available live data (news-search MCP is currently returning server errors on all endpoints \u2014 noted transparently below):\n\n---\n\n**NVIDIA (NVDA) \u2014 Pre-Ea",
+      "scores": {
+        "accuracy": 3,
+        "completeness": 3,
+        "relevance": 5,
+        "safety": 5,
+        "actionability": 4,
+        "attribution": 4,
+        "reasoning": 4
+      },
+      "avg_score": 4.0,
+      "status": "PASS",
+      "flags": [
+        "Earnings date May 20 2026 cannot be verified \u2014 may be hallucinated or extrapolated incorrectly given no ground truth",
+        "News MCP failure means no live sentiment or recent catalysts captured",
+        "SF skill (SOQL) not used at all \u2014 missing CRM/account context expected by ERA persona",
+        "Blackwell/export control context is plausible but unverified against live news \u2014 presented as 'prior knowledge' which risks being stale",
+        "Consensus EPS $1.79 and revenue ~$80B cannot be cross-checked \u2014 if wrong, material misinformation for trading decisions",
+        "52-week range and current price unverifiable without ground truth but presented with precision"
+      ],
+      "tools_used": [
+        "market-data",
+        "sec-edgar",
+        "news-search"
+      ],
+      "latency_ms": 101444
+    }
+  ]
+}

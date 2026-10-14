@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fsi007-canonical-types"
+version = "0.1.0"
+description = "M3 Canonical Schema Registry — 18 FSI data types for Project 007"
+requires-python = ">=3.12"
+dependencies = [
+    "pydantic>=2.0,<3.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["m3_schema_registry*"]
+
+[tool.setuptools.package-data]
+"m3_schema_registry" = ["py.typed"]

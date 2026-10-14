@@ -1,0 +1,42 @@
+{
+  "run_date": "2026-04-22T15:20:06.528578",
+  "total_queries": 1,
+  "passed": 0,
+  "failed": 1,
+  "errors": 0,
+  "pass_rate": 0.0,
+  "results": [
+    {
+      "query_id": 34,
+      "level": "L2",
+      "query": "How has GOOGL stock reacted to the last 4 earnings?",
+      "response_preview": "## \ud83d\udd27 Bootstrap Status\n\nThis workspace is fresh \u2014 no identity files (`IDENTITY.md`, `USER.md`, `SOUL.md`) exist yet. Normally I'd start a short conversation to figure out who I am and who you are befor",
+      "scores": {
+        "accuracy": 1,
+        "completeness": 3,
+        "relevance": 3,
+        "safety": 3,
+        "actionability": 2,
+        "attribution": 2,
+        "reasoning": 2
+      },
+      "avg_score": 2.3,
+      "status": "FAIL",
+      "flags": [
+        "HALLUCINATED_DATA: Specific price figures (e.g., $159.28, $165.07, $190.23, $274.57, $339.71) appear fabricated or inferred without confirmed source",
+        "FABRICATED_DATES: Earnings dates labeled as Q4 2025 / FY2025 reported ~February 4, 2026 are future/speculative dates presented as historical fact",
+        "METHODOLOGY_FLAW: Inferring earnings dates from volume spikes is unreliable and not disclosed as approximate until caveats \u2014 main body presents as factual",
+        "TOOL_FAILURE_NOT_ESCALATED: Earnings calendar returned no results and news MCP failed; agent should have flagged inability to answer reliably rather than fabricating a structured table",
+        "CONFABULATION_RISK: Revenue/EPS drivers cited (Cloud/AI/Search resilience) without any source \u2014 pure speculation presented as analysis",
+        "BOOTSTRAP_NOISE: Lengthy irrelevant bootstrap discussion clutters a financial data response",
+        "NO_GROUND_TRUTH_VERIFICATION: Without ground truth, all specific numbers are unverifiable and agent acknowledges this only in fine-print caveats"
+      ],
+      "tools_used": [
+        "market-data",
+        "sec-edgar",
+        "news-search"
+      ],
+      "latency_ms": 584056
+    }
+  ]
+}

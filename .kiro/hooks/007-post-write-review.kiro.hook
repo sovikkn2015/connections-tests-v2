@@ -1,0 +1,13 @@
+{
+  "name": "007 Post-Write Review",
+  "version": "1.0.0",
+  "description": "After any file is written inside the 007 project, verify it follows architecture and compliance rules.",
+  "when": {
+    "type": "postToolUse",
+    "toolTypes": ["write"]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Check if the file just written is inside my-agent-project-007-fsi-interoperability/. If yes, verify: (1) it belongs to a specific module (M1-M13) or infrastructure (infra/, .github/, schemas/, opa-bundles/), (2) it follows the architecture rules in .kiro/steering/007-fsi-interoperability.md, (3) no credentials are hardcoded, (4) MNPI fields are not sent to LLM prompts unfiltered, (5) OPA rules include wsp_section annotations. Report which module this file belongs to and whether it passes all checks. If NOT in the 007 folder, respond: File is NOT in 007. Hook check N/A."
+  }
+}

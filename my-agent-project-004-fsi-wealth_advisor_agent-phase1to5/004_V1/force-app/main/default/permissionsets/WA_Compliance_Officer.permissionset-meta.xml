@@ -1,0 +1,391 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label>Wealth Advisor Compliance Access</label>
+    <description>Grants compliance officers read access to ALL client data across all advisors (viewAllRecords) and audit logs. Used for SEC/FINRA oversight.</description>
+    <hasActivationRequired>false</hasActivationRequired>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         OBJECT PERMISSIONS — All read-only with viewAllRecords
+         ═══════════════════════════════════════════════════════════ -->
+
+    <objectPermissions>
+        <object>WA_Household__c</object>
+        <allowRead>true</allowRead>
+        <allowCreate>false</allowCreate>
+        <allowEdit>false</allowEdit>
+        <allowDelete>false</allowDelete>
+        <viewAllRecords>true</viewAllRecords>
+        <modifyAllRecords>false</modifyAllRecords>
+    </objectPermissions>
+
+    <objectPermissions>
+        <object>WA_Client__c</object>
+        <allowRead>true</allowRead>
+        <allowCreate>false</allowCreate>
+        <allowEdit>false</allowEdit>
+        <allowDelete>false</allowDelete>
+        <viewAllRecords>true</viewAllRecords>
+        <modifyAllRecords>false</modifyAllRecords>
+    </objectPermissions>
+
+    <objectPermissions>
+        <object>WA_Financial_Account__c</object>
+        <allowRead>true</allowRead>
+        <allowCreate>false</allowCreate>
+        <allowEdit>false</allowEdit>
+        <allowDelete>false</allowDelete>
+        <viewAllRecords>true</viewAllRecords>
+        <modifyAllRecords>false</modifyAllRecords>
+    </objectPermissions>
+
+    <objectPermissions>
+        <object>WA_Financial_Goal__c</object>
+        <allowRead>true</allowRead>
+        <allowCreate>false</allowCreate>
+        <allowEdit>false</allowEdit>
+        <allowDelete>false</allowDelete>
+        <viewAllRecords>true</viewAllRecords>
+        <modifyAllRecords>false</modifyAllRecords>
+    </objectPermissions>
+
+    <objectPermissions>
+        <object>WA_Meeting__c</object>
+        <allowRead>true</allowRead>
+        <allowCreate>false</allowCreate>
+        <allowEdit>false</allowEdit>
+        <allowDelete>false</allowDelete>
+        <viewAllRecords>true</viewAllRecords>
+        <modifyAllRecords>false</modifyAllRecords>
+    </objectPermissions>
+
+    <objectPermissions>
+        <object>WA_Transaction__c</object>
+        <allowRead>true</allowRead>
+        <allowCreate>false</allowCreate>
+        <allowEdit>false</allowEdit>
+        <allowDelete>false</allowDelete>
+        <viewAllRecords>true</viewAllRecords>
+        <modifyAllRecords>false</modifyAllRecords>
+    </objectPermissions>
+
+    <objectPermissions>
+        <object>WA_Referral__c</object>
+        <allowRead>true</allowRead>
+        <allowCreate>false</allowCreate>
+        <allowEdit>false</allowEdit>
+        <allowDelete>false</allowDelete>
+        <viewAllRecords>true</viewAllRecords>
+        <modifyAllRecords>false</modifyAllRecords>
+    </objectPermissions>
+
+    <objectPermissions>
+        <object>WA_Audit_Log__c</object>
+        <allowRead>true</allowRead>
+        <allowCreate>false</allowCreate>
+        <allowEdit>false</allowEdit>
+        <allowDelete>false</allowDelete>
+        <viewAllRecords>true</viewAllRecords>
+        <modifyAllRecords>false</modifyAllRecords>
+    </objectPermissions>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         FIELD PERMISSIONS — WA_Household__c
+         ═══════════════════════════════════════════════════════════ -->
+    <fieldPermissions>
+        <field>WA_Household__c.Advisor__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>WA_Household__c.Risk_Profile__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>WA_Household__c.Total_AUM__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         FIELD PERMISSIONS — WA_Client__c
+         ═══════════════════════════════════════════════════════════ -->
+    <fieldPermissions>
+        <field>WA_Client__c.Email__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>WA_Client__c.Household__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>WA_Client__c.Phone__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>WA_Client__c.Role__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         FIELD PERMISSIONS — WA_Financial_Account__c
+         ═══════════════════════════════════════════════════════════ -->
+    <fieldPermissions>
+        <field>WA_Financial_Account__c.Allocation__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>WA_Financial_Account__c.Balance__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>WA_Financial_Account__c.Client__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>WA_Financial_Account__c.Target_Allocation__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>WA_Financial_Account__c.Type__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>WA_Financial_Account__c.YTD_Return__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         FIELD PERMISSIONS — WA_Financial_Goal__c
+         ═══════════════════════════════════════════════════════════ -->
+    <fieldPermissions>
+        <field>WA_Financial_Goal__c.Client__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>WA_Financial_Goal__c.Current_Amount__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>WA_Financial_Goal__c.Target_Amount__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>WA_Financial_Goal__c.Target_Date__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         FIELD PERMISSIONS — WA_Meeting__c
+         ═══════════════════════════════════════════════════════════ -->
+    <fieldPermissions>
+        <field>WA_Meeting__c.Action_Items__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>WA_Meeting__c.Client__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>WA_Meeting__c.Date_Time__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>WA_Meeting__c.Location__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>WA_Meeting__c.Notes__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         FIELD PERMISSIONS — WA_Transaction__c
+         ═══════════════════════════════════════════════════════════ -->
+    <fieldPermissions>
+        <field>WA_Transaction__c.Account__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>WA_Transaction__c.Amount__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>WA_Transaction__c.Client__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>WA_Transaction__c.Date__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>WA_Transaction__c.Description__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>WA_Transaction__c.Symbol__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>WA_Transaction__c.Type__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         FIELD PERMISSIONS — WA_Referral__c
+         ═══════════════════════════════════════════════════════════ -->
+    <fieldPermissions>
+        <field>WA_Referral__c.Client__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>WA_Referral__c.Date__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>WA_Referral__c.Source__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>WA_Referral__c.Source_Type__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>WA_Referral__c.Status__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>WA_Referral__c.Value__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         FIELD PERMISSIONS — WA_Audit_Log__c
+         ═══════════════════════════════════════════════════════════ -->
+    <fieldPermissions>
+        <field>WA_Audit_Log__c.Action__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>WA_Audit_Log__c.Agent_Name__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>WA_Audit_Log__c.Client_Accessed__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>WA_Audit_Log__c.Query__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>WA_Audit_Log__c.Response_Summary__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>WA_Audit_Log__c.Session_Id__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>WA_Audit_Log__c.Timestamp__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>WA_Audit_Log__c.Topic__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>WA_Audit_Log__c.User__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         APEX CLASS ACCESS — All 11 DC_* action classes
+         ═══════════════════════════════════════════════════════════ -->
+    <classAccesses>
+        <apexClass>DC_ClientLookupAction</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>DC_PortfolioReviewAction</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>DC_GoalPlanningAction</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>DC_MeetingPrepAction</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>DC_RebalancingAction</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>DC_TransactionHistoryAction</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>DC_ComplianceCheckAction</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>DC_ReferralTrackingAction</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>DC_AuditLogAction</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>DC_MarketDataAction</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>DC_NewsSearchAction</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+
+</PermissionSet>

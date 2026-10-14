@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Linked_Brief_Id__c</fullName>
+    <label>Linked Brief</label>
+    <type>Lookup</type>
+    <referenceTo>Research_Brief__c</referenceTo>
+    <relationshipName>Client_Inquiries</relationshipName>
+    <relationshipLabel>Client Inquiries</relationshipLabel>
+    <deleteConstraint>SetNull</deleteConstraint>
+</CustomField>

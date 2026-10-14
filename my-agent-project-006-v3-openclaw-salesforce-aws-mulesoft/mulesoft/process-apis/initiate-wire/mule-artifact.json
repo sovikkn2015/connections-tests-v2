@@ -1,0 +1,25 @@
+{
+  "minMuleVersion": "4.9.0",
+  "name": "initiate-wire-process-api",
+  "configs": [
+    "initiate-wire.xml"
+  ],
+  "redeploymentEnabled": true,
+  "secureProperties": [
+    "mule.secure.properties.key"
+  ],
+  "requiredProduct": "MULE_EE",
+  "supportedJavaVersions": ["17"],
+  "classLoaderModelLoaderDescriptor": {
+    "id": "mule",
+    "attributes": {
+      "exportedResources": [
+        "config.yaml",
+        "transforms/dwolla-request.dwl",
+        "transforms/dwolla-response.dwl",
+        "transforms/ofac-screening.dwl",
+        "api/initiate-wire.raml"
+      ]
+    }
+  }
+}

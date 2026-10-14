@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Live E2E harness runtime artifacts (regenerated on each run)
+scripts/_live_e2e_tmp/

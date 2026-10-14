@@ -1,0 +1,120 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "007.fullname" . }}
+  labels:
+    {{- include "007.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "007.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "007.labels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "007.serviceAccountName" . }}
+      automountServiceAccountToken: true
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: {{ .Chart.Name }}
+          image: {{ include "007.image" . | quote }}
+          imagePullPolicy: {{ include "007.imagePullPolicy" . }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.probePort }}
+              protocol: TCP
+          env:
+            - name: HTTP_PORT
+              value: {{ .Values.service.probePort | quote }}
+            - name: ICE_ENABLED
+              value: {{ .Values.ice.enabled | quote }}
+            - name: ICE_TARGET
+              value: {{ .Values.ice.target | quote }}
+            - name: ICE_TENANT_ID
+              value: {{ .Values.ice.tenantId | quote }}
+            - name: ICE_CHANNEL_POOL_SIZE
+              value: {{ .Values.ice.channelPoolSize | quote }}
+            - name: ICE_CHANNEL_IDLE_S
+              value: {{ .Values.ice.channelIdleS | quote }}
+            - name: ICE_CIRCUIT_THRESHOLD
+              value: {{ .Values.ice.circuitThreshold | quote }}
+            - name: ICE_CIRCUIT_COOLDOWN_MS
+              value: {{ .Values.ice.circuitCooldownMs | quote }}
+            - name: ICE_RATE_LIMIT_RPM
+              value: {{ .Values.ice.rateLimit.rpm | quote }}
+            - name: ICE_RATE_LIMIT_BURST
+              value: {{ .Values.ice.rateLimit.burst | quote }}
+            - name: ICE_BEARER_TOKEN_VAULT_PATH
+              value: "{{ .Values.externalSecretPath }}/bearer"
+            - name: ICE_MTLS_CERT_VAULT_PATH
+              value: "{{ .Values.externalSecretPath }}/mtls/cert"
+            - name: ICE_MTLS_KEY_VAULT_PATH
+              value: "{{ .Values.externalSecretPath }}/mtls/key"
+            - name: ICE_MTLS_CA_VAULT_PATH
+              value: "{{ .Values.externalSecretPath }}/mtls/ca"
+            - name: ICE_SECRETS_BACKEND
+              value: "vault"
+            - name: MTLS_CERT_PATH
+              value: /etc/007/mtls/tls.crt
+            - name: MTLS_KEY_PATH
+              value: /etc/007/mtls/tls.key
+            - name: MTLS_CA_PATH
+              value: /etc/007/mtls/ca.crt
+            - name: VAULT_TOKEN_PATH
+              value: /var/run/secrets/vault/token
+          envFrom:
+            - secretRef:
+                name: {{ include "007.fullname" . }}-secrets
+                optional: true
+          readinessProbe:
+            httpGet:
+              path: /
+              port: {{ .Values.service.probePort }}
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /
+              port: {{ .Values.service.probePort }}
+            initialDelaySeconds: 30
+            periodSeconds: 20
+            timeoutSeconds: 3
+            failureThreshold: 3
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          securityContext:
+            {{- toYaml .Values.containerSecurityContext | nindent 12 }}
+          volumeMounts:
+            - name: mtls
+              mountPath: /etc/007/mtls
+              readOnly: true
+            - name: vault-token
+              mountPath: /var/run/secrets/vault
+              readOnly: true
+            {{- range .Values.tmpVolumes }}
+            - name: {{ .name }}
+              mountPath: {{ .mountPath }}
+            {{- end }}
+      volumes:
+        - name: mtls
+          secret:
+            secretName: {{ include "007.fullname" . }}-mtls
+            defaultMode: 0400
+            optional: true
+        - name: vault-token
+          secret:
+            secretName: {{ include "007.fullname" . }}-vault-token
+            defaultMode: 0400
+            optional: true
+        {{- range .Values.tmpVolumes }}
+        - name: {{ .name }}
+          emptyDir:
+            medium: Memory
+            sizeLimit: 64Mi
+        {{- end }}

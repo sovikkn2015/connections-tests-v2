@@ -1,0 +1,42 @@
+# Project 007 — Cloud topology (Tier 3/4)
+# Claude Managed Agents runtime, Bedrock LLM, us-east-1
+# Usage: helm install 007 . -f values.yaml -f values-cloud.yaml
+
+global:
+  agentRuntime: managed-agents
+  llmProvider: bedrock
+  awsRegion: us-east-1
+
+m6McpGateway:
+  replicas: 3
+  env:
+    # Bedrock PrivateLink — no public internet for MNPI (Rule 22)
+    BEDROCK_ENDPOINT: https://bedrock-runtime.us-east-1.amazonaws.com
+
+m8Pipeline:
+  replicas: 2
+  env:
+    # Sonnet for research (Rule 13)
+    LLM_MODEL_RESEARCH: anthropic.claude-sonnet-v4
+    # DynamoDB for checkpoints in cloud
+    CHECKPOINT_BACKEND: dynamodb
+
+m9IntentRouter:
+  replicas: 2
+  env:
+    # Haiku for routing (Rule 13)
+    LLM_MODEL_ROUTING: anthropic.claude-haiku-v4
+
+m10AuditLogger:
+  replicas: 2
+  env:
+    # S3 Object Lock for WORM tier (Rule 6)
+    WORM_BACKEND: s3
+
+# ─── TLS / mTLS (Rule 21) ───────────────────────────────────────
+tls:
+  enabled: true
+  issuerName: letsencrypt-prod
+  issuerKind: ClusterIssuer
+  duration: 24h
+  renewBefore: 8h

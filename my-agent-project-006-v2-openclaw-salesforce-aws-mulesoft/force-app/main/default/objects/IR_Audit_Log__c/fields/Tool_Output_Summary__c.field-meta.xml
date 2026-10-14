@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Tool_Output_Summary__c</fullName>
+    <description>JSON-serialized summary of the MuleSoft MCP tool response (order_id, status, etc.). Truncated to 32000 chars. Never contains MNPI fields — those are redacted by the salesforce-crm MCP before they reach this field.</description>
+    <externalId>false</externalId>
+    <label>Tool Output Summary</label>
+    <length>32000</length>
+    <required>false</required>
+    <type>LongTextArea</type>
+    <visibleLines>4</visibleLines>
+</CustomField>

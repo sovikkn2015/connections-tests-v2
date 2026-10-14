@@ -1,0 +1,123 @@
+<mxfile host="draw.io" modified="2026-04-05T00:00:00.000Z" agent="draw.io" version="24.0.0" type="device">
+  <diagram id="atlas-reasoning-02" name="Atlas Reasoning Engine">
+    <mxGraphModel dx="1400" dy="1100" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- TITLE -->
+        <mxCell id="title" value="&lt;b style=&quot;font-size:16px;&quot;&gt;Atlas Reasoning Engine — Cognitive Flywheel&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="400" y="10" width="600" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- STEP 1: USER INPUT -->
+        <mxCell id="s1" value="&lt;b&gt;1. User Input&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;&quot;&gt;Query / Event / API Trigger&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1D5E7;strokeColor=#9673A6;strokeWidth=2;fontSize=12;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="550" y="55" width="250" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- STEP 2: TOPIC CLASSIFICATION -->
+        <mxCell id="s2" value="&lt;b&gt;2. Topic Classification&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;&quot;&gt;Semantic matching on topic name + description&lt;br&gt;No match → &quot;off-topic&quot; fallback&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;strokeWidth=2;fontSize=12;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="500" y="140" width="350" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- STEP 3: PROMPT CONSTRUCTION -->
+        <mxCell id="s3" value="&lt;b&gt;3. Prompt Construction&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;&quot;&gt;User message + Topic instructions + Available actions&lt;br&gt;+ Conversation history (last 6 turns) + Context vars&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;strokeWidth=2;fontSize=12;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="500" y="235" width="350" height="65" as="geometry" />
+        </mxCell>
+
+        <!-- STEP 4: EINSTEIN TRUST LAYER -->
+        <mxCell id="s4" value="&lt;b&gt;4. Einstein Trust Layer&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;&quot;&gt;PII Masking → Secure LLM Gateway → Zero Data Retention&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FF6B6B;strokeColor=#CC3333;strokeWidth=2;fontSize=12;fontColor=#FFFFFF;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="500" y="335" width="350" height="55" as="geometry" />
+        </mxCell>
+
+        <!-- STEP 5: LLM DECISION -->
+        <mxCell id="s5" value="&lt;b&gt;5. LLM Decision-Making&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;&quot;&gt;Direct answer | Execute action | Ask clarifying Q | Decline&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;strokeWidth=2;fontSize=12;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="500" y="425" width="350" height="55" as="geometry" />
+        </mxCell>
+
+        <!-- STEP 6: GROUNDING VALIDATION -->
+        <mxCell id="s6" value="&lt;b&gt;6. Grounding Validation&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;&quot;&gt;Check: instructions ✓ | business data ✓ | hallucination ✗ | guardrails ✓&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;strokeWidth=2;fontSize=12;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="500" y="515" width="350" height="55" as="geometry" />
+        </mxCell>
+
+        <!-- DECISION DIAMOND -->
+        <mxCell id="dec" value="&lt;b&gt;Pass?&lt;/b&gt;" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;strokeWidth=2;fontSize=12;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="630" y="605" width="90" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- STEP 7: ACTION EXECUTION -->
+        <mxCell id="s7" value="&lt;b&gt;7. Action Execution&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;&quot;&gt;Flow / Apex / API / Prompt Template&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1B96FF;strokeColor=#0176D3;strokeWidth=2;fontSize=12;fontColor=#FFFFFF;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="400" y="700" width="250" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- STEP 8: RESPONSE -->
+        <mxCell id="s8" value="&lt;b&gt;8. Response to User&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;&quot;&gt;Demasking → Toxicity Check → Audit Trail&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;strokeWidth=2;fontSize=12;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="700" y="700" width="250" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- RETRY LOOP -->
+        <mxCell id="retry" value="&lt;b&gt;Retry Loop&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px;&quot;&gt;Refine plan, get more data&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8CECC;strokeColor=#B85450;strokeWidth=1;fontSize=10;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="950" y="510" width="150" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- SIDE PANELS: Agent Internals -->
+        <mxCell id="state_box" value="&lt;b&gt;STATE&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px;&quot;&gt;Short-term memory&lt;br&gt;Long-term memory&lt;br&gt;Context variables&lt;br&gt;Custom variables&lt;br&gt;Session ID tracking&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E6E6E6;strokeColor=#999999;strokeWidth=1;fontSize=10;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="50" y="150" width="160" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="flow_box" value="&lt;b&gt;FLOW&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px;&quot;&gt;Logical framework&lt;br&gt;Next-step determination&lt;br&gt;Coherent sequencing&lt;br&gt;Topic-driven routing&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E6E6E6;strokeColor=#999999;strokeWidth=1;fontSize=10;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="50" y="270" width="160" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="fx_box" value="&lt;b&gt;SIDE EFFECTS&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px;&quot;&gt;Update CRM records&lt;br&gt;Create cases/opps&lt;br&gt;Trigger workflows&lt;br&gt;Call external APIs&lt;br&gt;Log audit trail&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E6E6E6;strokeColor=#999999;strokeWidth=1;fontSize=10;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="50" y="380" width="160" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="internals_label" value="&lt;b&gt;Agent Internals&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;fontSize=12;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="60" y="120" width="140" height="25" as="geometry" />
+        </mxCell>
+
+        <!-- SIDE PANEL: LLM Providers -->
+        <mxCell id="llm_box" value="&lt;b&gt;External LLM Providers&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px;&quot;&gt;OpenAI / Anthropic / Others&lt;br&gt;Zero Data Retention Policy&lt;br&gt;Secure Gateway Access&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8CECC;strokeColor=#B85450;strokeWidth=2;fontSize=10;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="1150" y="335" width="200" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- ARROWS -->
+        <mxCell id="a12" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#333333;" edge="1" source="s1" target="s2" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a23" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#333333;" edge="1" source="s2" target="s3" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a34" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#333333;" edge="1" source="s3" target="s4" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a45" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#333333;" edge="1" source="s4" target="s5" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a56" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#333333;" edge="1" source="s5" target="s6" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a6d" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#333333;" edge="1" source="s6" target="dec" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad7" value="Yes (action needed)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#82B366;fontSize=10;" edge="1" source="dec" target="s7" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad8" value="Yes (direct answer)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#82B366;fontSize=10;" edge="1" source="dec" target="s8" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="adr" value="No (retry)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#B85450;dashed=1;fontSize=10;" edge="1" source="dec" target="retry" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ar3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1;strokeColor=#B85450;dashed=1;" edge="1" source="retry" target="s3" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a4l" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#B85450;dashed=1;" edge="1" source="s4" target="llm_box" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a78" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#333333;" edge="1" source="s7" target="s8" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

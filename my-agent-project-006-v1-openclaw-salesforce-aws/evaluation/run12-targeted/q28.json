@@ -1,0 +1,41 @@
+{
+  "run_date": "2026-04-22T15:02:11.601867",
+  "total_queries": 1,
+  "passed": 0,
+  "failed": 1,
+  "errors": 0,
+  "pass_rate": 0.0,
+  "results": [
+    {
+      "query_id": 28,
+      "level": "L1",
+      "query": "Headlines on the NVDA-ARM deal",
+      "response_preview": "---\n\n### \ud83d\udd34 Bootstrap Note\n\nThe workspace is fresh \u2014 **BOOTSTRAP.md is pending**. Per its instructions, I'd normally kick off an identity conversation with you first. However, since you've jumped strai",
+      "scores": {
+        "accuracy": 4,
+        "completeness": 2,
+        "relevance": 3,
+        "safety": 5,
+        "actionability": 3,
+        "attribution": 3,
+        "reasoning": 4
+      },
+      "avg_score": 3.4,
+      "status": "FAIL",
+      "flags": [
+        "Primary task undelivered \u2014 no headlines provided",
+        "Bootstrap/intro commentary is noise for a task-focused query",
+        "No fallback attempt made before declaring tool failure",
+        "Emoji usage unprofessional for FSI/ERA persona",
+        "500 error claim unverifiable \u2014 may be masking capability gap",
+        "No retry logic demonstrated despite suggesting it as an option"
+      ],
+      "tools_used": [
+        "market-data",
+        "sec-edgar",
+        "news-search"
+      ],
+      "latency_ms": 78922
+    }
+  ]
+}

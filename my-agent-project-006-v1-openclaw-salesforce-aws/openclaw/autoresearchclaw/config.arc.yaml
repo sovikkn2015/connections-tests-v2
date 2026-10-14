@@ -1,0 +1,110 @@
+# ============================================================================
+# AutoResearchClaw Configuration — FSI Equity Research Adaptation
+# Project 006: OpenClaw + Salesforce + AWS
+# Phase 3: Pipeline adaptation for investment research briefs
+# ============================================================================
+
+project:
+  name: "006-fsi-research"
+
+research:
+  topic: ""  # Set per-run via CLI: --topic "Equity research: NVDA — earnings catalyst"
+
+# ---------------------------------------------------------------------------
+# LLM — Bedrock only. No GPT, no Comprehend, no FinBERT.
+# ---------------------------------------------------------------------------
+llm:
+  provider: "acp"
+  acp:
+    agent: "openclaw"
+    cwd: "."
+  primary_model: "anthropic.claude-sonnet-4-6"
+  fallback_models:
+    - "anthropic.claude-haiku-4-5-20251001-v1:0"
+
+# ---------------------------------------------------------------------------
+# Experiment sandbox — financial model execution environment
+# ---------------------------------------------------------------------------
+experiment:
+  mode: "sandbox"
+  sandbox:
+    python_path: ".venv/bin/python"
+    allowed_imports:
+      - math
+      - random
+      - json
+      - csv
+      - numpy
+      - pandas
+      - scipy
+    max_memory_mb: 4096
+  repair:
+    enabled: true
+    max_cycles: 3
+
+# ---------------------------------------------------------------------------
+# HITL Gate Mapping (custom pipeline → config)
+# Pipeline Stage 7  = Data Quality Gate (Phase C: Validation)
+# Pipeline Stage 13 = Analysis Review Gate (Phase E: Review)
+# Pipeline Stage 21 = Final Approval Gate (Phase H: Delivery)
+#
+# The design doc originally referenced AutoResearchClaw native stage IDs
+# (5, 8, 9, 17, 20). Since pipeline.py is a custom implementation,
+# the actual gate stages are 7, 13, 21.
+# ---------------------------------------------------------------------------
+hitl:
+  enabled: true
+  mode: co-pilot
+  cost_budget_usd: 25.0
+  notifications:
+    on_pause: true
+    channels:
+      - "slack"
+  stage_policies:
+    7:  { require_approval: true }                              # Data Quality Gate
+    13: { require_approval: true, enable_collaboration: true }  # Analysis Review Gate
+    21: { require_approval: true, allow_edit_output: true }     # Final Approval Gate
+
+# ---------------------------------------------------------------------------
+# MetaClaw bridge — learn from pipeline failures
+# ---------------------------------------------------------------------------
+metaclaw_bridge:
+  enabled: true
+  lesson_to_skill:
+    enabled: true
+    min_severity: "warning"
+    max_skills_per_run: 3
+
+# ---------------------------------------------------------------------------
+# OpenClaw bridge — use OpenClaw's native capabilities
+# ---------------------------------------------------------------------------
+openclaw_bridge:
+  use_message: true
+  use_memory: true
+  use_web_fetch: true
+
+# ---------------------------------------------------------------------------
+# Security — FINRA compliance requirements
+# ---------------------------------------------------------------------------
+security:
+  hitl_required_stages:
+    - 7
+    - 13
+    - 21
+  allow_publish_without_approval: false
+  redact_sensitive_logs: true
+
+# ---------------------------------------------------------------------------
+# Export — FSI research brief, not academic paper
+# ---------------------------------------------------------------------------
+export:
+  target_conference: ""  # Not academic — FSI research brief format
+  authors: ""
+
+# ---------------------------------------------------------------------------
+# FSI-specific: override stages 16-19 to produce research briefs
+# AutoResearchClaw normally outputs LaTeX papers.
+# We replace academic paper stages with investment research brief stages.
+# ---------------------------------------------------------------------------
+prompts:
+  custom_file: "prompts/fsi-research-prompts.yaml"

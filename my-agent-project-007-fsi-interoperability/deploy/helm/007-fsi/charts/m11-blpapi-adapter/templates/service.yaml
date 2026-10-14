@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "007.fullname" . }}
+  labels:
+    {{- include "007.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  selector:
+    {{- include "007.selectorLabels" . | nindent 4 }}
+  ports:
+    - name: https
+      port: {{ .Values.service.appPort }}
+      targetPort: {{ .Values.service.probePort }}
+      protocol: TCP
+    - name: probe
+      port: {{ .Values.service.probePort }}
+      targetPort: {{ .Values.service.probePort }}
+      protocol: TCP

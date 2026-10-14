@@ -1,0 +1,34 @@
+# OS
+.DS_Store
+
+# Salesforce
+.sf/
+.sfdx/
+
+# AWS SAM
+aws/.aws-sam/
+aws/samconfig.toml
+
+# Node
+node_modules/
+frontend/dist/
+frontend/node_modules/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Environment (NEVER commit real credentials)
+.env
+aws/.env
+frontend/.env
+
+# OpenClaw runtime
+openclaw/memory/
+openclaw/sessions/
+
+# Phase 6 test runner creates this symlink at import time so Python can
+# import "mulesoft-api" as "mulesoft_api" (hyphens not allowed in module names).
+# The canonical source is openclaw/skills/mulesoft-api/. Do NOT commit.
+openclaw/skills/mulesoft_api

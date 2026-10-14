@@ -1,0 +1,277 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://007.fsi/schemas/canonical/order/v0.1.0",
+  "title": "Order",
+  "description": "Canonical trade order. Used by Execution Specialist state machine.",
+  "type": "object",
+  "required": [
+    "order_id",
+    "client_ref",
+    "account_ref",
+    "security_identifier",
+    "side",
+    "quantity",
+    "status"
+  ],
+  "properties": {
+    "order_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Primary key for canonical order"
+    },
+    "client_ref": {
+      "type": "string",
+      "description": "Canonical Client ID"
+    },
+    "account_ref": {
+      "type": "string",
+      "description": "Canonical Account ID"
+    },
+    "security_identifier": {
+      "type": "object",
+      "properties": {
+        "ticker": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Exchange ticker symbol"
+        },
+        "cusip": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "CUSIP identifier (9-char alphanumeric)"
+        },
+        "figi": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "FIGI identifier (12-char alphanumeric)"
+        }
+      },
+      "description": "Security being traded"
+    },
+    "side": {
+      "type": "string",
+      "enum": [
+        "buy",
+        "sell",
+        "sell_short",
+        "buy_to_cover"
+      ],
+      "description": "Trade side: buy, sell, sell_short, buy_to_cover"
+    },
+    "order_type": {
+      "type": "string",
+      "enum": [
+        "market",
+        "limit",
+        "stop",
+        "stop_limit"
+      ],
+      "description": "Order type: market, limit, stop, stop_limit"
+    },
+    "quantity": {
+      "type": "number",
+      "description": "Number of shares/units to trade"
+    },
+    "limit_price": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Limit price for limit/stop_limit orders"
+    },
+    "stop_price": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Stop price for stop/stop_limit orders"
+    },
+    "time_in_force": {
+      "type": "string",
+      "enum": [
+        "day",
+        "gtc",
+        "ioc",
+        "fok"
+      ],
+      "default": "day",
+      "description": "Time in force: day, gtc, ioc, fok"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "compliance_check",
+        "pending_approval",
+        "approved",
+        "submitted",
+        "confirmed",
+        "pending_settlement",
+        "settled",
+        "rejected",
+        "cancelled",
+        "settlement_failed",
+        "escalated"
+      ],
+      "description": "Maps to Execution Specialist state machine (ARCH-05)"
+    },
+    "compliance_checks": {
+      "type": "array",
+      "items": {
+        "$ref": "compliance-check.json"
+      },
+      "description": "Compliance check results for this order"
+    },
+    "hitl_approval": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "approver_id": {
+          "type": "string",
+          "description": "ID of the human approver"
+        },
+        "approved_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp of approval"
+        },
+        "approval_token": {
+          "type": "string",
+          "description": "SHA-256(order_id + approver_id + timestamp) \u2014 tamper-proof"
+        }
+      },
+      "description": "HITL approval record if approved"
+    },
+    "submitted_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time",
+      "description": "When order was submitted to execution venue"
+    },
+    "confirmed_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time",
+      "description": "When order execution was confirmed"
+    },
+    "settled_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time",
+      "description": "When order settlement completed"
+    },
+    "settlement_date_expected": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date",
+      "description": "T+1 from trade date"
+    },
+    "execution_venue": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Custodian API, FIX broker, OMS"
+    },
+    "fill_price": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Actual execution price"
+    },
+    "fill_quantity": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Actual filled quantity"
+    },
+    "commission": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Commission charged"
+    },
+    "account_type": {
+      "type": "string",
+      "enum": [
+        "taxable",
+        "traditional_ira",
+        "roth_ira",
+        "401k",
+        "403b",
+        "457",
+        "sep_ira",
+        "simple_ira",
+        "trust_revocable",
+        "trust_irrevocable",
+        "custodial_utma",
+        "custodial_ugma",
+        "erisa_pension",
+        "erisa_profit_sharing",
+        "529",
+        "hsa"
+      ],
+      "description": "Account type for ERISA/tax rules. Unified enum per BLOCKER-8."
+    },
+    "tax_impact": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "description": "Estimated tax impact shown at HITL gate (ARCH-06 Gap 5)",
+      "properties": {
+        "estimated_gain_loss": {
+          "type": "number",
+          "description": "Estimated gain or loss amount"
+        },
+        "holding_period": {
+          "type": "string",
+          "enum": [
+            "short_term",
+            "long_term"
+          ],
+          "description": "short_term or long_term"
+        },
+        "tax_rate_estimate": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "Estimated applicable tax rate"
+        },
+        "wash_sale_risk": {
+          "type": "boolean",
+          "description": "True if wash sale risk detected"
+        }
+      }
+    },
+    "trace_id": {
+      "type": "string",
+      "description": "Links to M10 audit trail"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Order creation timestamp"
+    }
+  }
+}

@@ -1,0 +1,48 @@
+# Rate limit — 25 req/sec per caller, burst 50
+# Mirrors agent-fabric/policies/rate-limit.yaml in flex-gateway self-managed format
+#
+# IMPLEMENTATION NOTES (post-RATE-LIMIT-FIX, 2026-04-27):
+#
+# 1. keySelector syntax: Flex Gateway's DataWeave subset does NOT support
+#    the bracket-subscript form `attributes.headers['x-agent-id']`. Per
+#    https://docs.mulesoft.com/gateway/latest/policies-flex-dataweave-support
+#    the only documented header access for names containing hyphens is
+#    `attributes.headers.'x-agent-id'` (dot + single-quoted key).
+#    Using the bracket form silently returns null, so the whole
+#    expression evaluated to the `default 'anonymous'` fallback for
+#    every single request — all callers landed in the same bucket.
+#
+# 2. clusterizable: We run a single-replica ECS task with NO shared
+#    storage backend (no Redis). The policy doc notes:
+#      "If you enable the distributed rate limiting, the policy resizes
+#       time windows under 10 seconds linearly. For example, if you
+#       configure a maximum of 10 requests per 5 seconds, the policy
+#       resizes that window to a maximum of 20 requests per 10 seconds."
+#    With clusterizable: true AND no Redis, Flex resized our 25/1s to
+#    250/10s AND used its "refetch from shared storage" code path —
+#    which handed out 25 additional permits per refetch, effectively
+#    defeating the quota under burst load. CloudWatch proof:
+#        `Out of local quota` -> `Portion requested: 25, given: 25,
+#         remaining: 225` -> `Updating quota` -> request allowed.
+#    Setting clusterizable: false pins enforcement to in-replica memory,
+#    which is exactly right for a single-task deployment.
+apiVersion: gateway.mulesoft.com/v1alpha1
+kind: PolicyBinding
+metadata:
+  name: rate-limit-binding
+spec:
+  targetRef:
+    kind: ApiInstance
+    name: fsi-mcp-servers
+  policyRef:
+    name: rate-limiting-flex
+  config:
+    rateLimits:
+      - maximumRequests: 25
+        timePeriodInMilliseconds: 1000
+    # Flex DataWeave dot-quote header access — bracket-subscript returns
+    # null for hyphenated keys and silently falls through to the default.
+    keySelector: "#[attributes.headers.'x-agent-id' default 'anonymous']"
+    # Single-replica ECS, no shared Redis — enforce locally.
+    clusterizable: false
+    exposeHeaders: true

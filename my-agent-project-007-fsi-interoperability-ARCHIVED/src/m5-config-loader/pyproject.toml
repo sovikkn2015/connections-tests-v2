@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fsi007-config-loader"
+version = "0.1.0"
+description = "M5 Enterprise Config Loader — per-firm YAML config for Project 007"
+requires-python = ">=3.12"
+dependencies = [
+    "pydantic>=2.0,<3.0",
+    "pyyaml>=6.0,<7.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["m5_config_loader*"]
+
+[tool.setuptools.package-data]
+"m5_config_loader" = ["py.typed"]

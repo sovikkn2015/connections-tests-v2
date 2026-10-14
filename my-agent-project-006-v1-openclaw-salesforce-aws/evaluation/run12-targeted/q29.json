@@ -1,0 +1,37 @@
+{
+  "run_date": "2026-04-22T15:04:00.037901",
+  "total_queries": 1,
+  "passed": 0,
+  "failed": 1,
+  "errors": 0,
+  "pass_rate": 0.0,
+  "results": [
+    {
+      "query_id": 29,
+      "level": "L1",
+      "query": "What did Jensen Huang say at GTC last week?",
+      "response_preview": "**Bootstrap note:** Fresh workspace \u2014 no identity files exist yet. I'd normally stop to introduce myself and set things up, but you've come in hot with a real question. I'll answer it properly first, ",
+      "scores": {
+        "accuracy": 4,
+        "completeness": 2,
+        "relevance": 3,
+        "safety": 5,
+        "actionability": 3,
+        "attribution": 2,
+        "reasoning": 4
+      },
+      "avg_score": 3.3,
+      "status": "FAIL",
+      "flags": [
+        "tool_failure_unverified",
+        "bootstrap_preamble_unprofessional",
+        "no_actual_content_delivered",
+        "cannot_verify_tool_errors_were_genuine"
+      ],
+      "tools_used": [
+        "news-search"
+      ],
+      "latency_ms": 91336
+    }
+  ]
+}

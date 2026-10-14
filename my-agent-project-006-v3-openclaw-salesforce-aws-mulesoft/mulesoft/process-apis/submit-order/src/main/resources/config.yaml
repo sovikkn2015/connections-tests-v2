@@ -1,0 +1,6 @@
+# Project 006 v3 - submit-order Process API configuration.
+# NON-SECRET only. Flat keys (Mule 4.9 YAML loader compatibility).
+
+alpaca.endpoint_host: "paper-api.alpaca.markets"
+alpaca.endpoint_path: "/v2"
+mock_mode: "false"

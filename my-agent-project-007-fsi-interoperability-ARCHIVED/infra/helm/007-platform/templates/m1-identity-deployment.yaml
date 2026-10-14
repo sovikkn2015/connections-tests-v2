@@ -1,0 +1,141 @@
+{{- if .Values.m1Identity.enabled }}
+# M1 Agent Identity — JWT/mTLS identity verification
+# Depends on Keycloak for token issuance/validation.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "007-platform.fullname" . }}-m1-identity
+  labels:
+    {{- include "007-platform.labels" . | nindent 4 }}
+    {{- include "007-platform.selectorLabels" (dict "module" "m1-identity" "context" .) | nindent 4 }}
+spec:
+  replicas: {{ .Values.m1Identity.replicas }}
+  selector:
+    matchLabels:
+      {{- include "007-platform.selectorLabels" (dict "module" "m1-identity" "context" .) | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "007-platform.labels" . | nindent 8 }}
+        {{- include "007-platform.selectorLabels" (dict "module" "m1-identity" "context" .) | nindent 8 }}
+    spec:
+      containers:
+        - name: m1-identity
+          image: {{ include "007-platform.image" (dict "image" .Values.m1Identity.image "global" .Values.global) }}
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.m1Identity.port }}
+              protocol: TCP
+          env:
+            {{- range $key, $value := .Values.m1Identity.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+            - name: AGENT_RUNTIME
+              value: {{ .Values.global.agentRuntime | quote }}
+            - name: LLM_PROVIDER
+              value: {{ .Values.global.llmProvider | quote }}
+            - name: AWS_DEFAULT_REGION
+              value: {{ .Values.global.awsRegion | quote }}
+            {{- if .Values.tls.enabled }}
+            - name: TLS_CERT_PATH
+              value: "/etc/certs/tls.crt"
+            - name: TLS_KEY_PATH
+              value: "/etc/certs/tls.key"
+            {{- end }}
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          {{- if .Values.tls.enabled }}
+          volumeMounts:
+            - name: tls-certs
+              mountPath: /etc/certs
+              readOnly: true
+          {{- end }}
+          resources:
+            {{- toYaml .Values.m1Identity.resources | nindent 12 }}
+      {{- if .Values.tls.enabled }}
+      volumes:
+        - name: tls-certs
+          secret:
+            secretName: {{ include "007-platform.fullname" . }}-m1-identity-tls
+      {{- end }}
+---
+{{- if .Values.tls.enabled }}
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ include "007-platform.fullname" . }}-m1-identity-tls
+  labels:
+    {{- include "007-platform.labels" . | nindent 4 }}
+spec:
+  secretName: {{ include "007-platform.fullname" . }}-m1-identity-tls
+  duration: {{ .Values.tls.duration }}
+  renewBefore: {{ .Values.tls.renewBefore }}
+  issuerRef:
+    name: {{ .Values.tls.issuerName }}
+    kind: {{ .Values.tls.issuerKind }}
+  dnsNames:
+    - {{ include "007-platform.fullname" . }}-m1-identity
+    - {{ include "007-platform.fullname" . }}-m1-identity.{{ .Release.Namespace }}.svc
+---
+{{- end }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "007-platform.fullname" . }}-m1-identity
+  labels:
+    {{- include "007-platform.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.m1Identity.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "007-platform.selectorLabels" (dict "module" "m1-identity" "context" .) | nindent 4 }}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "007-platform.fullname" . }}-m1-identity
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "007-platform.selectorLabels" (dict "module" "m1-identity" "context" .) | nindent 6 }}
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # M6 gateway and M9 intent-router call M1 for identity verification
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: m6-mcp-gateway
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: m9-intent-router
+      ports:
+        - port: {{ .Values.m1Identity.port }}
+  egress:
+    - to:
+        # Keycloak for token validation
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: keycloak
+        # PostgreSQL for identity persistence
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: postgresql
+{{- end }}

@@ -1,0 +1,561 @@
+# Project 007 — Local Development Stack
+# Full microservices topology. Every engineer starts here.
+# Run: docker-compose up -d
+# Infrastructure: PostgreSQL, Redis, MinIO, OPA, Langfuse, Keycloak
+# Application: M1, M2/M4, M6, M8, M9, M10, M11 adapters
+
+version: "3.9"
+
+services:
+  # ─── Infrastructure ────────────────────────────────────────────
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: fsi007
+      POSTGRES_USER: fsi007
+      POSTGRES_PASSWORD: localdev
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+      - ./infra/docker/init-databases.sh:/docker-entrypoint-initdb.d/init-databases.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fsi007"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio-data:/data
+
+  opa:
+    image: openpolicyagent/opa:latest
+    command: run --server --bundle /bundles --log-level debug
+    ports:
+      - "8181:8181"
+    volumes:
+      - ./opa-bundles:/bundles
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8181/health || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  langfuse:
+    image: langfuse/langfuse:latest
+    environment:
+      DATABASE_URL: postgresql://fsi007:localdev@postgres:5432/fsi007
+      NEXTAUTH_SECRET: localdev-secret-change-in-production
+      NEXTAUTH_URL: http://localhost:3000
+      SALT: localdev-salt-change-in-production
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0
+    command: start-dev
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/localhost/8080 && echo -e 'GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\n\\r\\n' >&3 && cat <&3 | grep -q '200'"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  # ─── Application Modules ───────────────────────────────────────
+
+  m1-identity:
+    build:
+      context: ./src/m1-identity
+      dockerfile: Dockerfile
+    environment:
+      KEYCLOAK_URL: http://keycloak:8080
+      DATABASE_URL: postgresql://fsi007:localdev@postgres:5432/fsi007_m1
+    ports:
+      - "8001:8001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./src/m1-identity:/app
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import httpx; r=httpx.get('http://localhost:8001/health'); exit(0 if r.status_code==200 else 1)\""]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  m2-m4-policy:
+    build:
+      context: ./src/m2-m4-policy-engine
+      dockerfile: Dockerfile
+    environment:
+      OPA_URL: http://opa:8181
+      USE_LOCAL_EVALUATOR: "false"
+    ports:
+      - "8002:8002"
+    depends_on:
+      opa:
+        condition: service_healthy
+    volumes:
+      - ./src/m2-m4-policy-engine:/app
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import httpx; r=httpx.get('http://localhost:8002/health'); exit(0 if r.status_code==200 else 1)\""]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  m10-audit-logger:
+    build:
+      context: ./src/m10-audit-logger
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: postgresql://fsi007:localdev@postgres:5432/fsi007_m10
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin
+      LANGFUSE_URL: http://langfuse:3000
+    ports:
+      - "8010:8010"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_started
+      langfuse:
+        condition: service_started
+    volumes:
+      - ./src/m10-audit-logger:/app
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import httpx; r=httpx.get('http://localhost:8010/health'); exit(0 if r.status_code==200 else 1)\""]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  m6-mcp-gateway:
+    build:
+      context: ./src/m6-mcp-gateway
+      dockerfile: Dockerfile
+    environment:
+      REDIS_URL: redis://redis:6379
+      M1_URL: http://m1-identity:8001
+      M2_URL: http://m2-m4-policy:8002
+      M4_URL: http://m2-m4-policy:8002
+      M7_URL: http://m7-schema-translators:8007
+      M10_URL: http://m10-audit-logger:8010
+    ports:
+      - "8006:8006"
+    depends_on:
+      m1-identity:
+        condition: service_healthy
+      m2-m4-policy:
+        condition: service_healthy
+      m10-audit-logger:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./src/m6-mcp-gateway:/app
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import httpx; r=httpx.get('http://localhost:8006/health'); exit(0 if r.status_code==200 else 1)\""]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  m8-pipeline:
+    build:
+      context: ./src/m8-pipeline-engine
+      dockerfile: Dockerfile
+    environment:
+      M6_URL: http://m6-mcp-gateway:8006
+      DATABASE_URL: postgresql://fsi007:localdev@postgres:5432/fsi007_m8
+      AWS_DEFAULT_REGION: us-east-1
+    ports:
+      - "8008:8008"
+    depends_on:
+      m6-mcp-gateway:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./src/m8-pipeline-engine:/app
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import httpx; r=httpx.get('http://localhost:8008/health'); exit(0 if r.status_code==200 else 1)\""]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  m9-intent-router:
+    build:
+      context: ./src/m9-intent-router
+      dockerfile: Dockerfile
+    environment:
+      M1_URL: http://m1-identity:8001
+      M6_URL: http://m6-mcp-gateway:8006
+      AWS_DEFAULT_REGION: us-east-1
+    ports:
+      - "8009:8009"
+    depends_on:
+      m1-identity:
+        condition: service_healthy
+    volumes:
+      - ./src/m9-intent-router:/app
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import httpx; r=httpx.get('http://localhost:8009/health'); exit(0 if r.status_code==200 else 1)\""]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  # ─── M11 MCP Adapters ─────────────────────────────────────────
+
+  m11-sec-edgar:
+    build:
+      context: ./src/m11-mcp-adapters/sec-edgar
+      dockerfile: Dockerfile
+    environment:
+      SEC_EDGAR_USER_AGENT: "007-FSI-Platform admin@example.com"
+    ports:
+      - "8011:8000"
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import httpx; r=httpx.get('http://localhost:8000/'); exit(0 if r.status_code==200 else 1)\""]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # M11-REST: SEC EDGAR TypeScript reference implementation (Rule 10 polyglot, ADR-003)
+  m11-sec-edgar-ts:
+    build:
+      context: ./src/m11-mcp-adapters/sec-edgar-ts
+      dockerfile: Dockerfile
+    environment:
+      SEC_EDGAR_USER_AGENT: "007-FSI-Platform admin@example.com"
+      PORT: "8070"
+    ports:
+      - "8070:8070"
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://localhost:8070/').then(r => process.exit(r.ok ? 0 : 1))\""]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  m11-market-data:
+    build:
+      context: ./src/m11-mcp-adapters/market-data
+      dockerfile: Dockerfile
+    ports:
+      - "8012:8001"
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import httpx; r=httpx.get('http://localhost:8001/'); exit(0 if r.status_code==200 else 1)\""]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  m11-news-search:
+    build:
+      context: ./src/m11-mcp-adapters/news-search
+      dockerfile: Dockerfile
+    ports:
+      - "8013:8002"
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import httpx; r=httpx.get('http://localhost:8002/'); exit(0 if r.status_code==200 else 1)\""]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  m11-schwab-rest:
+    build:
+      context: ./src/m11-mcp-adapters/schwab-rest
+      dockerfile: Dockerfile
+    ports:
+      - "8014:8014"
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import httpx; r=httpx.get('http://localhost:8014/'); exit(0 if r.status_code==200 else 1)\""]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  m11-emoney:
+    build:
+      context: ./src/m11-mcp-adapters/emoney
+      dockerfile: Dockerfile
+    ports:
+      - "8015:8015"
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import httpx; r=httpx.get('http://localhost:8015/'); exit(0 if r.status_code==200 else 1)\""]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  m11-schwab-sftp:
+    build:
+      context: ./src/m11-mcp-adapters/schwab-sftp
+      dockerfile: Dockerfile
+    ports:
+      - "8016:8016"
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import httpx; r=httpx.get('http://localhost:8016/'); exit(0 if r.status_code==200 else 1)\""]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  m11-salesforce-fsc:
+    build:
+      context: ./src/m11-mcp-adapters/salesforce-fsc
+      dockerfile: Dockerfile
+    environment:
+      SF_CLIENT_ID: ${SF_CLIENT_ID:-}
+      SF_CLIENT_SECRET: ${SF_CLIENT_SECRET:-}
+      SF_INSTANCE_URL: ${SF_INSTANCE_URL:-}
+    ports:
+      - "8003:8003"
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import httpx; r=httpx.get('http://localhost:8003/'); exit(0 if r.status_code==200 else 1)\""]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  m11-orion:
+    build:
+      context: ./src/m11-mcp-adapters/orion
+      dockerfile: Dockerfile
+    environment:
+      ORION_CLIENT_ID: ${ORION_CLIENT_ID:-}
+      ORION_CLIENT_SECRET: ${ORION_CLIENT_SECRET:-}
+    ports:
+      - "8004:8004"
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import httpx; r=httpx.get('http://localhost:8004/'); exit(0 if r.status_code==200 else 1)\""]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # M11-REST: Fidelity REST adapter (Phase 3, pending 6-12 month vendor approval)
+  m11-fidelity-rest:
+    build:
+      context: ./src/m11-mcp-adapters/fidelity-rest
+      dockerfile: Dockerfile
+    environment:
+      FIDELITY_CLIENT_ID: ${FIDELITY_CLIENT_ID:-}
+      FIDELITY_CLIENT_SECRET: ${FIDELITY_CLIENT_SECRET:-}
+    ports:
+      - "8050:8050"
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import httpx; r=httpx.get('http://localhost:8050/'); exit(0 if r.status_code==200 else 1)\""]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # M11-REST: Pershing (BNY Mellon) Integration Hub adapter (Phase 3)
+  m11-pershing:
+    build:
+      context: ./src/m11-mcp-adapters/pershing
+      dockerfile: Dockerfile
+    environment:
+      PERSHING_CLIENT_ID: ${PERSHING_CLIENT_ID:-}
+      PERSHING_CLIENT_SECRET: ${PERSHING_CLIENT_SECRET:-}
+    ports:
+      - "8051:8051"
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import httpx; r=httpx.get('http://localhost:8051/'); exit(0 if r.status_code==200 else 1)\""]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # M11-REST: Wealthbox CRM adapter (Phase 3, small RIA CRM)
+  m11-wealthbox:
+    build:
+      context: ./src/m11-mcp-adapters/wealthbox
+      dockerfile: Dockerfile
+    environment:
+      WEALTHBOX_API_KEY: ${WEALTHBOX_API_KEY:-}
+    ports:
+      - "8052:8052"
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import httpx; r=httpx.get('http://localhost:8052/'); exit(0 if r.status_code==200 else 1)\""]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # M11-REST: Redtail CRM adapter (Phase 3, small RIA CRM)
+  m11-redtail:
+    build:
+      context: ./src/m11-mcp-adapters/redtail
+      dockerfile: Dockerfile
+    environment:
+      REDTAIL_API_KEY: ${REDTAIL_API_KEY:-}
+    ports:
+      - "8053:8053"
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import httpx; r=httpx.get('http://localhost:8053/'); exit(0 if r.status_code==200 else 1)\""]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # M11-REST: Envestnet platform adapter (Phase 4, 110K+ advisors, competitor risk)
+  m11-envestnet:
+    build:
+      context: ./src/m11-mcp-adapters/envestnet
+      dockerfile: Dockerfile
+    environment:
+      ENVESTNET_CLIENT_ID: ${ENVESTNET_CLIENT_ID:-}
+      ENVESTNET_CLIENT_SECRET: ${ENVESTNET_CLIENT_SECRET:-}
+    ports:
+      - "8054:8054"
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import httpx; r=httpx.get('http://localhost:8054/'); exit(0 if r.status_code==200 else 1)\""]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # M11-REST: ComplySci personal trading compliance adapter (Phase 4)
+  m11-complysci:
+    build:
+      context: ./src/m11-mcp-adapters/complysci
+      dockerfile: Dockerfile
+    environment:
+      COMPLYSCI_API_KEY: ${COMPLYSCI_API_KEY:-}
+    ports:
+      - "8055:8055"
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import httpx; r=httpx.get('http://localhost:8055/'); exit(0 if r.status_code==200 else 1)\""]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # M11-SFTP: Fidelity SFTP daily file adapter (Phase 3, batch reconciliation)
+  # Authoritative cost basis source — cost_basis_method NEVER null.
+  m11-fidelity-sftp:
+    build:
+      context: ./src/m11-mcp-adapters/fidelity-sftp
+      dockerfile: Dockerfile
+    environment:
+      FIDELITY_SFTP_HOST: ${FIDELITY_SFTP_HOST:-}
+      FIDELITY_SFTP_USER: ${FIDELITY_SFTP_USER:-}
+      FIDELITY_SFTP_KEY_PATH: ${FIDELITY_SFTP_KEY_PATH:-}
+    ports:
+      - "8056:8056"
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import httpx; r=httpx.get('http://localhost:8056/'); exit(0 if r.status_code==200 else 1)\""]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # M11-BLPAPI: Bloomberg B-PIPE adapter (Python, blpapi SDK)
+  # Binary protocol, subscription model, 10K+ fields. Phase 4.
+  # Requires PrivateLink on AWS for production B-PIPE connectivity ($24K+/yr license).
+  m11-bloomberg-blpapi:
+    build:
+      context: ./src/m11-mcp-adapters/bloomberg-blpapi
+      dockerfile: Dockerfile
+    environment:
+      BLOOMBERG_SERVER_HOST: ${BLOOMBERG_SERVER_HOST:-}
+      BLOOMBERG_SERVER_PORT: ${BLOOMBERG_SERVER_PORT:-8194}
+      BLOOMBERG_RATE_LIMIT_RPM: ${BLOOMBERG_RATE_LIMIT_RPM:-500}
+      BLOOMBERG_RATE_LIMIT_BURST: ${BLOOMBERG_RATE_LIMIT_BURST:-50}
+    ports:
+      - "8040:8040"
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import httpx; r=httpx.get('http://localhost:8040/'); exit(0 if r.status_code==200 else 1)\""]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # M11-gRPC: SS&C Eze xAPI adapter (Python, grpcio)
+  # Hedge fund OMS/EMS. Proto-defined services. Phase 4.
+  m11-eze-grpc:
+    build:
+      context: ./src/m11-mcp-adapters/eze-grpc
+      dockerfile: Dockerfile
+    environment:
+      EZE_GRPC_HOST: ${EZE_GRPC_HOST:-}
+      EZE_GRPC_PORT: ${EZE_GRPC_PORT:-50051}
+      EZE_CLIENT_ID: ${EZE_CLIENT_ID:-}
+      EZE_CLIENT_SECRET: ${EZE_CLIENT_SECRET:-}
+      EZE_RATE_LIMIT_RPM: ${EZE_RATE_LIMIT_RPM:-300}
+      EZE_RATE_LIMIT_BURST: ${EZE_RATE_LIMIT_BURST:-30}
+    ports:
+      - "8041:8041"
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import httpx; r=httpx.get('http://localhost:8041/'); exit(0 if r.status_code==200 else 1)\""]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # M11-MCP-NATIVE: FactSet passthrough (routes through M6 for trust/MNPI)
+  # FactSet's own MCP server. Near-zero adapter code. Validates 007 thesis. Phase 4.
+  m11-factset-native:
+    build:
+      context: ./src/m11-mcp-adapters/factset-native
+      dockerfile: Dockerfile
+    environment:
+      FACTSET_MCP_ENDPOINT: ${FACTSET_MCP_ENDPOINT:-}
+      FACTSET_OAUTH_CLIENT_ID: ${FACTSET_OAUTH_CLIENT_ID:-}
+      FACTSET_OAUTH_CLIENT_SECRET: ${FACTSET_OAUTH_CLIENT_SECRET:-}
+    ports:
+      - "8042:8042"
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import httpx; r=httpx.get('http://localhost:8042/'); exit(0 if r.status_code==200 else 1)\""]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # ─── M13 FIX Bridge ───────────────────────────────────────────
+  # Stateful FIX 4.2 TCP sessions. Separate from M11 (Rule 11).
+  # StatefulSet in K8s; docker-compose uses volume for state persistence.
+
+  m13-fix-bridge:
+    build:
+      context: ./src/m13-fix-bridge
+      dockerfile: Dockerfile
+    environment:
+      FIX_BROKER_HOST: ""
+      FIX_BROKER_PORT: "9876"
+      FIX_SENDER_COMP_ID: ""
+      FIX_TARGET_COMP_ID: ""
+      FIX_PROTOCOL_VERSION: "FIX.4.2"
+      STATE_BACKEND: memory
+      FIX_HEARTBEAT_INTERVAL: "30"
+      M6_URL: http://m6-mcp-gateway:8006
+    ports:
+      - "8030:8030"
+    depends_on:
+      m6-mcp-gateway:
+        condition: service_healthy
+    volumes:
+      - ./src/m13-fix-bridge:/app
+      - fix-state:/data/fix-state
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import httpx; r=httpx.get('http://localhost:8030/health'); exit(0 if r.status_code==200 else 1)\""]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pg-data:
+  minio-data:
+  fix-state:

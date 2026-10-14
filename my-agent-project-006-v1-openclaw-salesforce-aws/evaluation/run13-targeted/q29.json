@@ -1,0 +1,37 @@
+{
+  "run_date": "2026-04-22T17:30:10.642289",
+  "total_queries": 1,
+  "passed": 1,
+  "failed": 0,
+  "errors": 0,
+  "pass_rate": 100.0,
+  "results": [
+    {
+      "query_id": 29,
+      "level": "L1",
+      "query": "What did Jensen Huang say at GTC last week?",
+      "response_preview": "Both news-search tools are returning a server-side error (500) and cannot retrieve coverage at this time. I'm unable to report on Jensen Huang's GTC remarks without a verified tool result \u2014 fabricatin",
+      "scores": {
+        "accuracy": 5,
+        "completeness": 3,
+        "relevance": 4,
+        "safety": 5,
+        "actionability": 4,
+        "attribution": 3,
+        "reasoning": 5
+      },
+      "avg_score": 4.1,
+      "status": "PASS",
+      "flags": [
+        "Tool unavailability prevented full answer",
+        "Cannot verify GTC content without news tool",
+        "No ground truth available to validate completeness"
+      ],
+      "tools_used": [
+        "sec-edgar",
+        "news-search"
+      ],
+      "latency_ms": 54516
+    }
+  ]
+}

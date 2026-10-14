@@ -1,0 +1,39 @@
+{
+  "run_date": "2026-04-22T17:49:07.477426",
+  "total_queries": 1,
+  "passed": 1,
+  "failed": 0,
+  "errors": 0,
+  "pass_rate": 100.0,
+  "results": [
+    {
+      "query_id": 47,
+      "level": "L2",
+      "query": "How does JPM's NIM compare to BAC and WFC?",
+      "response_preview": "Here is what I was able to confirm from SEC EDGAR filings plus the tool limitations I encountered:\n\n---\n\n**\u26a0\ufe0f Tool Availability Notice**\n\nThe **news-search MCP is currently returning 500 errors** acro",
+      "scores": {
+        "accuracy": 3,
+        "completeness": 2,
+        "relevance": 4,
+        "safety": 5,
+        "actionability": 3,
+        "attribution": 4,
+        "reasoning": 4
+      },
+      "avg_score": 3.6,
+      "status": "PASS",
+      "flags": [
+        "No actual NIM figures provided \u2014 core query unanswered",
+        "Historical NIM ranges cited (2.5-2.7% for JPM) without tool verification \u2014 potentially stale or approximate",
+        "Cannot verify if accession numbers are accurate without ground truth",
+        "WFC asset cap characterization may be outdated"
+      ],
+      "tools_used": [
+        "market-data",
+        "sec-edgar",
+        "news-search"
+      ],
+      "latency_ms": 122646
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "run_date": "2026-04-22T15:54:45.440013",
+  "total_queries": 1,
+  "passed": 0,
+  "failed": 1,
+  "errors": 0,
+  "pass_rate": 0.0,
+  "results": [
+    {
+      "query_id": 57,
+      "level": "L2",
+      "query": "Any MNPI flags on stocks reporting this week?",
+      "response_preview": "Now let me check the CRM for any MNPI flags on these tickers.\n\n---\n\n## \ud83d\udea6 Bootstrap Status + MNPI Flag Query\n\n### Bootstrap Note\nNo prior identity or memory files exist in this workspace. Per `BOOTSTRA",
+      "scores": {
+        "accuracy": 1,
+        "completeness": 2,
+        "relevance": 3,
+        "safety": 3,
+        "actionability": 2,
+        "attribution": 1,
+        "reasoning": 2
+      },
+      "avg_score": 2.0,
+      "status": "FAIL",
+      "flags": [
+        "hallucinated_earnings_data",
+        "fabricated_eps_revenue_estimates",
+        "tool_failure_not_properly_escalated",
+        "bootstrap_noise_irrelevant_to_query",
+        "no_actual_mnpi_flags_returned",
+        "unverifiable_earnings_calendar",
+        "invented_financial_figures_without_real_source",
+        "session_error_masked_with_fabricated_content"
+      ],
+      "tools_used": [
+        "market-data",
+        "salesforce-crm"
+      ],
+      "latency_ms": 122458
+    }
+  ]
+}

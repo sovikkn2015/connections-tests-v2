@@ -1,0 +1,82 @@
+// ICE Data Services gRPC service definition.
+//
+// Placeholder proto committed for reference; production builds regenerate stubs
+// from the vendor-supplied proto via scripts/gen_ice_stubs.sh. The shipped
+// adapter ships with a fake stub (FakeIceStub) and the RealIceStub in the
+// source tree is a skeleton until live vendor proto lands.
+
+syntax = "proto3";
+
+package ice.data.v1;
+
+// Service: three unary RPCs matching the adapter tools.
+service IceDataService {
+  rpc GetMarketDataSnapshot(MarketDataSnapshotRequest) returns (MarketDataSnapshotResponse);
+  rpc GetTradeTape(TradeTapeRequest) returns (TradeTapeResponse);
+  rpc GetReferenceData(ReferenceDataRequest) returns (ReferenceDataResponse);
+}
+
+message SecurityRef {
+  string identifier_type = 1;  // SYMBOL | ISIN | CUSIP | ICE_OPAQUE_ID
+  string value            = 2;
+  string venue            = 3;  // optional MIC code
+}
+
+// ---- MarketDataSnapshot --------------------------------------------------
+
+message MarketDataSnapshotRequest {
+  repeated SecurityRef securities = 1;
+  bool include_depth              = 2;
+}
+
+message Quote {
+  SecurityRef security   = 1;
+  double bid             = 2;
+  double ask             = 3;
+  uint64 bid_size        = 4;
+  uint64 ask_size        = 5;
+  int64  timestamp_us    = 6;
+}
+
+message MarketDataSnapshotResponse {
+  repeated Quote quotes = 1;
+}
+
+// ---- TradeTape -----------------------------------------------------------
+
+message TradeTapeRequest {
+  SecurityRef security = 1;
+  int64 start_time_us  = 2;
+  int64 end_time_us    = 3;
+  uint32 max_ticks     = 4;
+}
+
+message Tick {
+  int64 timestamp_us = 1;
+  double price        = 2;
+  uint64 size         = 3;
+  string condition    = 4;
+}
+
+message TradeTapeResponse {
+  repeated Tick ticks = 1;
+}
+
+// ---- ReferenceData -------------------------------------------------------
+
+message ReferenceDataRequest {
+  repeated SecurityRef securities = 1;
+  string as_of_date               = 2;  // ISO 8601 YYYY-MM-DD, empty = latest
+}
+
+message ReferenceEntry {
+  SecurityRef security = 1;
+  string asset_class   = 2;
+  string tick_size     = 3;
+  uint32 lot_size      = 4;
+  string trading_hours = 5;
+}
+
+message ReferenceDataResponse {
+  repeated ReferenceEntry securities = 1;
+}

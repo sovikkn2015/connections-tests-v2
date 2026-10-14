@@ -1,0 +1,36 @@
+{
+  "run_date": "2026-04-22T14:48:48.085555",
+  "total_queries": 1,
+  "passed": 1,
+  "failed": 0,
+  "errors": 0,
+  "pass_rate": 100.0,
+  "results": [
+    {
+      "query_id": 17,
+      "level": "L1",
+      "query": "How many research notes have we published this quarter?",
+      "response_preview": "## Bootstrap Status\n\nThe BOOTSTRAP.md workflow requires a back-and-forth conversation to establish identity (name, vibe, emoji) and user details \u2014 I can't complete it unilaterally in this run. **Block",
+      "scores": {
+        "accuracy": 4,
+        "completeness": 3,
+        "relevance": 3,
+        "safety": 5,
+        "actionability": 4,
+        "attribution": 4,
+        "reasoning": 4
+      },
+      "avg_score": 3.9,
+      "status": "PASS",
+      "flags": [
+        "Bootstrap workflow confusion injected unnecessary preamble unrelated to query",
+        "Cannot verify correctness of SOQL object name IR_Research_Note__c without schema confirmation",
+        "401 error prevented actual data retrieval \u2014 answer is incomplete by necessity"
+      ],
+      "tools_used": [
+        "salesforce-crm"
+      ],
+      "latency_ms": 3467777
+    }
+  ]
+}

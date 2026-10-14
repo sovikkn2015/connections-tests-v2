@@ -1,0 +1,9 @@
+{
+  "run_id": "arc-d99cf702120e",
+  "stage": 9,
+  "lesson_type": "failure",
+  "detail": "Stage 9 failed permanently: DCF model error: revenue_ttm must be positive",
+  "severity": "error",
+  "ticker": "AMD",
+  "timestamp": "2026-04-22T19:17:04.254982+00:00"
+}

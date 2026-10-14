@@ -1,0 +1,171 @@
+/* v3 PersonaHeader — FSI Workforce 360 branded bar. */
+
+.v3-root .v3-persona-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 3rem;
+  padding: 0 0.875rem;
+  background: var(--forensic-bg-2);
+  color: var(--forensic-text-1);
+  border-bottom: 1px solid var(--forensic-line);
+}
+.v3-root .v3-persona-header--light {
+  background: var(--n-000);
+  color: var(--n-900);
+  border-bottom: 1px solid var(--n-200);
+}
+.v3-root .v3-persona-header--channel {
+  background: var(--channel-header);
+  color: var(--n-000);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.v3-root .v3-persona-header__brand {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.v3-root .v3-persona-header__logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  font-size: 0.9375rem;
+  letter-spacing: -0.01em;
+}
+.v3-root .v3-persona-header__persona {
+  font-size: 0.75rem;
+  opacity: 0.7;
+}
+.v3-root .v3-persona-header__nav {
+  display: flex;
+  gap: 0.125rem;
+  margin-left: 0.5rem;
+}
+.v3-root .v3-persona-header__nav a {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  color: inherit;
+  opacity: 0.65;
+}
+.v3-root .v3-persona-header__nav a.is-active {
+  background: rgba(255, 255, 255, 0.12);
+  opacity: 1;
+  font-weight: 600;
+}
+.v3-root .v3-persona-header--light .v3-persona-header__nav a.is-active {
+  background: var(--fsi-brand-050);
+  color: var(--fsi-brand-700);
+}
+.v3-root .v3-persona-header__nav a:hover { opacity: 1; }
+
+.v3-root .v3-persona-header__user {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.8125rem;
+}
+.v3-root .v3-persona-header__role {
+  font-size: 0.6875rem;
+  opacity: 0.6;
+}
+.v3-root .v3-persona-header__avatar {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--fsi-brand-500);
+  color: var(--n-000);
+  font-size: 0.6875rem;
+  font-weight: 700;
+}
+.v3-root .v3-persona-header__signout {
+  padding: 0.25rem 0.625rem;
+  font-size: 0.6875rem;
+  background: transparent;
+  color: inherit;
+  border: 1px solid currentColor;
+  border-radius: var(--radius-sm);
+  opacity: 0.7;
+  cursor: pointer;
+  font-family: inherit;
+}
+.v3-root .v3-persona-header__signout:hover { opacity: 1; }
+
+/* Theme toggle button — sun/moon glyph */
+.v3-root .v3-persona-header__theme {
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: inherit;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  opacity: 0.6;
+  cursor: pointer;
+  font-size: 0.875rem;
+  line-height: 1;
+  font-family: inherit;
+  transition: opacity 120ms ease-out, background 120ms ease-out;
+}
+.v3-root .v3-persona-header__theme:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.08);
+}
+.v3-root[data-theme="light"] .v3-persona-header__theme:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+.v3-root .v3-persona-header__theme:focus-visible {
+  outline: 2px solid var(--fsi-focus);
+  outline-offset: 2px;
+}
+.v3-root .v3-persona-header--channel .v3-persona-header__theme {
+  /* Theme toggle on the green WhatsApp surface is hidden — the surface
+   * is brand-locked, not forensic. Parent component typically passes
+   * showThemeToggle=false on channel, but we keep the selector here as
+   * a defensive double-hide in case a caller forgets. */
+  display: none;
+}
+
+/* Live connection dot */
+.v3-root .v3-live-dot {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--success-300);
+}
+.v3-root .v3-live-dot::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  background: var(--success-300);
+  border-radius: 50%;
+  box-shadow: 0 0 6px var(--success-300);
+  animation: v3-pulse 1.6s ease-in-out infinite;
+}
+.v3-root .v3-live-dot[data-status="reconnecting"],
+.v3-root .v3-live-dot[data-status="connecting"] { color: var(--warning-300); }
+.v3-root .v3-live-dot[data-status="reconnecting"]::before,
+.v3-root .v3-live-dot[data-status="connecting"]::before {
+  background: var(--warning-300);
+  box-shadow: 0 0 6px var(--warning-300);
+}
+.v3-root .v3-live-dot[data-status="closed"],
+.v3-root .v3-live-dot[data-status="error"] { color: var(--error-300); }
+.v3-root .v3-live-dot[data-status="closed"]::before,
+.v3-root .v3-live-dot[data-status="error"]::before {
+  background: var(--error-300);
+  box-shadow: 0 0 6px var(--error-300);
+  animation: none;
+}

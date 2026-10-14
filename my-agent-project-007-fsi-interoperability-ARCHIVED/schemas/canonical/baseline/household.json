@@ -1,0 +1,159 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://007.fsi/schemas/canonical/household/v0.1.0",
+  "title": "Household",
+  "description": "CONTAINER model \u2014 holds vendor-specific groupings, not a unified model. SF FSC (relationship), Orion (portfolio), Schwab (custodial) all preserved.",
+  "type": "object",
+  "required": [
+    "canonical_id",
+    "display_name",
+    "primary_source",
+    "members"
+  ],
+  "properties": {
+    "canonical_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Primary key for canonical household"
+    },
+    "display_name": {
+      "type": "string",
+      "description": "Human-readable household display name"
+    },
+    "primary_source": {
+      "type": "string",
+      "enum": [
+        "salesforce_fsc",
+        "orion",
+        "schwab",
+        "fidelity",
+        "pershing",
+        "manual"
+      ],
+      "description": "Primary source system: salesforce_fsc, orion, schwab, fidelity, pershing, manual"
+    },
+    "members": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "client_ref",
+          "role",
+          "source"
+        ],
+        "properties": {
+          "client_ref": {
+            "type": "string",
+            "description": "Canonical Client ID"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "primary",
+              "spouse",
+              "dependent",
+              "trustee",
+              "beneficiary",
+              "authorized_signer",
+              "power_of_attorney"
+            ]
+          },
+          "source": {
+            "type": "string",
+            "description": "Which vendor system defined this membership"
+          }
+        }
+      },
+      "description": "Household members with roles and source attribution"
+    },
+    "accounts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "account_ref": {
+            "type": "string",
+            "description": "Canonical Account ID"
+          },
+          "source": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Accounts linked to this household"
+    },
+    "vendor_mappings": {
+      "type": "object",
+      "description": "Preserves vendor-specific grouping semantics",
+      "properties": {
+        "salesforce_fsc": {
+          "type": "object",
+          "properties": {
+            "household_id": {
+              "type": "string",
+              "description": "SF Record ID"
+            },
+            "grouping_type": {
+              "type": "string",
+              "const": "relationship",
+              "description": "SF FSC uses relationship grouping"
+            }
+          },
+          "description": "Salesforce FSC household mapping"
+        },
+        "orion": {
+          "type": "object",
+          "properties": {
+            "household_id": {
+              "type": "string",
+              "description": "Orion Household ID"
+            },
+            "grouping_type": {
+              "type": "string",
+              "const": "portfolio_management",
+              "description": "Orion uses portfolio_management grouping"
+            }
+          },
+          "description": "Orion household mapping"
+        },
+        "schwab": {
+          "type": "object",
+          "properties": {
+            "master_account": {
+              "type": "string",
+              "description": "Schwab master account number"
+            },
+            "grouping_type": {
+              "type": "string",
+              "const": "custodial",
+              "description": "Schwab uses custodial grouping"
+            }
+          },
+          "description": "Schwab household mapping"
+        }
+      }
+    },
+    "reconciliation": {
+      "type": "object",
+      "properties": {
+        "sources_agree": {
+          "type": "boolean",
+          "description": "True if all vendor sources agree on membership"
+        },
+        "discrepancies": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "List of disagreements between sources \u2014 flagged for SME review"
+        },
+        "last_reconciled": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When reconciliation last ran"
+        }
+      },
+      "description": "Cross-vendor agreement tracking"
+    }
+  }
+}

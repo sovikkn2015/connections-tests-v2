@@ -1,0 +1,33 @@
+dependencies:
+- name: m1-identity
+  repository: file://charts/m1-identity
+  version: 0.1.0
+- name: m2-m4-policy-engine
+  repository: file://charts/m2-m4-policy-engine
+  version: 0.1.0
+- name: m6-mcp-gateway
+  repository: file://charts/m6-mcp-gateway
+  version: 0.1.0
+- name: m10-audit-logger
+  repository: file://charts/m10-audit-logger
+  version: 0.1.0
+- name: m8-pipeline-engine
+  repository: file://charts/m8-pipeline-engine
+  version: 0.1.0
+- name: m9-intent-router
+  repository: file://charts/m9-intent-router
+  version: 0.1.0
+- name: m12-supervisor
+  repository: file://charts/m12-supervisor
+  version: 0.1.0
+- name: m11-blpapi-adapter
+  repository: file://charts/m11-blpapi-adapter
+  version: 0.1.0
+- name: m11-grpc-adapter
+  repository: file://charts/m11-grpc-adapter
+  version: 0.1.0
+- name: m13-fix-bridge
+  repository: file://charts/m13-fix-bridge
+  version: 0.1.0
+digest: sha256:44b0c1446d7849f1fa6c224f7693050db22e26097befe8566e9772d267458e4e
+generated: "2026-04-29T06:32:56.166098-04:00"

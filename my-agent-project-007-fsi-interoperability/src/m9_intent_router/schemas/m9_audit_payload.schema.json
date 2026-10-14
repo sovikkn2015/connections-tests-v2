@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://007.fsi-platform/schemas/m9_audit_payload.schema.json",
+  "title": "M9 Audit Payload",
+  "description": "M9 RoutingDecision.audit_payload() shape. 12 keys in v0.2.0.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "trace_id",
+    "utterance_sha256",
+    "intent",
+    "confidence",
+    "selected_target",
+    "fallback_used",
+    "llm_latency_ms",
+    "llm_model",
+    "llm_provider",
+    "reason_code",
+    "entities_present",
+    "tenant_id"
+  ],
+  "properties": {
+    "trace_id": {"type": "string", "minLength": 1},
+    "utterance_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "intent": {
+      "type": "string",
+      "enum": [
+        "client.data_lookup",
+        "client.goal_tracking",
+        "client.plan_summary",
+        "compliance.question",
+        "escalate_to_human",
+        "research.household_summary",
+        "research.market_query",
+        "research.meeting_prep",
+        "research.portfolio_review",
+        "trade.inquiry",
+        "unsupported"
+      ]
+    },
+    "confidence": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+    "selected_target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "name"],
+      "properties": {
+        "kind": {"type": "string", "enum": ["pipeline", "tool", "escalate"]},
+        "name": {"type": "string", "minLength": 1}
+      }
+    },
+    "fallback_used": {"type": "boolean"},
+    "llm_latency_ms": {"type": "integer", "minimum": 0},
+    "llm_model": {"type": "string", "minLength": 1},
+    "llm_provider": {"type": "string", "minLength": 1},
+    "reason_code": {
+      "anyOf": [
+        {"type": "null"},
+        {
+          "type": "string",
+          "enum": [
+            "llm_timeout",
+            "llm_error_5xx",
+            "llm_error_4xx",
+            "llm_malformed_output",
+            "mnpi_shape_suspected",
+            "low_confidence",
+            "regex_fallback_miss",
+            "provider_unconfigured",
+            "taxonomy_mismatch",
+            "llm_assisted_plan",
+            "invalid_utterance_length",
+            "unsupported_intent_stub",
+            "aid_authority_denied"
+          ]
+        }
+      ]
+    },
+    "entities_present": {
+      "type": "array",
+      "items": {"type": "string"},
+      "uniqueItems": true
+    },
+    "tenant_id": {"type": "string", "minLength": 1}
+  }
+}

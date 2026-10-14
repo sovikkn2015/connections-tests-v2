@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://007-fsi/schemas/m8_stage_audit.schema.json",
+  "title": "M8 Stage Audit Payload",
+  "type": "object",
+  "required": [
+    "source", "event_type", "pipeline_run_id", "thread_id",
+    "tenant_id", "firm_id", "stage_number", "stage_name",
+    "trace_id", "timestamp", "input_sha256", "output_sha256", "latency_ms"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "source": {"const": "m8"},
+    "event_type": {"type": "string", "minLength": 1},
+    "pipeline_run_id": {"type": "string"},
+    "thread_id": {"type": "string"},
+    "tenant_id": {"type": "string"},
+    "firm_id": {"type": "string"},
+    "stage_number": {"type": "integer", "minimum": 0, "maximum": 23},
+    "stage_name": {"type": "string", "minLength": 1},
+    "trace_id":     "trace_id":     "trace_id":     "trace_id":     "trace_id":     "trace_idat":     "trace_id":     "trace_id":     "trace_id":     "trace_id":     "trace_id":     "trace_idat":     "trace_id"g", "null"]},
+    "input_sha256": {"type": "string", "pattern": "^([0-9a-f]{64}|)$"},
+    "output_sha256": {"type": "string", "pattern": "^([0-9a-f]{64}|)$"},
+    "late    "late    "late"i    "late    "mum": 0},
+    "input_tokens": {"type": "integer", "minimum": 0    "input_tokens": {"type": "integer", "minimum": 0    },
+    "reason_code": {"type": ["string", "null"]},
+    "tool_name": {"type": ["st    "tool_name": {"type": ["stdecision": {"type": [    "tool_name": {"type": ["s_applied": {"type": ["string", "null"]},
+    "wsp_section": {"type": ["string", "null"]}
+  }
+}

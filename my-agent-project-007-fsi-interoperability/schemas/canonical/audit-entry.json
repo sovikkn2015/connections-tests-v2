@@ -1,0 +1,300 @@
+{
+  "$defs": {
+    "ProvenanceStage": {
+      "description": "Per-stage entry in the liability provenance chain.",
+      "properties": {
+        "stage": {
+          "description": "Stage name in the processing pipeline.",
+          "title": "Stage",
+          "type": "string"
+        },
+        "module": {
+          "description": "Module that processed this stage (m1-m13).",
+          "title": "Module",
+          "type": "string"
+        },
+        "hash": {
+          "description": "SHA-256 hash of data at this stage.",
+          "title": "Hash",
+          "type": "string"
+        },
+        "timestamp": {
+          "description": "When this stage was processed.",
+          "format": "date-time",
+          "title": "Timestamp",
+          "type": "string"
+        }
+      },
+      "required": [
+        "stage",
+        "module",
+        "hash",
+        "timestamp"
+      ],
+      "title": "ProvenanceStage",
+      "type": "object"
+    }
+  },
+  "description": "Immutable audit trail entry. 3-tier storage. 6-year retention minimum (SEC 17a-4).",
+  "properties": {
+    "canonical_id": {
+      "description": "Primary key for this audit entry.",
+      "format": "uuid",
+      "title": "Canonical Id",
+      "type": "string"
+    },
+    "trace_id": {
+      "description": "Distributed trace ID linking all entries for one request.",
+      "title": "Trace Id",
+      "type": "string"
+    },
+    "timestamp": {
+      "description": "When this audit entry was created.",
+      "format": "date-time",
+      "title": "Timestamp",
+      "type": "string"
+    },
+    "actor_id": {
+      "description": "AID hash of the actor (agent, advisor, system).",
+      "title": "Actor Id",
+      "type": "string"
+    },
+    "action": {
+      "description": "What was done (e.g., portfolio_rebalance_proposed).",
+      "title": "Action",
+      "type": "string"
+    },
+    "module": {
+      "description": "Module that generated this entry: m1-m13.",
+      "title": "Module",
+      "type": "string"
+    },
+    "target_type": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Entity type acted upon.",
+      "title": "Target Type"
+    },
+    "target_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Canonical ID of the entity acted upon.",
+      "title": "Target Id"
+    },
+    "decision": {
+      "description": "Decision outcome: allow, deny, warn, escalate, error.",
+      "title": "Decision",
+      "type": "string"
+    },
+    "reason": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Reason for the decision.",
+      "title": "Reason"
+    },
+    "input_hash": {
+      "description": "SHA-256 of input payload for reproducibility.",
+      "title": "Input Hash",
+      "type": "string"
+    },
+    "output_hash": {
+      "description": "SHA-256 of output payload for reproducibility.",
+      "title": "Output Hash",
+      "type": "string"
+    },
+    "policy_bundle_version": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "OPA bundle version used.",
+      "title": "Policy Bundle Version"
+    },
+    "rule_applied": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Rego rule path evaluated.",
+      "title": "Rule Applied"
+    },
+    "wsp_section": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "WSP section reference (steering rule 19).",
+      "title": "Wsp Section"
+    },
+    "data_sources_used": {
+      "description": "Data sources consulted.",
+      "items": {
+        "type": "string"
+      },
+      "title": "Data Sources Used",
+      "type": "array"
+    },
+    "latency_ms": {
+      "description": "Operation latency in milliseconds.",
+      "minimum": 0,
+      "title": "Latency Ms",
+      "type": "integer"
+    },
+    "archetype": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Client archetype classification.",
+      "title": "Archetype"
+    },
+    "role": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Actor role (advisor, compliance_officer, agent).",
+      "title": "Role"
+    },
+    "firm_id": {
+      "description": "Firm context for multi-tenant.",
+      "title": "Firm Id",
+      "type": "string"
+    },
+    "jurisdiction": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Regulatory jurisdiction.",
+      "title": "Jurisdiction"
+    },
+    "provenance_chain": {
+      "description": "Liability provenance chain (ARCH-06 Gap 2).",
+      "items": {
+        "$ref": "#/$defs/ProvenanceStage"
+      },
+      "title": "Provenance Chain",
+      "type": "array"
+    },
+    "worm_record_id": {
+      "description": "S3 Object Lock key for WORM copy.",
+      "title": "Worm Record Id",
+      "type": "string"
+    },
+    "sha256_integrity": {
+      "description": "SHA-256 of entire entry for tamper detection.",
+      "title": "Sha256 Integrity",
+      "type": "string"
+    },
+    "langfuse_trace_url": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Langfuse trace URL for LLM observability.",
+      "title": "Langfuse Trace Url"
+    },
+    "crm_record_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "SF Record ID if written to CRM.",
+      "title": "Crm Record Id"
+    },
+    "retention_years": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": 6,
+      "description": "Minimum retention period. 6 years default (SEC 17a-4).",
+      "title": "Retention Years"
+    }
+  },
+  "required": [
+    "canonical_id",
+    "trace_id",
+    "timestamp",
+    "actor_id",
+    "action",
+    "module",
+    "decision",
+    "input_hash",
+    "output_hash",
+    "latency_ms",
+    "firm_id",
+    "worm_record_id",
+    "sha256_integrity"
+  ],
+  "title": "AuditEntry",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://007.fsi/schemas/canonical/audit-entry/v0.1.0"
+}

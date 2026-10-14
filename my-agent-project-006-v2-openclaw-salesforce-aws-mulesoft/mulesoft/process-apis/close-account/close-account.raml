@@ -1,0 +1,88 @@
+#%RAML 1.0
+title: Close Account Process API
+version: v1
+baseUri: /api
+mediaType: application/json
+description: |
+  Project 006 v2 - MuleSoft Process API for close_account action.
+  Mock backend: returns canned status. Real core-banking + custodian integration is a later step.
+  All calls originate from the mulesoft-actions Lambda (MCP server).
+  HITL approval is verified upstream; this API only enforces shape + presence of approval_token_hash
+  AND dual_approval_token_hash - close_account ALWAYS needs both per 006 v2 steering rule 5.
+
+types:
+  CloseAccountRequest:
+    type: object
+    additionalProperties: false
+    properties:
+      client_id:
+        type: string
+      account_id:
+        type: string
+      reason:
+        type: string
+        minLength: 10
+        description: Free-text rationale. Short reasons (< 10 chars) are rejected as low-quality.
+      approval_token_hash:
+        type: string
+        description: SHA-256 hex digest of the raw ApprovalToken.
+        pattern: "^[a-f0-9]{64}$"
+      dual_approval_token_hash:
+        type: string
+        description: SHA-256 hex digest of the dual-approval token. ALWAYS required for close_account.
+        pattern: "^[a-f0-9]{64}$"
+
+  CloseAccountResponse:
+    type: object
+    properties:
+      account_id: string
+      status:
+        type: string
+        enum: [CLOSED]
+      closed_at:
+        type: integer
+        description: Unix epoch seconds
+      mulesoft_reference:
+        type: string
+
+  ErrorResponse:
+    type: object
+    properties:
+      error: string
+      message: string
+      missing_fields?:
+        type: array
+        items: string
+
+/accounts/close:
+  post:
+    description: Close an existing account. Mock returns a canned response. Always requires dual approval.
+    body:
+      application/json:
+        type: CloseAccountRequest
+    responses:
+      200:
+        description: Account closed (mock).
+        body:
+          application/json:
+            type: CloseAccountResponse
+      400:
+        description: Missing required fields, reason too short, or invalid shape.
+        body:
+          application/json:
+            type: ErrorResponse
+      403:
+        description: approval_token_hash or dual_approval_token_hash missing.
+        body:
+          application/json:
+            type: ErrorResponse
+
+/health:
+  get:
+    description: Liveness probe.
+    responses:
+      200:
+        body:
+          application/json:
+            example: |
+              {"status": "ok", "mode": "mock", "api": "close-account-process-api"}

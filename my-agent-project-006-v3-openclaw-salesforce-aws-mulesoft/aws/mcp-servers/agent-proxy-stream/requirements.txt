@@ -1,0 +1,2 @@
+# Streaming proxy Lambda deps — only boto3 (bundled in runtime) is needed.
+# Kept empty so `sam build` doesn't try to install anything extra.

@@ -1,0 +1,683 @@
+{
+  "$defs": {
+    "Beneficiary": {
+      "description": "Payment beneficiary details. PII-sensitive fields marked with x-pii.",
+      "properties": {
+        "name": {
+          "description": "Beneficiary name.",
+          "title": "Name",
+          "type": "string"
+        },
+        "account_number": {
+          "description": "Beneficiary account number. PII \u2014 masked in logs, M4 strips for non-authorized roles.",
+          "title": "Account Number",
+          "type": "string",
+          "x-pii": true
+        },
+        "routing_number": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "ABA routing number for domestic wires. PII \u2014 M4 strips for non-authorized roles.",
+          "title": "Routing Number",
+          "x-pii": true
+        },
+        "swift_bic": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "SWIFT/BIC code for international wires.",
+          "title": "Swift Bic"
+        },
+        "iban": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "International Bank Account Number. PII \u2014 M4 strips for non-authorized roles.",
+          "title": "Iban",
+          "x-pii": true
+        },
+        "bank_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Beneficiary bank name.",
+          "title": "Bank Name"
+        },
+        "bank_address": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Beneficiary bank address.",
+          "title": "Bank Address"
+        },
+        "intermediary_bank": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Intermediary bank for international wires.",
+          "title": "Intermediary Bank"
+        }
+      },
+      "required": [
+        "name",
+        "account_number"
+      ],
+      "title": "Beneficiary",
+      "type": "object"
+    },
+    "BsaAml": {
+      "description": "BSA/AML regulatory fields. Required for payment compliance.",
+      "properties": {
+        "ctr_required": {
+          "description": "True if amount >= $10,000 (CTR threshold).",
+          "title": "Ctr Required",
+          "type": "boolean"
+        },
+        "ctr_filed": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "True if CTR has been filed.",
+          "title": "Ctr Filed"
+        },
+        "sar_flagged": {
+          "description": "True if structuring or suspicious pattern detected.",
+          "title": "Sar Flagged",
+          "type": "boolean"
+        },
+        "sanctions_screened": {
+          "description": "True if sanctions screening completed.",
+          "title": "Sanctions Screened",
+          "type": "boolean"
+        },
+        "sanctions_result": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Sanctions result: clear, potential_match, confirmed_match.",
+          "title": "Sanctions Result"
+        },
+        "ofac_screened": {
+          "description": "True if OFAC screening completed.",
+          "title": "Ofac Screened",
+          "type": "boolean"
+        },
+        "ofac_result": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "OFAC result: clear, potential_match, confirmed_match.",
+          "title": "Ofac Result"
+        }
+      },
+      "required": [
+        "ctr_required",
+        "sar_flagged",
+        "sanctions_screened",
+        "ofac_screened"
+      ],
+      "title": "BsaAml",
+      "type": "object"
+    },
+    "ComplianceCheck": {
+      "description": "Result of a deterministic OPA compliance check. NOT LLM-generated.",
+      "properties": {
+        "check_id": {
+          "description": "Primary key for this compliance check result.",
+          "format": "uuid",
+          "title": "Check Id",
+          "type": "string"
+        },
+        "check_type": {
+          "$ref": "#/$defs/ComplianceCheckType",
+          "description": "Type of compliance check performed."
+        },
+        "decision": {
+          "$ref": "#/$defs/ComplianceDecision",
+          "description": "Compliance decision: ALLOW, DENY, WARN, REQUIRE_APPROVAL, ESCALATE."
+        },
+        "reason": {
+          "description": "Human-readable reason for the decision.",
+          "title": "Reason",
+          "type": "string"
+        },
+        "rule_applied": {
+          "description": "OPA rule path (e.g., authority/restricted_list.rego:check_restricted_list).",
+          "title": "Rule Applied",
+          "type": "string"
+        },
+        "policy_bundle_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "OPA bundle version for audit trail.",
+          "title": "Policy Bundle Version"
+        },
+        "wsp_section": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "WSP section this rule maps to (ARCH-06 Gap 3, steering rule 19).",
+          "title": "Wsp Section"
+        },
+        "input_context": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ComplianceCheckInputContext"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "What was checked."
+        },
+        "details": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Additional context (e.g., concentration percentage).",
+          "title": "Details"
+        },
+        "evaluated_at": {
+          "description": "When the check was evaluated.",
+          "format": "date-time",
+          "title": "Evaluated At",
+          "type": "string"
+        },
+        "trace_id": {
+          "description": "Links to M10 audit trail.",
+          "title": "Trace Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "check_id",
+        "check_type",
+        "decision",
+        "reason",
+        "rule_applied",
+        "evaluated_at",
+        "trace_id"
+      ],
+      "title": "ComplianceCheck",
+      "type": "object"
+    },
+    "ComplianceCheckInputContext": {
+      "description": "What was checked in a compliance evaluation.",
+      "properties": {
+        "security_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Security identifier checked.",
+          "title": "Security Id"
+        },
+        "client_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Client ID checked.",
+          "title": "Client Id"
+        },
+        "action": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Action being evaluated.",
+          "title": "Action"
+        },
+        "archetype": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Firm archetype context.",
+          "title": "Archetype"
+        },
+        "account_type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Account type context.",
+          "title": "Account Type"
+        }
+      },
+      "title": "ComplianceCheckInputContext",
+      "type": "object"
+    },
+    "ComplianceCheckType": {
+      "description": "12 compliance check types evaluated by M2 OPA rules.",
+      "enum": [
+        "restricted_list",
+        "concentration_limit",
+        "trading_window",
+        "suitability",
+        "chinese_wall",
+        "pod_isolation",
+        "mnpi_filter",
+        "erisa_prohibited_transaction",
+        "rmd_check",
+        "bsa_aml_ctr",
+        "bsa_aml_sar",
+        "sanctions_screen"
+      ],
+      "title": "ComplianceCheckType",
+      "type": "string"
+    },
+    "ComplianceDecision": {
+      "description": "5 compliance decision outcomes from OPA evaluation.",
+      "enum": [
+        "ALLOW",
+        "DENY",
+        "WARN",
+        "REQUIRE_APPROVAL",
+        "ESCALATE"
+      ],
+      "title": "ComplianceDecision",
+      "type": "string"
+    },
+    "HitlApproval": {
+      "description": "Human-in-the-loop approval record. Used by Order, PaymentInstruction.",
+      "properties": {
+        "approver_id": {
+          "description": "ID of the human approver.",
+          "title": "Approver Id",
+          "type": "string"
+        },
+        "approved_at": {
+          "description": "Timestamp of approval (ISO 8601).",
+          "format": "date-time",
+          "title": "Approved At",
+          "type": "string"
+        },
+        "approval_token": {
+          "description": "SHA-256(entity_id + approver_id + timestamp) \u2014 tamper-proof.",
+          "title": "Approval Token",
+          "type": "string"
+        }
+      },
+      "required": [
+        "approver_id",
+        "approved_at",
+        "approval_token"
+      ],
+      "title": "HitlApproval",
+      "type": "object"
+    },
+    "Iso20022Mapping": {
+      "description": "ISO 20022 pain.001 message mapping (Phase 5).",
+      "properties": {
+        "message_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "pain.001 MsgId.",
+          "title": "Message Id"
+        },
+        "payment_info_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "pain.001 PmtInfId.",
+          "title": "Payment Info Id"
+        },
+        "end_to_end_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "pain.001 EndToEndId.",
+          "title": "End To End Id"
+        },
+        "charge_bearer": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Charge bearer: DEBT, CRED, SHAR, SLEV.",
+          "title": "Charge Bearer"
+        }
+      },
+      "title": "Iso20022Mapping",
+      "type": "object"
+    },
+    "PaymentStatus": {
+      "description": "10-state payment lifecycle. HITL mandatory before submission.",
+      "enum": [
+        "draft",
+        "compliance_check",
+        "pending_approval",
+        "approved",
+        "submitted",
+        "processing",
+        "completed",
+        "rejected",
+        "cancelled",
+        "failed"
+      ],
+      "title": "PaymentStatus",
+      "type": "string"
+    },
+    "PaymentType": {
+      "description": "7 payment types for PaymentInstruction.",
+      "enum": [
+        "wire_domestic",
+        "wire_international",
+        "ach_transfer",
+        "check_request",
+        "journal_transfer",
+        "standing_instruction",
+        "distribution"
+      ],
+      "title": "PaymentType",
+      "type": "string"
+    }
+  },
+  "description": "Canonical payment/wire instruction. HITL mandatory. BSA/AML fields required.",
+  "properties": {
+    "instruction_id": {
+      "description": "Primary key for this payment instruction.",
+      "format": "uuid",
+      "title": "Instruction Id",
+      "type": "string"
+    },
+    "client_ref": {
+      "description": "Canonical Client ID.",
+      "format": "uuid",
+      "title": "Client Ref",
+      "type": "string"
+    },
+    "account_ref": {
+      "description": "Source account canonical ID.",
+      "format": "uuid",
+      "title": "Account Ref",
+      "type": "string"
+    },
+    "payment_type": {
+      "$ref": "#/$defs/PaymentType",
+      "description": "Payment classification."
+    },
+    "amount": {
+      "description": "Payment amount.",
+      "minimum": 0,
+      "title": "Amount",
+      "type": "number"
+    },
+    "currency": {
+      "description": "ISO 4217 currency code.",
+      "title": "Currency",
+      "type": "string"
+    },
+    "beneficiary": {
+      "$ref": "#/$defs/Beneficiary",
+      "description": "Beneficiary details."
+    },
+    "purpose": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Payment purpose/memo.",
+      "title": "Purpose"
+    },
+    "reference": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Client or firm reference number.",
+      "title": "Reference"
+    },
+    "value_date": {
+      "anyOf": [
+        {
+          "format": "date",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Requested value/settlement date.",
+      "title": "Value Date"
+    },
+    "status": {
+      "$ref": "#/$defs/PaymentStatus",
+      "description": "Payment lifecycle status. HITL mandatory before submission."
+    },
+    "compliance_checks": {
+      "description": "BSA/AML, sanctions, OFAC screening results.",
+      "items": {
+        "$ref": "#/$defs/ComplianceCheck"
+      },
+      "title": "Compliance Checks",
+      "type": "array"
+    },
+    "bsa_aml": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/BsaAml"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "BSA/AML specific fields."
+    },
+    "hitl_approval": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/HitlApproval"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "HITL approval record."
+    },
+    "iso20022_mapping": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Iso20022Mapping"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "ISO 20022 pain.001 message mapping (Phase 5)."
+    },
+    "trace_id": {
+      "description": "Links to M10 audit trail.",
+      "title": "Trace Id",
+      "type": "string"
+    },
+    "source_system": {
+      "description": "Source system.",
+      "title": "Source System",
+      "type": "string"
+    },
+    "source_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Vendor-specific payment ID.",
+      "title": "Source Id"
+    },
+    "created_at": {
+      "description": "Payment creation timestamp.",
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "updated_at": {
+      "description": "Payment last update timestamp.",
+      "format": "date-time",
+      "title": "Updated At",
+      "type": "string"
+    }
+  },
+  "required": [
+    "instruction_id",
+    "client_ref",
+    "account_ref",
+    "payment_type",
+    "amount",
+    "currency",
+    "beneficiary",
+    "status",
+    "trace_id",
+    "source_system",
+    "created_at",
+    "updated_at"
+  ],
+  "title": "PaymentInstruction",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://007.fsi/schemas/canonical/payment-instruction/v0.1.0"
+}

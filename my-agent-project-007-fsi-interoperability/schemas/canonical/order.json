@@ -1,0 +1,698 @@
+{
+  "$defs": {
+    "AccountType": {
+      "description": "16 ERISA + tax-advantaged account types. OPA needs account_type for per-type compliance rules.",
+      "enum": [
+        "taxable",
+        "traditional_ira",
+        "roth_ira",
+        "401k",
+        "403b",
+        "457",
+        "sep_ira",
+        "simple_ira",
+        "trust_revocable",
+        "trust_irrevocable",
+        "custodial_utma",
+        "custodial_ugma",
+        "erisa_pension",
+        "erisa_profit_sharing",
+        "529",
+        "hsa"
+      ],
+      "title": "AccountType",
+      "type": "string"
+    },
+    "ComplianceCheck": {
+      "description": "Result of a deterministic OPA compliance check. NOT LLM-generated.",
+      "properties": {
+        "check_id": {
+          "description": "Primary key for this compliance check result.",
+          "format": "uuid",
+          "title": "Check Id",
+          "type": "string"
+        },
+        "check_type": {
+          "$ref": "#/$defs/ComplianceCheckType",
+          "description": "Type of compliance check performed."
+        },
+        "decision": {
+          "$ref": "#/$defs/ComplianceDecision",
+          "description": "Compliance decision: ALLOW, DENY, WARN, REQUIRE_APPROVAL, ESCALATE."
+        },
+        "reason": {
+          "description": "Human-readable reason for the decision.",
+          "title": "Reason",
+          "type": "string"
+        },
+        "rule_applied": {
+          "description": "OPA rule path (e.g., authority/restricted_list.rego:check_restricted_list).",
+          "title": "Rule Applied",
+          "type": "string"
+        },
+        "policy_bundle_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "OPA bundle version for audit trail.",
+          "title": "Policy Bundle Version"
+        },
+        "wsp_section": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "WSP section this rule maps to (ARCH-06 Gap 3, steering rule 19).",
+          "title": "Wsp Section"
+        },
+        "input_context": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ComplianceCheckInputContext"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "What was checked."
+        },
+        "details": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Additional context (e.g., concentration percentage).",
+          "title": "Details"
+        },
+        "evaluated_at": {
+          "description": "When the check was evaluated.",
+          "format": "date-time",
+          "title": "Evaluated At",
+          "type": "string"
+        },
+        "trace_id": {
+          "description": "Links to M10 audit trail.",
+          "title": "Trace Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "check_id",
+        "check_type",
+        "decision",
+        "reason",
+        "rule_applied",
+        "evaluated_at",
+        "trace_id"
+      ],
+      "title": "ComplianceCheck",
+      "type": "object"
+    },
+    "ComplianceCheckInputContext": {
+      "description": "What was checked in a compliance evaluation.",
+      "properties": {
+        "security_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Security identifier checked.",
+          "title": "Security Id"
+        },
+        "client_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Client ID checked.",
+          "title": "Client Id"
+        },
+        "action": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Action being evaluated.",
+          "title": "Action"
+        },
+        "archetype": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Firm archetype context.",
+          "title": "Archetype"
+        },
+        "account_type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Account type context.",
+          "title": "Account Type"
+        }
+      },
+      "title": "ComplianceCheckInputContext",
+      "type": "object"
+    },
+    "ComplianceCheckType": {
+      "description": "12 compliance check types evaluated by M2 OPA rules.",
+      "enum": [
+        "restricted_list",
+        "concentration_limit",
+        "trading_window",
+        "suitability",
+        "chinese_wall",
+        "pod_isolation",
+        "mnpi_filter",
+        "erisa_prohibited_transaction",
+        "rmd_check",
+        "bsa_aml_ctr",
+        "bsa_aml_sar",
+        "sanctions_screen"
+      ],
+      "title": "ComplianceCheckType",
+      "type": "string"
+    },
+    "ComplianceDecision": {
+      "description": "5 compliance decision outcomes from OPA evaluation.",
+      "enum": [
+        "ALLOW",
+        "DENY",
+        "WARN",
+        "REQUIRE_APPROVAL",
+        "ESCALATE"
+      ],
+      "title": "ComplianceDecision",
+      "type": "string"
+    },
+    "HitlApproval": {
+      "description": "Human-in-the-loop approval record. Used by Order, PaymentInstruction.",
+      "properties": {
+        "approver_id": {
+          "description": "ID of the human approver.",
+          "title": "Approver Id",
+          "type": "string"
+        },
+        "approved_at": {
+          "description": "Timestamp of approval (ISO 8601).",
+          "format": "date-time",
+          "title": "Approved At",
+          "type": "string"
+        },
+        "approval_token": {
+          "description": "SHA-256(entity_id + approver_id + timestamp) \u2014 tamper-proof.",
+          "title": "Approval Token",
+          "type": "string"
+        }
+      },
+      "required": [
+        "approver_id",
+        "approved_at",
+        "approval_token"
+      ],
+      "title": "HitlApproval",
+      "type": "object"
+    },
+    "OrderStatus": {
+      "description": "12-state order lifecycle matching Execution Specialist state machine.",
+      "enum": [
+        "draft",
+        "compliance_check",
+        "pending_approval",
+        "approved",
+        "submitted",
+        "confirmed",
+        "pending_settlement",
+        "settled",
+        "rejected",
+        "cancelled",
+        "settlement_failed",
+        "escalated"
+      ],
+      "title": "OrderStatus",
+      "type": "string"
+    },
+    "SecurityIdentifier": {
+      "description": "Cross-reference object holding multiple identifiers for the same security.",
+      "properties": {
+        "ticker": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Exchange ticker symbol.",
+          "title": "Ticker"
+        },
+        "cusip": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "CUSIP identifier (9-char alphanumeric).",
+          "title": "Cusip"
+        },
+        "isin": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "ISIN identifier (2-letter country + 10 alphanum).",
+          "title": "Isin"
+        },
+        "figi": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "FIGI identifier (12-char alphanumeric).",
+          "title": "Figi"
+        },
+        "sedol": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "SEDOL identifier (7-char alphanumeric).",
+          "title": "Sedol"
+        },
+        "bloomberg_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Bloomberg ticker format (e.g., 'NVDA US Equity').",
+          "title": "Bloomberg Id"
+        }
+      },
+      "title": "SecurityIdentifier",
+      "type": "object"
+    },
+    "TaxImpact": {
+      "description": "Estimated tax impact shown at HITL gate for orders.",
+      "properties": {
+        "estimated_gain_loss": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Estimated gain or loss amount.",
+          "title": "Estimated Gain Loss"
+        },
+        "holding_period": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Tax holding period: short_term, long_term, unknown.",
+          "title": "Holding Period"
+        },
+        "tax_rate_estimate": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Estimated applicable tax rate.",
+          "title": "Tax Rate Estimate"
+        },
+        "wash_sale_risk": {
+          "default": false,
+          "description": "True if wash sale risk detected.",
+          "title": "Wash Sale Risk",
+          "type": "boolean"
+        }
+      },
+      "title": "TaxImpact",
+      "type": "object"
+    }
+  },
+  "description": "Canonical trade order. 12-state lifecycle. HITL mandatory before submission.",
+  "properties": {
+    "order_id": {
+      "description": "Primary key for canonical order.",
+      "format": "uuid",
+      "title": "Order Id",
+      "type": "string"
+    },
+    "client_ref": {
+      "description": "Canonical Client ID.",
+      "title": "Client Ref",
+      "type": "string"
+    },
+    "account_ref": {
+      "description": "Canonical Account ID.",
+      "title": "Account Ref",
+      "type": "string"
+    },
+    "security_identifier": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/SecurityIdentifier"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Security being traded."
+    },
+    "side": {
+      "description": "Trade side: buy, sell, sell_short, buy_to_cover.",
+      "title": "Side",
+      "type": "string"
+    },
+    "order_type": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Order type: market, limit, stop, stop_limit.",
+      "title": "Order Type"
+    },
+    "quantity": {
+      "description": "Number of shares/units to trade.",
+      "title": "Quantity",
+      "type": "number"
+    },
+    "limit_price": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Limit price for limit/stop_limit orders.",
+      "title": "Limit Price"
+    },
+    "stop_price": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Stop price for stop/stop_limit orders.",
+      "title": "Stop Price"
+    },
+    "time_in_force": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": "day",
+      "description": "Time in force: day, gtc, ioc, fok.",
+      "title": "Time In Force"
+    },
+    "status": {
+      "$ref": "#/$defs/OrderStatus",
+      "description": "Order lifecycle status per Execution Specialist state machine."
+    },
+    "compliance_checks": {
+      "description": "Compliance check results for this order.",
+      "items": {
+        "$ref": "#/$defs/ComplianceCheck"
+      },
+      "title": "Compliance Checks",
+      "type": "array"
+    },
+    "hitl_approval": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/HitlApproval"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "HITL approval record if approved."
+    },
+    "submitted_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "When order was submitted to execution venue.",
+      "title": "Submitted At"
+    },
+    "confirmed_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "When order execution was confirmed.",
+      "title": "Confirmed At"
+    },
+    "settled_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "When order settlement completed.",
+      "title": "Settled At"
+    },
+    "settlement_date_expected": {
+      "anyOf": [
+        {
+          "format": "date",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Expected settlement date (T+1 from trade date).",
+      "title": "Settlement Date Expected"
+    },
+    "execution_venue": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Custodian API, FIX broker, OMS.",
+      "title": "Execution Venue"
+    },
+    "fill_price": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Actual execution price.",
+      "title": "Fill Price"
+    },
+    "fill_quantity": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Actual filled quantity.",
+      "title": "Fill Quantity"
+    },
+    "commission": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Commission charged.",
+      "title": "Commission"
+    },
+    "account_type": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/AccountType"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Account type for ERISA/tax rules."
+    },
+    "tax_impact": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/TaxImpact"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Estimated tax impact shown at HITL gate."
+    },
+    "trace_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Links to M10 audit trail.",
+      "title": "Trace Id"
+    },
+    "created_at": {
+      "description": "Order creation timestamp.",
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    }
+  },
+  "required": [
+    "order_id",
+    "client_ref",
+    "account_ref",
+    "side",
+    "quantity",
+    "status",
+    "created_at"
+  ],
+  "title": "Order",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://007.fsi/schemas/canonical/order/v0.1.0"
+}

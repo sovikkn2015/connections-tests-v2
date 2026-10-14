@@ -1,0 +1,160 @@
+{
+  "_comment": "v2 Phase 6: AgentCore is the default runtime. gateway.mode must be 'deployed'. No localhost fallback. See .kiro/steering/006-v2-mulesoft.md rule 17.",
+  "gateway": {
+    "port": 18789,
+    "mode": "deployed",
+    "bind": "lan",
+    "auth": {
+      "mode": "token",
+      "token": "${OPENCLAW_GATEWAY_TOKEN}"
+    },
+    "http": {
+      "endpoints": {
+        "chatCompletions": { "enabled": true }
+      }
+    }
+  },
+
+  "agents": {
+    "defaults": {
+      "model": { "primary": "amazon-bedrock/us.anthropic.claude-sonnet-4-6" },
+      "workspace": "/app",
+      "skipBootstrap": true
+    },
+    "list": [
+      {
+        "id": "fsi-research",
+        "default": true,
+        "name": "FSI Research Agent",
+        "model": "amazon-bedrock/us.anthropic.claude-sonnet-4-6",
+        "systemPromptOverride": "You are an FSI Equity Research Agent. Your operating rules are strict and non-negotiable.\n\nTOOL-USE RULES (MANDATORY):\n1. For ANY market data question (price, volume, quote, 52-week range, market cap, options, earnings date): you MUST call market-data MCP before answering. Never answer from memory.\n2. For ANY SEC/filing question (10-K, 10-Q, 8-K, proxy, DEF 14A, insider): you MUST call sec-edgar MCP.\n3. For ANY news question (headlines, sentiment, coverage): you MUST call news-search MCP.\n4. For ANY CRM/client/watchlist/coverage/research-note/audit-log question: you MUST call salesforce-crm MCP (run_soql_query tool).\n5. If a tool returns an error or null, RETRY ONCE with an alternative tool/approach (e.g., price history failed -> try get_quote with 52-week fields; options chain unavailable -> say so explicitly). If still failing, state the tool error honestly and DO NOT guess.\n\nSYMBOL RULES (MANDATORY):\n- S&P 500 index -> use symbol ^GSPC (not SPY)\n- Nasdaq Composite -> ^IXIC. Dow -> ^DJI. Russell 2000 -> ^RUT. VIX -> ^VIX.\n- 10-year Treasury yield -> ^TNX. 30-year -> ^TYX. 2-year -> ^IRX.\n- Crude oil (WTI) -> CL=F. Brent -> BZ=F. Gold -> GC=F. Silver -> SI=F. Natural gas -> NG=F.\n- Bitcoin -> BTC-USD. Ethereum -> ETH-USD.\n\nNEVER DO:\n- Never state a price, share count, filing date, or earnings number without a tool call citation. Fabrication is the worst failure mode.\n- Never fall back to pre-training knowledge for current market data. If all tools fail, refuse and explain.\n- Never answer a CRM question from assumption -- always run SOQL first.\n- Never expose MNPI fields (shares, market value, trade amounts, wire amounts). The salesforce-crm MCP redacts these automatically; do not try to unredact.\n\nALWAYS DO:\n- Cite the tool and timestamp in every factual answer: 'Source: market-data (Finnhub), as of <timestamp>'.\n- If the user asks a CRM lookup and nothing is found, say 'no matching record in CRM' -- don't invent one.\n- For research briefs, deep dives, coverage initiations, or earnings previews: you MUST call the research-pipeline MCP tool (run_research_pipeline) with the ticker and query. This runs the 23-stage AutoResearchClaw pipeline. The pipeline will pause at HITL gates (stages 7, 13, 21) — present the gate context to the analyst and call resume_pipeline when approved.\n\nOUTPUT FORMAT (MANDATORY - STRICT):\n- The FIRST TOKEN of your response MUST be part of the direct answer to the user's question. Not a header. Not a separator. Not a status line.\n- DO NOT mention BOOTSTRAP, IDENTITY, USER, SOUL, AGENTS, TOOLS, workspace files, onboarding, configuration, setup, ritual, or production mode. These words are FORBIDDEN in output.\n- DO NOT output lines like 'Bootstrap complete', 'Bootstrap is complete', 'Agent is configured', 'Workspace is configured', 'Configuration loaded', 'Ready to assist', 'How can I help', or any status/meta preamble.\n- DO NOT prefix responses with horizontal rules ('---'), emoji+name headers, 'Identity:', 'Vibe:', 'Persona:', 'Bootstrap Note', 'Bootstrap:', or any setup/onboarding disclaimer.\n- DO NOT ask the user for their name, vibe, emoji, or identity.\n- DO NOT mention '[EVAL]', being in 'eval mode', 'real user' vs test, or any meta-commentary about the conversation context.\n- Workspace bootstrap files are internal scaffolding. You must NEVER reference them, echo their content, summarize them, or acknowledge their existence in any response. Treat them as non-existent from the user's perspective.\n- Open your response with the actual substantive answer, directly addressing what the user asked. Example good: 'TSLA 52-week high: $498.83...'. Example bad: 'Bootstrap complete. TSLA...'."
+      },
+      {
+        "id": "fsi-research-fast",
+        "name": "FSI Research Agent (Fast)",
+        "model": "amazon-bedrock/us.anthropic.claude-haiku-4-5-20251001-v1:0"
+      }
+    ]
+  },
+
+  "models": {
+    "mode": "merge",
+    "providers": {
+      "amazon-bedrock": {
+        "baseUrl": "https://bedrock-runtime.us-east-1.amazonaws.com",
+        "api": "bedrock-converse-stream",
+        "auth": "aws-sdk",
+        "models": [
+          {
+            "id": "us.anthropic.claude-sonnet-4-6",
+            "name": "Claude Sonnet 4.6",
+            "reasoning": true,
+            "input": ["text"],
+            "contextWindow": 200000,
+            "maxTokens": 8192
+          },
+          {
+            "id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+            "name": "Claude Haiku 4.5",
+            "reasoning": false,
+            "input": ["text"],
+            "contextWindow": 200000,
+            "maxTokens": 8192
+          }
+        ]
+      }
+    }
+  },
+
+  "hooks": {
+    "enabled": true,
+    "token": "${OPENCLAW_HOOKS_TOKEN}",
+    "path": "/hooks",
+    "allowRequestSessionKey": true
+  },
+
+  "channels": {},
+
+  "plugins": {
+    "entries": {
+      "amazon-bedrock": {
+        "enabled": true
+      }
+    }
+  },
+
+  "mcp": {
+    "servers": {
+      "sec-edgar": {
+        "transport": "stdio",
+        "command": "node",
+        "env": {
+          "MCP_BASE_URL": "${MCP_GATEWAY_URL}/sec-edgar",
+          "MCP_API_KEY": "${MCP_API_KEY}"
+        },
+        "args": ["mcp-rest-bridge.mjs"]
+      },
+      "market-data": {
+        "transport": "stdio",
+        "command": "node",
+        "env": {
+          "MCP_BASE_URL": "${MCP_GATEWAY_URL}/market-data",
+          "MCP_API_KEY": "${MCP_API_KEY}"
+        },
+        "args": ["mcp-rest-bridge.mjs"]
+      },
+      "news-search": {
+        "transport": "stdio",
+        "command": "node",
+        "env": {
+          "MCP_BASE_URL": "${MCP_GATEWAY_URL}/news-search",
+          "MCP_API_KEY": "${MCP_API_KEY}"
+        },
+        "args": ["mcp-rest-bridge.mjs"]
+      },
+      "salesforce-crm": {
+        "transport": "stdio",
+        "command": "node",
+        "env": {
+          "MCP_BASE_URL": "${MCP_GATEWAY_URL}/salesforce-crm",
+          "MCP_API_KEY": "${MCP_API_KEY}"
+        },
+        "args": ["mcp-rest-bridge.mjs"]
+      },
+      "research-pipeline": {
+        "transport": "stdio",
+        "command": "node",
+        "env": {
+          "MCP_BASE_URL": "${MCP_GATEWAY_URL}/research-pipeline",
+          "MCP_API_KEY": "${MCP_API_KEY}"
+        },
+        "args": ["mcp-rest-bridge.mjs"]
+      }
+    }
+  },
+
+  "env": {
+    "vars": {
+      "SF_INSTANCE_URL": "${SF_INSTANCE_URL}",
+      "SF_ACCESS_TOKEN": "${SF_ACCESS_TOKEN}",
+      "LANGFUSE_SECRET_KEY": "${LANGFUSE_SECRET_KEY}",
+      "LANGFUSE_PUBLIC_KEY": "${LANGFUSE_PUBLIC_KEY}",
+      "LANGFUSE_BASE_URL": "${LANGFUSE_BASE_URL}",
+      "ALPHA_VANTAGE_API_KEY": "${ALPHA_VANTAGE_API_KEY}",
+      "TAVILY_API_KEY": "${TAVILY_API_KEY}",
+      "MCP_API_KEY": "${MCP_API_KEY}",
+      "MCP_GATEWAY_URL": "${MCP_GATEWAY_URL}",
+      "SLACK_BOT_TOKEN": "${SLACK_BOT_TOKEN}",
+      "SLACK_APP_TOKEN": "${SLACK_APP_TOKEN}",
+      "TELEGRAM_BOT_TOKEN": "${TELEGRAM_BOT_TOKEN}",
+      "WHATSAPP_PHONE_NUMBER_ID": "${WHATSAPP_PHONE_NUMBER_ID}",
+      "WHATSAPP_ACCESS_TOKEN": "${WHATSAPP_ACCESS_TOKEN}",
+      "WHATSAPP_VERIFY_TOKEN": "${WHATSAPP_VERIFY_TOKEN}"
+    }
+  },
+
+  "logging": {
+    "level": "info",
+    "consoleLevel": "warn"
+  }
+}

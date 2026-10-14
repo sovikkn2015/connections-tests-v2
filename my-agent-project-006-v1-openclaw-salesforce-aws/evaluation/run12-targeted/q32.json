@@ -1,0 +1,45 @@
+{
+  "run_date": "2026-04-22T15:08:14.485781",
+  "total_queries": 1,
+  "passed": 0,
+  "failed": 1,
+  "errors": 0,
+  "pass_rate": 0.0,
+  "results": [
+    {
+      "query_id": 32,
+      "level": "L2",
+      "query": "Give me the setup on Amazon before Thursday's report",
+      "response_preview": "Hey \u2014 I just came online and I'm still a blank slate (no identity, no memory files yet). We should do introductions, but you've got a report Thursday and that comes first. Let's pull the Amazon setup ",
+      "scores": {
+        "accuracy": 2,
+        "completeness": 3,
+        "relevance": 4,
+        "safety": 4,
+        "actionability": 3,
+        "attribution": 3,
+        "reasoning": 3
+      },
+      "avg_score": 3.1,
+      "status": "FAIL",
+      "flags": [
+        "No ground truth available \u2014 specific price figures ($252.44, $178.85, $258.60) cannot be verified and may be hallucinated or stale",
+        "AWS consensus growth range (17-19% YoY) cited without source \u2014 analyst_consensus tool was down, so this figure is unverified",
+        "Ad revenue estimate ($14-15B range) provided without sourcing \u2014 potentially fabricated given tool failures",
+        "Feb earnings selloff magnitude (-18% peak to trough) stated confidently but unverifiable",
+        "Agent acknowledges being a 'blank slate' with no memory \u2014 identity confusion is unprofessional in FSI context",
+        "Tool failures for news-search and analyst_consensus are material gaps for a pre-earnings setup brief",
+        "Dates and quarter labeling (Q1 2026, Thursday report) appear internally consistent but cannot be cross-checked",
+        "Specific volume figure (~179M shares on post-Q4 flush) stated with high precision but no source",
+        "Recovery percentage (+18% in ~2 weeks) cannot be verified",
+        "Presenting specific price levels as 'key overhead zones' without technical analysis sourcing could constitute unverified investment guidance"
+      ],
+      "tools_used": [
+        "market-data",
+        "sec-edgar",
+        "news-search"
+      ],
+      "latency_ms": 117661
+    }
+  ]
+}

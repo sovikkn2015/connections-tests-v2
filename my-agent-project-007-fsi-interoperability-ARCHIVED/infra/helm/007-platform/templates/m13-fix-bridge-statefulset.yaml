@@ -1,0 +1,244 @@
+{{- if .Values.m13FixBridge.enabled }}
+# M13 FIX Bridge — Stateful FIX 4.2 TCP Sessions
+# StatefulSet (NOT Deployment) because:
+#   - FIX sessions are stateful TCP connections
+#   - Sequence numbers must survive pod restarts
+#   - PersistentVolume stores message logs and session state
+# Separate module from M11 (Rule 11). Called only by M6 (Rule 4).
+# mTLS enforced via cert-manager (Rule 21).
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "007-platform.fullname" . }}-m13-fix-bridge
+  labels:
+    {{- include "007-platform.labels" . | nindent 4 }}
+    {{- include "007-platform.selectorLabels" (dict "module" "m13-fix-bridge" "context" .) | nindent 4 }}
+spec:
+  serviceName: {{ include "007-platform.fullname" . }}-m13-fix-bridge
+  replicas: {{ .Values.m13FixBridge.replicas }}
+  podManagementPolicy: OrderedReady
+  selector:
+    matchLabels:
+      {{- include "007-platform.selectorLabels" (dict "module" "m13-fix-bridge" "context" .) | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "007-platform.labels" . | nindent 8 }}
+        {{- include "007-platform.selectorLabels" (dict "module" "m13-fix-bridge" "context" .) | nindent 8 }}
+    spec:
+      # Init container: load last sequence numbers from persistent storage
+      # On pod restart, QuickFIX reads persisted seqnums for gap-fill recovery
+      initContainers:
+        - name: restore-sequence-state
+          image: {{ include "007-platform.image" (dict "image" .Values.m13FixBridge.image "global" .Values.global) }}
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          command:
+            - /bin/sh
+            - -c
+            - |
+              echo "Restoring FIX sequence state from persistent storage..."
+              if [ -f /data/session-state/seqnums.dat ]; then
+                cp /data/session-state/seqnums.dat /data/fix-working/seqnums.dat
+                echo "Restored sequence numbers: $(cat /data/fix-working/seqnums.dat)"
+              else
+                echo "No prior sequence state found — fresh session"
+              fi
+              mkdir -p /data/message-store/logs
+              echo "Init complete. Ready for FIX session."
+          volumeMounts:
+            - name: session-state
+              mountPath: /data/session-state
+            - name: message-store
+              mountPath: /data/message-store
+            - name: fix-working
+              mountPath: /data/fix-working
+      containers:
+        - name: m13-fix-bridge
+          image: {{ include "007-platform.image" (dict "image" .Values.m13FixBridge.image "global" .Values.global) }}
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.m13FixBridge.port }}
+              protocol: TCP
+          env:
+            {{- range $key, $value := .Values.m13FixBridge.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+            - name: AGENT_RUNTIME
+              value: {{ .Values.global.agentRuntime | quote }}
+            - name: AWS_DEFAULT_REGION
+              value: {{ .Values.global.awsRegion | quote }}
+            {{- if .Values.tls.enabled }}
+            - name: TLS_CERT_PATH
+              value: "/etc/certs/tls.crt"
+            - name: TLS_KEY_PATH
+              value: "/etc/certs/tls.key"
+            {{- end }}
+            # Paths for persistent state (mounted from PVCs)
+            - name: FIX_SESSION_STATE_PATH
+              value: "/data/session-state"
+            - name: FIX_MESSAGE_STORE_PATH
+              value: "/data/message-store"
+            - name: FIX_WORKING_PATH
+              value: "/data/fix-working"
+          volumeMounts:
+            - name: session-state
+              mountPath: /data/session-state
+            - name: message-store
+              mountPath: /data/message-store
+            - name: fix-working
+              mountPath: /data/fix-working
+            {{- if .Values.tls.enabled }}
+            # mTLS certs from cert-manager (Rule 21)
+            - name: tls-certs
+              mountPath: /etc/certs
+              readOnly: true
+            {{- end }}
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            timeoutSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+            {{- toYaml .Values.m13FixBridge.resources | nindent 12 }}
+      # Ephemeral working volume (not persisted across pod deletes)
+      volumes:
+        - name: fix-working
+          emptyDir: {}
+        {{- if .Values.tls.enabled }}
+        # mTLS cert volume from cert-manager (Rule 21)
+        - name: tls-certs
+          secret:
+            secretName: {{ include "007-platform.fullname" . }}-m13-fix-bridge-tls
+        {{- end }}
+  # PersistentVolumeClaim templates — survive pod restarts and rescheduling
+  volumeClaimTemplates:
+    - metadata:
+        name: session-state
+        labels:
+          {{- include "007-platform.labels" . | nindent 10 }}
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        {{- if .Values.m13FixBridge.storage.sessionState.storageClass }}
+        storageClassName: {{ .Values.m13FixBridge.storage.sessionState.storageClass | quote }}
+        {{- else if .Values.global.storageClass }}
+        storageClassName: {{ .Values.global.storageClass | quote }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.m13FixBridge.storage.sessionState.size }}
+    - metadata:
+        name: message-store
+        labels:
+          {{- include "007-platform.labels" . | nindent 10 }}
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        {{- if .Values.m13FixBridge.storage.messageStore.storageClass }}
+        storageClassName: {{ .Values.m13FixBridge.storage.messageStore.storageClass | quote }}
+        {{- else if .Values.global.storageClass }}
+        storageClassName: {{ .Values.global.storageClass | quote }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.m13FixBridge.storage.messageStore.size }}
+---
+{{- if .Values.tls.enabled }}
+# cert-manager Certificate for M13 mTLS (Rule 21)
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ include "007-platform.fullname" . }}-m13-fix-bridge-tls
+  labels:
+    {{- include "007-platform.labels" . | nindent 4 }}
+spec:
+  secretName: {{ include "007-platform.fullname" . }}-m13-fix-bridge-tls
+  duration: {{ .Values.tls.duration }}
+  renewBefore: {{ .Values.tls.renewBefore }}
+  issuerRef:
+    name: {{ .Values.tls.issuerName }}
+    kind: {{ .Values.tls.issuerKind }}
+  dnsNames:
+    - {{ include "007-platform.fullname" . }}-m13-fix-bridge
+    - {{ include "007-platform.fullname" . }}-m13-fix-bridge.{{ .Release.Namespace }}.svc
+---
+{{- end }}
+# Headless Service for StatefulSet (required for stable network identity)
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "007-platform.fullname" . }}-m13-fix-bridge
+  labels:
+    {{- include "007-platform.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  clusterIP: None  # Headless — StatefulSet pods get stable DNS names
+  ports:
+    - port: {{ .Values.m13FixBridge.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "007-platform.selectorLabels" (dict "module" "m13-fix-bridge" "context" .) | nindent 4 }}
+---
+# NetworkPolicy: M13 ingress from M6 ONLY, egress to broker endpoints
+# M6 is the only module that calls M13 (dependency matrix, ARCH-09)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "007-platform.fullname" . }}-m13-fix-bridge
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "007-platform.selectorLabels" (dict "module" "m13-fix-bridge" "context" .) | nindent 6 }}
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # Only M6 MCP Gateway can reach M13 (Rule 4)
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: m6-mcp-gateway
+      ports:
+        - port: {{ .Values.m13FixBridge.port }}
+  egress:
+    # FIX broker endpoint (TCP, customer-provided CIDR)
+    {{- if .Values.networkPolicy }}
+    {{- if .Values.networkPolicy.m13EgressCIDRs }}
+    {{- range .Values.networkPolicy.m13EgressCIDRs }}
+    {{- if . }}
+    - to:
+        - ipBlock:
+            cidr: {{ . | quote }}
+      ports:
+        - port: {{ $.Values.m13FixBridge.env.FIX_BROKER_PORT | default "9876" | int }}
+          protocol: TCP
+    {{- end }}
+    {{- end }}
+    {{- end }}
+    {{- end }}
+    # PostgreSQL for session state persistence
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: postgresql
+      ports:
+        - port: 5432
+          protocol: TCP
+    # DNS resolution
+    - to: []
+      ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+{{- end }}

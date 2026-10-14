@@ -1,0 +1,156 @@
+# M10 Audit Logger -- cloud-topology Helm values (Ops Hardening Wave 3)
+#
+# Operator-selected WORM backend path. Two options documented below;
+# pick ONE at deploy time.
+#
+# Zero credentials in this file. All MinIO secrets resolved at pod
+# startup via Vault Agent Sidecar (HashiCorp Vault) or equivalent
+# (AWS Secrets Manager). The Vault paths are the only credential-
+# adjacent strings here, and they point at secrets that must be
+# provisioned out-of-band.
+#
+# See `.kiro/specs/m10-worm-minio-backend.md` §R11 for the full
+# rationale.
+
+m10AuditLogger:
+  replicas: 2
+  image:
+    repository: 007/m10-audit-logger
+    tag: v0.4.0
+
+  # --------------------------------------------------------------------
+  # WORM backend selector. One of: minio | aws_s3 | in_memory (dev only).
+  # Overrides which AuditBackend is injected by the service's DI wiring.
+  # --------------------------------------------------------------------
+  wormBackend: minio
+
+  # --------------------------------------------------------------------
+  # OPTION A -- Self-hosted MinIO (Ops Hardening Wave 3 default).
+  # Provisioned via the MinIO Operator Tenant CRD; see
+  # https://min.io/docs/minio/kubernetes/upstream/operations/installation.html.
+  # DO NOT roll a StatefulSet by hand: the Operator handles erasure
+  # coding, TLS rotation, drive reconciliation, and the
+  # bucket-retention configuration step that a hand-rolled
+  # StatefulSet will inevitably get wrong.
+  # --------------------------------------------------------------------
+  minio:
+    enabled: true
+
+    # References an existing MinIO Tenant. Name + namespace are
+    # REQUIRED; the Operator reconciles the tenant on its own.
+    # Provisioning the tenant itself is an operator-runbook task.
+    tenantRef:
+      name: audit-worm-tenant
+      namespace: minio-operator
+
+    # Per-firm Object-Lock-enabled bucket. The bucket MUST be created
+    # with Object Lock ENABLED (MinIO rejects enabling Object Lock on
+    # an already-populated bucket). The initContainer below asserts
+    # the configuration at pod boot.
+    bucketName: audit-worm
+    region: us-east-1
+    endpointUrl: https://audit-worm-tenant-hl.minio-operator.svc.cluster.local:9000
+    secure: true
+
+    # Retention. 6 is the SEC 17a-4 floor; enforced three ways
+    # (M5 parse, backend constructor, AuditLogger). DO NOT set
+    # below 6 -- M5 will refuse to parse.
+    retentionYears: 6
+
+    # Object Lock mode. COMPLIANCE = immutable even from root.
+    # GOVERNANCE = compliance-officer release is possible; use only
+    # with a written internal policy that explains the deviation.
+    objectLockMode: COMPLIANCE
+
+    # Vault paths for the MinIO root (or a dedicated app-user) access
+    # and secret keys. These strings are the ONLY credential-adjacent
+    # thing in this file. Both values are resolved at pod startup via
+    # the Vault Agent Sidecar annotations below.
+    accessKeyVaultPath: secret/data/m10/minio/access_key
+    secretKeyVaultPath: secret/data/m10/minio/secret_key
+
+  # --------------------------------------------------------------------
+  # OPTION B -- AWS S3 Object Lock (commented out).
+  # Uncomment this block AND set `wormBackend: aws_s3` (+ disable
+  # `minio.enabled`) when running in a region where the customer has
+  # explicitly chosen AWS S3 over self-hosted MinIO. The S3 backend is
+  # a future spec (same AuditBackend Protocol; the MinIO backend
+  # covers ~95% of it, including retention + metadata handling).
+  # --------------------------------------------------------------------
+  # awsS3:
+  #   enabled: false
+  #   bucketName: 007-audit-worm-us-east-1
+  #   region: us-east-1
+  #   # Object Lock must be ENABLED at bucket creation time and
+  #   # MUST be in Compliance mode for SEC 17a-4 claim.
+  #   objectLockMode: COMPLIANCE
+  #   retentionYears: 6
+  #   # EKS IRSA-backed service-account ARN. NO literal access keys.
+  #   iamRoleArn: arn:aws:iam::123456789012:role/007-m10-audit-worm
+
+  # --------------------------------------------------------------------
+  # Vault Agent Sidecar annotations -- injects the MinIO secret
+  # material into the pod's filesystem at /vault/secrets/*. The
+  # m10_audit_logger VaultClient adapter reads from those paths at
+  # init time and releases the plaintext immediately.
+  # --------------------------------------------------------------------
+  podAnnotations:
+    vault.hashicorp.com/agent-inject: "true"
+    vault.hashicorp.com/role: m10-audit-logger
+    vault.hashicorp.com/agent-inject-secret-minio-access: secret/data/m10/minio/access_key
+    vault.hashicorp.com/agent-inject-secret-minio-secret: secret/data/m10/minio/secret_key
+    vault.hashicorp.com/agent-inject-template-minio-access: |
+      {{ with secret "secret/data/m10/minio/access_key" -}}
+      {{ .Data.data.value }}
+      {{- end }}
+    vault.hashicorp.com/agent-inject-template-minio-secret: |
+      {{ with secret "secret/data/m10/minio/secret_key" -}}
+      {{ .Data.data.value }}
+      {{- end }}
+
+  # --------------------------------------------------------------------
+  # Startup bucket-policy probe. Runs BEFORE the main container. If
+  # Object Lock is not configured on the bucket (or the mode does not
+  # match the configured `objectLockMode`), the init container fails
+  # with a non-zero exit code and the pod never reaches Ready.
+  # Fail-closed alignment with Steering Rule 8.
+  # --------------------------------------------------------------------
+  initContainers:
+    - name: bucket-policy-probe
+      image: 007/m10-audit-logger:v0.4.0
+      command:
+        - python
+        - -m
+        - m10_audit_logger.scripts.verify_bucket_lock
+        - /etc/m10/minio-config.yaml
+      volumeMounts:
+        - name: minio-config
+          mountPath: /etc/m10
+          readOnly: true
+        - name: vault-secrets
+          mountPath: /vault/secrets
+          readOnly: true
+      # The probe fails loud if:
+      #   * the bucket does not exist,
+      #   * Object Lock is not configured on the bucket,
+      #   * the configured mode (COMPLIANCE|GOVERNANCE) does not
+      #     match what the bucket reports.
+
+  # --------------------------------------------------------------------
+  # Networking -- private subnet only (Rule 22). No public ingress.
+  # mTLS between the API service and this pod (Rule 21) terminates at
+  # the service-mesh sidecar; this container listens cleartext on the
+  # pod-local interface only.
+  # --------------------------------------------------------------------
+  service:
+    type: ClusterIP
+    port: 8443
+
+  networkPolicy:
+    enabled: true
+    # Ingress: only the M1/M6/M8/M9 pods that call POST /audit.
+    allowedCallers:
+      - m1-identity
+      - m6-mcp-gateway
+      - m8-pipeline-engine
+      - m9-intent-router

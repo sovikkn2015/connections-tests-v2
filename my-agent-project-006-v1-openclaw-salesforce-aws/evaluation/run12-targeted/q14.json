@@ -1,0 +1,37 @@
+{
+  "run_date": "2026-04-22T13:50:44.878436",
+  "total_queries": 1,
+  "passed": 0,
+  "failed": 1,
+  "errors": 0,
+  "pass_rate": 0.0,
+  "results": [
+    {
+      "query_id": 14,
+      "level": "L1",
+      "query": "Pull up Client Henderson's profile",
+      "response_preview": "---\n\n\u26a0\ufe0f **Bootstrap Note:** Identity files already exist in this workspace \u2014 bootstrap appears previously completed. Proceeding with the eval.\n\n---\n\n**CRM Lookup \u2014 Client \"Henderson\"**\n\nBoth query att",
+      "scores": {
+        "accuracy": 3,
+        "completeness": 3,
+        "relevance": 3,
+        "safety": 5,
+        "actionability": 3,
+        "attribution": 3,
+        "reasoning": 4
+      },
+      "avg_score": 3.4,
+      "status": "FAIL",
+      "flags": [
+        "Bootstrap note is irrelevant noise and should not appear in user-facing responses",
+        "Cannot verify if 401 error is genuine or fabricated since no ground truth is available",
+        "Did not retrieve any actual client data \u2014 task incomplete",
+        "Clarifying question about Contact vs Account is useful but should have been asked upfront or attempted both"
+      ],
+      "tools_used": [
+        "salesforce-crm"
+      ],
+      "latency_ms": 973917
+    }
+  ]
+}

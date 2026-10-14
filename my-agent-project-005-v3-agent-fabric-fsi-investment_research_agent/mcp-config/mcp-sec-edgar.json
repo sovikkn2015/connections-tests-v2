@@ -1,0 +1,71 @@
+{
+  "name": "sec-edgar-mcp-server",
+  "description": "MCP server for SEC EDGAR filings — provides access to 10-K, 10-Q, 8-K filings and insider transactions via the free SEC EDGAR API.",
+  "version": "1.0.0",
+  "tools": [
+    {
+      "name": "get_10k",
+      "description": "Fetch the latest 10-K (annual report) filing summary for a company from SEC EDGAR.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "ticker": {
+            "type": "string",
+            "description": "Stock ticker symbol (e.g. AAPL, NVDA, MSFT)"
+          }
+        },
+        "required": ["ticker"]
+      }
+    },
+    {
+      "name": "get_10q",
+      "description": "Fetch the latest 10-Q (quarterly report) filing summary for a company from SEC EDGAR.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "ticker": {
+            "type": "string",
+            "description": "Stock ticker symbol (e.g. AAPL, NVDA, MSFT)"
+          }
+        },
+        "required": ["ticker"]
+      }
+    },
+    {
+      "name": "get_8k",
+      "description": "Fetch the latest 8-K (current report / material event) filing summary for a company from SEC EDGAR.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "ticker": {
+            "type": "string",
+            "description": "Stock ticker symbol (e.g. AAPL, NVDA, MSFT)"
+          }
+        },
+        "required": ["ticker"]
+      }
+    },
+    {
+      "name": "get_insider_transactions",
+      "description": "Fetch recent insider transactions (Form 3, 4, 5) for a company from SEC EDGAR.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "ticker": {
+            "type": "string",
+            "description": "Stock ticker symbol (e.g. AAPL, NVDA, MSFT)"
+          }
+        },
+        "required": ["ticker"]
+      }
+    }
+  ],
+  "transport": {
+    "type": "http",
+    "baseUrl": "${API_GATEWAY_URL}/sec-edgar",
+    "headers": {
+      "x-api-key": "${API_KEY}",
+      "Content-Type": "application/json"
+    }
+  }
+}

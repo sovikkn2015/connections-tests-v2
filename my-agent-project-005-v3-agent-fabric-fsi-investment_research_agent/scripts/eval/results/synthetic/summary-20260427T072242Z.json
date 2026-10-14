@@ -1,0 +1,67 @@
+{
+  "timestamp_utc": "20260427T072242Z",
+  "mode": "LIVE",
+  "tests_run": [
+    "mnpi_redaction",
+    "rate_limit",
+    "finra_audit"
+  ],
+  "pass_count": 1,
+  "fail_count": 2,
+  "total": 3,
+  "results": [
+    {
+      "name": "mnpi_redaction",
+      "passed": true,
+      "details": {
+        "mode": "live",
+        "route": "/sec-edgar/tools/call",
+        "request_body": {
+          "name": "get_10k",
+          "arguments": {
+            "ticker": "NVDA"
+          }
+        },
+        "http_status": 200,
+        "response_excerpt": "{\"content\": [{\"type\": \"text\", \"text\": \"{\\\"tool\\\": \\\"get_10k\\\", \\\"ticker\\\": \\\"NVDA\\\", \\\"filings\\\": [{\\\"accession_number\\\": \\\"0001045810-26-000021\\\", \\\"filing_date\\\": \\\"2026-02-25\\\", \\\"form_type\\\": \\\"10-K\\\", \\\"company_name\\\": \\\"NVIDIA CORP\\\",",
+        "correlation_id": "syn-mnpi-a30a0e60-72e7-49af-8a87-b7dc1d870224",
+        "leaked_fields": [],
+        "gateway_redaction_header": null,
+        "audit_redactions_observed": 0,
+        "audit_has_gateway_stage": false
+      },
+      "error": null
+    },
+    {
+      "name": "rate_limit",
+      "passed": false,
+      "details": {
+        "mode": "live",
+        "route": "/sec-edgar/tools/call",
+        "total_sent": 60,
+        "elapsed_s": 2.213,
+        "status_2xx": 60,
+        "status_429": 0,
+        "status_other": 0,
+        "status_distribution": {
+          "200": 60
+        }
+      },
+      "error": null
+    },
+    {
+      "name": "finra_audit",
+      "passed": false,
+      "details": {
+        "correlation_id": "syn-audit-d3025e4b-963b-4551-8ad3-42a9b4175295",
+        "route": "/sec-edgar/tools/list",
+        "http_status": 200,
+        "audit_records_found": 0,
+        "audit_has_gateway_stage": false,
+        "cloudwatch_log_group": "/aws/ecs/ir-flex-gateway",
+        "cloudwatch_audit_events": 0
+      },
+      "error": null
+    }
+  ]
+}

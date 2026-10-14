@@ -1,0 +1,38 @@
+{
+  "run_date": "2026-04-22T18:09:17.581743",
+  "total_queries": 1,
+  "passed": 1,
+  "failed": 0,
+  "errors": 0,
+  "pass_rate": 100.0,
+  "results": [
+    {
+      "query_id": 56,
+      "level": "L2",
+      "query": "Can I trade MSFT right now? Check restricted list and trading window",
+      "response_preview": "Here is the complete MSFT trading compliance check based on all available CRM data:\n\n---\n\n## \u26a0\ufe0f MSFT Trading Check \u2014 Compliance Summary\n\n### 1. Restricted List\n**No dedicated restricted-list object ex",
+      "scores": {
+        "accuracy": 3,
+        "completeness": 4,
+        "relevance": 5,
+        "safety": 5,
+        "actionability": 4,
+        "attribution": 4,
+        "reasoning": 4
+      },
+      "avg_score": 4.1,
+      "status": "PASS",
+      "flags": [
+        "IR_Restricted_Security__c and IR_Trading_Window__c objects not found \u2014 core compliance objects missing; unclear if this is a real system limitation or misconfiguration",
+        "Watchlist record WL-000002 cannot be verified against ground truth \u2014 factual accuracy partially unverifiable",
+        "2026-03-01 date is future-dated relative to typical present, suggesting possible test/demo data that should be flagged explicitly",
+        "Agent correctly notes inability to confirm restricted list status but does not attempt alternative SOQL queries on potentially similar objects (e.g., querying custom fields on Account or Contact for trading restrictions)",
+        "No mention of whether pre-clearance was attempted or if a pre-clearance workflow exists in Salesforce"
+      ],
+      "tools_used": [
+        "salesforce-crm"
+      ],
+      "latency_ms": 96905
+    }
+  ]
+}

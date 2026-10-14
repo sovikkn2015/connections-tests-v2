@@ -1,0 +1,183 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://007.fsi/schemas/canonical/balance/v0.1.0",
+  "title": "Balance",
+  "description": "Canonical account balance. Maps from custodian balance feeds (Schwab, Fidelity, Pershing). Balance components vary by custodian \u2014 M7 translator normalizes.",
+  "type": "object",
+  "required": [
+    "balance_id",
+    "account_ref",
+    "total_value",
+    "as_of_date",
+    "source_system"
+  ],
+  "properties": {
+    "balance_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Primary key for canonical balance snapshot"
+    },
+    "account_ref": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Canonical Account ID"
+    },
+    "client_ref": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid",
+      "description": "Canonical Client ID"
+    },
+    "total_value": {
+      "type": "number",
+      "description": "Total account value (long_market_value + cash_balance - short_market_value)"
+    },
+    "cash_balance": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Available cash (settled)"
+    },
+    "cash_unsettled": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Cash from unsettled trades"
+    },
+    "money_market_balance": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Sweep/money market balance (some custodians separate this from cash)"
+    },
+    "long_market_value": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Market value of long positions"
+    },
+    "short_market_value": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Market value of short positions (absolute value)"
+    },
+    "margin_balance": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Margin debit balance"
+    },
+    "margin_equity": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Equity in margin account"
+    },
+    "buying_power": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Available buying power"
+    },
+    "accrued_interest": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Accrued interest on fixed income holdings"
+    },
+    "pending_activity": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Pending deposits/withdrawals"
+    },
+    "account_type": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "taxable",
+        "traditional_ira",
+        "roth_ira",
+        "401k",
+        "403b",
+        "457",
+        "sep_ira",
+        "simple_ira",
+        "trust_revocable",
+        "trust_irrevocable",
+        "custodial_utma",
+        "custodial_ugma",
+        "erisa_pension",
+        "erisa_profit_sharing",
+        "529",
+        "hsa",
+        null
+      ],
+      "description": "Account type for ERISA/tax rules (ARCH-06 Gap 5)"
+    },
+    "currency": {
+      "type": "string",
+      "default": "USD",
+      "pattern": "^[A-Z]{3}$",
+      "description": "ISO 4217 currency code"
+    },
+    "as_of_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date this balance snapshot is valid for"
+    },
+    "as_of_time": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time",
+      "description": "Intraday timestamp if real-time balance"
+    },
+    "is_real_time": {
+      "type": "boolean",
+      "default": false,
+      "description": "True if from real-time API, false if from daily file"
+    },
+    "source_system": {
+      "type": "string",
+      "enum": [
+        "schwab",
+        "schwab_sftp",
+        "fidelity",
+        "fidelity_sftp",
+        "pershing",
+        "orion",
+        "envestnet",
+        "manual"
+      ],
+      "description": "Source system that provided this balance data"
+    },
+    "source_id": {
+      "type": "string",
+      "description": "Vendor-specific balance record ID"
+    },
+    "source_balance_components": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "description": "Custodian's native balance breakdown (for reconciliation). Structure varies by custodian."
+    }
+  }
+}

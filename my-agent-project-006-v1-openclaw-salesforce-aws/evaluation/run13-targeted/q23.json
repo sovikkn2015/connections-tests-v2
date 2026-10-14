@@ -1,0 +1,39 @@
+{
+  "run_date": "2026-04-22T17:23:07.626203",
+  "total_queries": 1,
+  "passed": 0,
+  "failed": 1,
+  "errors": 0,
+  "pass_rate": 0.0,
+  "results": [
+    {
+      "query_id": 23,
+      "level": "L1",
+      "query": "Pull AAPL's latest proxy statement",
+      "response_preview": "Now let me fetch the actual proxy document to extract key highlights.\n\nHere is what was located and confirmed via SEC EDGAR search. The sec.gov direct document fetch is being rate-limited (403), but t",
+      "scores": {
+        "accuracy": 3,
+        "completeness": 3,
+        "relevance": 4,
+        "safety": 4,
+        "actionability": 3,
+        "attribution": 3,
+        "reasoning": 3
+      },
+      "avg_score": 3.3,
+      "status": "FAIL",
+      "flags": [
+        "Document retrieval failed \u2014 only metadata returned, not actual proxy content",
+        "Cannot verify accession number 0001308179-25-000008 without ground truth",
+        "Proxy content section is fabricated/inferred rather than extracted from actual document",
+        "Rate-limiting fallback to templated content is a significant gap",
+        "Prior year accession number also unverified",
+        "Standard Apple proxy content section is speculative, not sourced from actual filing"
+      ],
+      "tools_used": [
+        "sec-edgar"
+      ],
+      "latency_ms": 97895
+    }
+  ]
+}

@@ -1,0 +1,446 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Investment Research Agent V2 — MCP Servers + Strands Agents + SSE Proxy
+  Deploys 3 Lambda-backed MCP servers (with MCP protocol), 2 Strands analysis
+  agents (with autonomous /agent endpoints), 1 SSE streaming proxy, and
+  supporting infrastructure (API Gateway, CloudFront, S3).
+
+Parameters:
+  Stage:
+    Type: String
+    Default: prod
+    AllowedValues: [dev, staging, prod]
+    Description: Deployment stage name
+  ApiKeyValue:
+    Type: String
+    NoEcho: true
+    Description: API key value for authenticating requests (required)
+  SecEdgarUserAgent:
+    Type: String
+    Default: placeholder@example.com
+    Description: User-Agent header for SEC EDGAR API compliance
+  AlphaVantageApiKey:
+    Type: String
+    NoEcho: true
+    Default: PLACEHOLDER
+    Description: Alpha Vantage API key for market data
+  TavilyApiKey:
+    Type: String
+    NoEcho: true
+    Default: PLACEHOLDER
+    Description: Tavily API key for news search
+  # --- V2: Salesforce bidirectional communication (Gap 18) ---
+  SfClientId:
+    Type: String
+    NoEcho: true
+    Default: CONFIGURE_AFTER_DEPLOY
+    Description: Salesforce Connected App consumer key
+  SfClientSecret:
+    Type: String
+    NoEcho: true
+    Default: CONFIGURE_AFTER_DEPLOY
+    Description: Salesforce Connected App consumer secret
+  SfTokenUrl:
+    Type: String
+    Default: https://login.salesforce.com/services/oauth2/token
+    Description: Salesforce OAuth2 token endpoint URL
+  SfInstanceUrl:
+    Type: String
+    Default: CONFIGURE_AFTER_DEPLOY
+    Description: Salesforce org instance URL
+  SfMcpEndpoint:
+    Type: String
+    Default: /services/apexrest/ir-mcp
+    Description: Salesforce MCP Server REST endpoint path
+  # --- Agentforce Agent API (ECA) ---
+  EcaClientId:
+    Type: String
+    NoEcho: true
+    Default: CONFIGURE_AFTER_DEPLOY
+    Description: External Client App consumer key for Agent API
+  EcaClientSecret:
+    Type: String
+    NoEcho: true
+    Default: CONFIGURE_AFTER_DEPLOY
+    Description: External Client App consumer secret for Agent API
+  # --- V3: MuleSoft Flex Gateway (trust/MNPI/rate-limit/audit pass-through) ---
+  FlexGatewayUrl:
+    Type: String
+    Default: CONFIGURE_AFTER_DEPLOY
+    Description: >
+      Base URL of the MuleSoft Flex Gateway that fronts the MCP servers.
+      All Strands-agent outbound MCP calls route through this URL so
+      the gateway can enforce MNPI filtering, rate limits, and FINRA
+      audit logging. Provided by the GATEWAY subagent after deployment.
+
+Globals:
+  Function:
+    Timeout: 30
+    MemorySize: 256
+    Runtime: python3.10
+
+Resources:
+
+  # ---------- OAuth Token Proxy ----------
+  TokenProxyFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "ir-token-proxy-v3-${Stage}"
+      Handler: app.lambda_handler
+      CodeUri: token-proxy/
+      Description: OAuth2 token exchange proxy
+      Timeout: 15
+      MemorySize: 128
+      Environment:
+        Variables:
+          SF_TOKEN_URL: https://orgfarm-035b70d101-dev-ed.develop.my.salesforce.com/services/oauth2/token
+          ALLOWED_ORIGIN: !Sub "https://${FrontendDistribution.DomainName}"
+          ECA_CLIENT_ID: !Ref EcaClientId
+          ECA_CLIENT_SECRET: !Ref EcaClientSecret
+      Events:
+        TokenExchange:
+          Type: Api
+          Properties:
+            RestApiId: !Ref InvestmentResearchApi
+            Path: /oauth/token
+            Method: POST
+            Auth:
+              ApiKeyRequired: false
+        TokenPreflight:
+          Type: Api
+          Properties:
+            RestApiId: !Ref InvestmentResearchApi
+            Path: /oauth/token
+            Method: OPTIONS
+            Auth:
+              ApiKeyRequired: false
+        AgentTokenExchange:
+          Type: Api
+          Properties:
+            RestApiId: !Ref InvestmentResearchApi
+            Path: /oauth/agent-token
+            Method: POST
+            Auth:
+              ApiKeyRequired: false
+        AgentTokenPreflight:
+          Type: Api
+          Properties:
+            RestApiId: !Ref InvestmentResearchApi
+            Path: /oauth/agent-token
+            Method: OPTIONS
+            Auth:
+              ApiKeyRequired: false
+
+  # ---------- API Gateway ----------
+  InvestmentResearchApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Sub "ir-mcp-api-v3-${Stage}"
+      StageName: !Ref Stage
+      Auth:
+        ApiKeyRequired: true
+
+  ApiKey:
+    Type: AWS::ApiGateway::ApiKey
+    DependsOn:
+      - InvestmentResearchApiStage
+    Properties:
+      Name: !Sub "ir-mcp-api-key-v3-${Stage}"
+      Enabled: true
+      Value: !Ref ApiKeyValue
+      StageKeys:
+        - RestApiId: !Ref InvestmentResearchApi
+          StageName: !Ref Stage
+
+  UsagePlan:
+    Type: AWS::ApiGateway::UsagePlan
+    DependsOn:
+      - InvestmentResearchApiStage
+    Properties:
+      UsagePlanName: !Sub "ir-mcp-usage-plan-v3-${Stage}"
+      ApiStages:
+        - ApiId: !Ref InvestmentResearchApi
+          Stage: !Ref Stage
+      Throttle:
+        BurstLimit: 50
+        RateLimit: 25
+
+  UsagePlanKey:
+    Type: AWS::ApiGateway::UsagePlanKey
+    Properties:
+      KeyId: !Ref ApiKey
+      KeyType: API_KEY
+      UsagePlanId: !Ref UsagePlan
+
+  # ---------- SEC EDGAR MCP Server (V2: MCP Protocol) ----------
+  SecEdgarMcpServer:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "ir-sec-edgar-mcp-v3-${Stage}"
+      Handler: app.lambda_handler
+      CodeUri: mcp-servers/sec-edgar/
+      Description: MCP server for SEC EDGAR filings — V2 with MCP protocol
+      Environment:
+        Variables:
+          SEC_EDGAR_USER_AGENT: !Ref SecEdgarUserAgent
+      Events:
+        ProxyApi:
+          Type: Api
+          Properties:
+            RestApiId: !Ref InvestmentResearchApi
+            Path: /sec-edgar/{proxy+}
+            Method: ANY
+            Auth:
+              ApiKeyRequired: true
+
+  # ---------- Market Data MCP Server (V2: MCP Protocol) ----------
+  MarketDataMcpServer:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "ir-market-data-mcp-v3-${Stage}"
+      Handler: app.lambda_handler
+      CodeUri: mcp-servers/market-data/
+      Description: MCP server for market data — V2 with MCP protocol
+      Environment:
+        Variables:
+          ALPHA_VANTAGE_API_KEY: !Ref AlphaVantageApiKey
+      Events:
+        ProxyApi:
+          Type: Api
+          Properties:
+            RestApiId: !Ref InvestmentResearchApi
+            Path: /market-data/{proxy+}
+            Method: ANY
+            Auth:
+              ApiKeyRequired: true
+
+  # ---------- News Search MCP Server (V2: MCP Protocol) ----------
+  NewsSearchMcpServer:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "ir-news-search-mcp-v3-${Stage}"
+      Handler: app.lambda_handler
+      CodeUri: mcp-servers/news-search/
+      Description: MCP server for financial news — V2 with MCP protocol
+      Environment:
+        Variables:
+          TAVILY_API_KEY: !Ref TavilyApiKey
+      Events:
+        ProxyApi:
+          Type: Api
+          Properties:
+            RestApiId: !Ref InvestmentResearchApi
+            Path: /news-search/{proxy+}
+            Method: ANY
+            Auth:
+              ApiKeyRequired: true
+
+  # ---------- Financial Analysis Agent (V3: Strands SDK + A2A + SF) ----------
+  FinancialAnalysisAgent:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "ir-financial-analysis-v3-${Stage}"
+      Handler: app.lambda_handler
+      CodeUri: strands-agents/financial-analysis/
+      Description: Financial Analysis Strands Agent — DCF, comps, Monte Carlo, fair value, A2A endpoint
+      Timeout: 90
+      MemorySize: 512
+      Environment:
+        Variables:
+          BEDROCK_MODEL_ID: us.anthropic.claude-sonnet-4-20250514-v1:0
+          LANGFUSE_HOST: CONFIGURE_AFTER_DEPLOY
+          LANGFUSE_PUBLIC_KEY: CONFIGURE_AFTER_DEPLOY
+          LANGFUSE_SECRET_KEY: CONFIGURE_AFTER_DEPLOY
+          SF_CLIENT_ID: !Ref SfClientId
+          SF_CLIENT_SECRET: !Ref SfClientSecret
+          SF_TOKEN_URL: !Ref SfTokenUrl
+          SF_INSTANCE_URL: !Ref SfInstanceUrl
+          SF_MCP_ENDPOINT: !Ref SfMcpEndpoint
+          # V3: route all MCP traffic through Flex Gateway
+          FLEX_GATEWAY_URL: !Ref FlexGatewayUrl
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action: bedrock:InvokeModel
+              Resource: "*"
+      Events:
+        ProxyApi:
+          Type: Api
+          Properties:
+            RestApiId: !Ref InvestmentResearchApi
+            Path: /financial-analysis/{proxy+}
+            Method: ANY
+            Auth:
+              ApiKeyRequired: true
+
+  # ---------- Sentiment Analysis Agent (V3: Strands SDK + A2A + Comprehend + SF) ----------
+  SentimentAnalysisAgent:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "ir-sentiment-analysis-v3-${Stage}"
+      Handler: app.lambda_handler
+      CodeUri: strands-agents/sentiment-analysis/
+      Description: Sentiment Analysis Strands Agent — transcript NLP, news sentiment, Comprehend, A2A endpoint
+      Timeout: 90
+      MemorySize: 512
+      Environment:
+        Variables:
+          BEDROCK_MODEL_ID: us.anthropic.claude-sonnet-4-20250514-v1:0
+          NEWS_API_URL: CONFIGURE_AFTER_DEPLOY
+          NEWS_API_KEY: CONFIGURE_AFTER_DEPLOY
+          LANGFUSE_HOST: CONFIGURE_AFTER_DEPLOY
+          LANGFUSE_PUBLIC_KEY: CONFIGURE_AFTER_DEPLOY
+          LANGFUSE_SECRET_KEY: CONFIGURE_AFTER_DEPLOY
+          SF_CLIENT_ID: !Ref SfClientId
+          SF_CLIENT_SECRET: !Ref SfClientSecret
+          SF_TOKEN_URL: !Ref SfTokenUrl
+          SF_INSTANCE_URL: !Ref SfInstanceUrl
+          SF_MCP_ENDPOINT: !Ref SfMcpEndpoint
+          # V3: route all MCP traffic through Flex Gateway
+          FLEX_GATEWAY_URL: !Ref FlexGatewayUrl
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action: bedrock:InvokeModel
+              Resource: "*"
+            - Effect: Allow
+              Action:
+                - comprehend:DetectSentiment
+                - comprehend:DetectEntities
+                - comprehend:DetectKeyPhrases
+              Resource: "*"
+      Events:
+        ProxyApi:
+          Type: Api
+          Properties:
+            RestApiId: !Ref InvestmentResearchApi
+            Path: /sentiment-analysis/{proxy+}
+            Method: ANY
+            Auth:
+              ApiKeyRequired: true
+
+  # ---------- SSE Proxy Lambda with Function URL (V2: Gap 7) ----------
+  SseProxyFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "ir-sse-proxy-v3-${Stage}"
+      Handler: app.lambda_handler
+      CodeUri: strands-agents/sse-proxy/
+      Description: SSE streaming proxy — routes queries to Strands agents and streams responses
+      Timeout: 60
+      MemorySize: 256
+      Environment:
+        Variables:
+          BEDROCK_MODEL_ID: us.anthropic.claude-sonnet-4-20250514-v1:0
+          FINANCIAL_ANALYSIS_URL: CONFIGURE_AFTER_DEPLOY
+          SENTIMENT_ANALYSIS_URL: CONFIGURE_AFTER_DEPLOY
+          API_KEY: !Ref ApiKeyValue
+          ALLOWED_ORIGIN: "*"
+          LANGFUSE_HOST: CONFIGURE_AFTER_DEPLOY
+          LANGFUSE_PUBLIC_KEY: CONFIGURE_AFTER_DEPLOY
+          LANGFUSE_SECRET_KEY: CONFIGURE_AFTER_DEPLOY
+      Events:
+        SseApi:
+          Type: Api
+          Properties:
+            RestApiId: !Ref InvestmentResearchApi
+            Path: /sse-proxy/{proxy+}
+            Method: ANY
+            Auth:
+              ApiKeyRequired: false
+
+  # ---------- Frontend Hosting ----------
+  FrontendBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "ir-research-workbench-v3-${Stage}-${AWS::AccountId}"
+      WebsiteConfiguration:
+        IndexDocument: index.html
+        ErrorDocument: index.html
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  FrontendBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref FrontendBucket
+      PolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action: s3:GetObject
+            Resource: !Sub "${FrontendBucket.Arn}/*"
+            Condition:
+              StringEquals:
+                AWS:SourceArn: !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/${FrontendDistribution}"
+
+  FrontendOAC:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig:
+        Name: !Sub "ir-frontend-oac-v3-${Stage}"
+        OriginAccessControlOriginType: s3
+        SigningBehavior: always
+        SigningProtocol: sigv4
+
+  FrontendDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        DefaultRootObject: index.html
+        Origins:
+          - Id: S3Origin
+            DomainName: !GetAtt FrontendBucket.RegionalDomainName
+            OriginAccessControlId: !GetAtt FrontendOAC.Id
+            S3OriginConfig:
+              OriginAccessIdentity: ""
+        DefaultCacheBehavior:
+          TargetOriginId: S3Origin
+          ViewerProtocolPolicy: redirect-to-https
+          AllowedMethods: [GET, HEAD]
+          CachedMethods: [GET, HEAD]
+          ForwardedValues:
+            QueryString: false
+        CustomErrorResponses:
+          - ErrorCode: 403
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+          - ErrorCode: 404
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+        Comment: !Sub "IR Research Workbench V3 - ${Stage}"
+
+Outputs:
+  ApiGatewayUrl:
+    Description: API Gateway endpoint URL
+    Value: !Sub "https://${InvestmentResearchApi}.execute-api.${AWS::Region}.amazonaws.com/${Stage}"
+  ApiKeyId:
+    Description: API Key ID (retrieve value from AWS Console or CLI)
+    Value: !Ref ApiKey
+  SseProxyUrl:
+    Description: SSE Proxy API Gateway URL for streaming
+    Value: !Sub "https://${InvestmentResearchApi}.execute-api.${AWS::Region}.amazonaws.com/${Stage}/sse-proxy"
+  FrontendUrl:
+    Description: Frontend CloudFront URL
+    Value: !Sub "https://${FrontendDistribution.DomainName}"
+  FrontendBucketName:
+    Description: S3 bucket for frontend assets
+    Value: !Ref FrontendBucket
+  FinancialAnalysisA2AManifestUrl:
+    Description: A2A manifest (AgentCard) URL for the Financial Analysis agent
+    Value: !Sub "https://${InvestmentResearchApi}.execute-api.${AWS::Region}.amazonaws.com/${Stage}/financial-analysis/.well-known/agent.json"
+  FinancialAnalysisA2AAgentUrl:
+    Description: A2A task endpoint URL for the Financial Analysis agent
+    Value: !Sub "https://${InvestmentResearchApi}.execute-api.${AWS::Region}.amazonaws.com/${Stage}/financial-analysis/agent"
+  SentimentAnalysisA2AManifestUrl:
+    Description: A2A manifest (AgentCard) URL for the Sentiment Analysis agent
+    Value: !Sub "https://${InvestmentResearchApi}.execute-api.${AWS::Region}.amazonaws.com/${Stage}/sentiment-analysis/.well-known/agent.json"
+  SentimentAnalysisA2AAgentUrl:
+    Description: A2A task endpoint URL for the Sentiment Analysis agent
+    Value: !Sub "https://${InvestmentResearchApi}.execute-api.${AWS::Region}.amazonaws.com/${Stage}/sentiment-analysis/agent"

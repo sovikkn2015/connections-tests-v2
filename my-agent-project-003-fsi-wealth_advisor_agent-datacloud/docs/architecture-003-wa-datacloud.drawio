@@ -1,0 +1,221 @@
+<mxfile>
+  <diagram id="dc-arch-003" name="WA DC Advisor — Data Cloud Architecture">
+    <mxGraphModel dx="1220" dy="1020" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="1000" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- Title -->
+        <mxCell id="title" value="Project 003: WA DC Advisor — Data Cloud Architecture (CdpQuery)" style="text;html=1;fontSize=18;fontStyle=1;fontColor=#333333;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="150" y="20" width="900" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- User -->
+        <mxCell id="user" value="&lt;b&gt;Financial Advisor&lt;/b&gt;&lt;br&gt;(User)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1D5E7;strokeColor=#9673A6;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="480" y="60" width="240" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- Agentforce Platform Section -->
+        <mxCell id="section_agent" value="Agentforce Platform" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1B96FF;strokeColor=#0176D3;fontColor=#FFFFFF;fontSize=14;fontStyle=1;verticalAlign=top;spacingTop=5;opacity=20;" vertex="1" parent="1">
+          <mxGeometry x="40" y="140" width="1120" height="250" as="geometry" />
+        </mxCell>
+
+        <!-- Agent -->
+        <mxCell id="agent" value="&lt;b&gt;WA DC Advisor&lt;/b&gt;&lt;br&gt;Agentforce Agent" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1B96FF;strokeColor=#0176D3;fontColor=#FFFFFF;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="440" y="170" width="320" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- Topic Selector -->
+        <mxCell id="topic_sel" value="&lt;b&gt;Topic Selector&lt;/b&gt;" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="510" y="245" width="180" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- 6 Topics -->
+        <mxCell id="t1" value="&lt;b&gt;Client Lookup&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="115" y="340" width="130" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="t2" value="&lt;b&gt;Portfolio Review&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="265" y="340" width="130" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="t3" value="&lt;b&gt;Goal Planning&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="415" y="340" width="130" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="t4" value="&lt;b&gt;Meeting Prep&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="565" y="340" width="130" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="t5" value="&lt;b&gt;Escalation&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8CECC;strokeColor=#B85450;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="715" y="340" width="130" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="t6" value="&lt;b&gt;Off-Topic&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8CECC;strokeColor=#B85450;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="865" y="340" width="130" height="35" as="geometry" />
+        </mxCell>
+
+        <!-- Apex Data Layer Section -->
+        <mxCell id="section_apex" value="Apex Data Layer (Data Cloud)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontColor=#333333;fontSize=14;fontStyle=1;verticalAlign=top;spacingTop=5;opacity=20;" vertex="1" parent="1">
+          <mxGeometry x="40" y="420" width="1120" height="100" as="geometry" />
+        </mxCell>
+
+        <!-- 4 DC Apex Classes -->
+        <mxCell id="a1" value="&lt;b&gt;DC_ClientLookupAction&lt;/b&gt;&lt;br&gt;Apex Invocable" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="80" y="450" width="200" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="a2" value="&lt;b&gt;DC_PortfolioReviewAction&lt;/b&gt;&lt;br&gt;Apex Invocable" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="320" y="450" width="210" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="a3" value="&lt;b&gt;DC_GoalPlanningAction&lt;/b&gt;&lt;br&gt;Apex Invocable" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="570" y="450" width="200" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="a4" value="&lt;b&gt;DC_MeetingPrepAction&lt;/b&gt;&lt;br&gt;Apex Invocable" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="810" y="450" width="200" height="55" as="geometry" />
+        </mxCell>
+
+        <!-- Data Cloud DLM Section -->
+        <mxCell id="section_dlm" value="Data Cloud — Data Lake Model (DLM)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E6D0DE;strokeColor=#996699;fontColor=#333333;fontSize=14;fontStyle=1;verticalAlign=top;spacingTop=5;opacity=20;" vertex="1" parent="1">
+          <mxGeometry x="40" y="550" width="1120" height="100" as="geometry" />
+        </mxCell>
+
+        <!-- 5 DLM Cylinder Shapes -->
+        <mxCell id="d1" value="&lt;b&gt;Client_DLM&lt;/b&gt;" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#E6D0DE;strokeColor=#996699;fontSize=11;size=8;" vertex="1" parent="1">
+          <mxGeometry x="65" y="575" width="170" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="d2" value="&lt;b&gt;Financial_Account_DLM&lt;/b&gt;" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#E6D0DE;strokeColor=#996699;fontSize=11;size=8;" vertex="1" parent="1">
+          <mxGeometry x="265" y="575" width="170" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="d3" value="&lt;b&gt;Goal_DLM&lt;/b&gt;" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#E6D0DE;strokeColor=#996699;fontSize=11;size=8;" vertex="1" parent="1">
+          <mxGeometry x="465" y="575" width="170" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="d4" value="&lt;b&gt;Meeting_DLM&lt;/b&gt;" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#E6D0DE;strokeColor=#996699;fontSize=11;size=8;" vertex="1" parent="1">
+          <mxGeometry x="665" y="575" width="170" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="d5" value="&lt;b&gt;Transaction_DLM&lt;/b&gt;" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#E6D0DE;strokeColor=#996699;fontSize=11;size=8;" vertex="1" parent="1">
+          <mxGeometry x="865" y="575" width="170" height="55" as="geometry" />
+        </mxCell>
+
+        <!-- CRM Section -->
+        <mxCell id="section_crm" value="Salesforce CRM (Source)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;fontColor=#333333;fontSize=14;fontStyle=1;verticalAlign=top;spacingTop=5;opacity=20;" vertex="1" parent="1">
+          <mxGeometry x="40" y="690" width="1120" height="90" as="geometry" />
+        </mxCell>
+
+        <!-- 5 CRM Objects -->
+        <mxCell id="c1" value="&lt;b&gt;WA_Client__c&lt;/b&gt;" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;fontSize=11;size=8;" vertex="1" parent="1">
+          <mxGeometry x="65" y="715" width="170" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="c2" value="&lt;b&gt;WA_Financial_Account__c&lt;/b&gt;" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;fontSize=11;size=8;" vertex="1" parent="1">
+          <mxGeometry x="265" y="715" width="170" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="c3" value="&lt;b&gt;WA_Goal__c&lt;/b&gt;" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;fontSize=11;size=8;" vertex="1" parent="1">
+          <mxGeometry x="465" y="715" width="170" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="c4" value="&lt;b&gt;WA_Meeting__c&lt;/b&gt;" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;fontSize=11;size=8;" vertex="1" parent="1">
+          <mxGeometry x="665" y="715" width="170" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="c5" value="&lt;b&gt;WA_Transaction__c&lt;/b&gt;" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;fontSize=11;size=8;" vertex="1" parent="1">
+          <mxGeometry x="865" y="715" width="170" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- Legend -->
+        <mxCell id="legend_bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#CCCCCC;" vertex="1" parent="1">
+          <mxGeometry x="40" y="810" width="1120" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="leg1" value="Topic (P1)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="60" y="820" width="80" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="leg2" value="Guardrail" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8CECC;strokeColor=#B85450;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="160" y="820" width="80" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="leg3" value="Apex Action" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="260" y="820" width="80" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="leg4" value="DLM Object" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E6D0DE;strokeColor=#996699;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="360" y="820" width="80" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="leg5" value="CRM Object" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="460" y="820" width="80" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="leg6" value="User" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1D5E7;strokeColor=#9673A6;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="560" y="820" width="80" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="leg_label" value="Legend" style="text;html=1;fontSize=11;fontStyle=1;fontColor=#666666;align=right;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="950" y="820" width="190" height="28" as="geometry" />
+        </mxCell>
+
+        <!-- EDGES -->
+        <!-- User → Agent -->
+        <mxCell id="e_user_agent" value="Chat" style="rounded=1;strokeColor=#9673A6;strokeWidth=1.5;fontSize=9;fontColor=#666666;" edge="1" parent="1" source="user" target="agent">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Agent → Topic Selector -->
+        <mxCell id="e_agent_ts" value="Route" style="rounded=1;strokeColor=#0176D3;strokeWidth=1.5;fontSize=9;fontColor=#666666;" edge="1" parent="1" source="agent" target="topic_sel">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Topic Selector → Topics -->
+        <mxCell id="e_ts_t1" value="" style="rounded=1;strokeColor=#D6B656;strokeWidth=1;" edge="1" parent="1" source="topic_sel" target="t1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_ts_t2" value="" style="rounded=1;strokeColor=#D6B656;strokeWidth=1;" edge="1" parent="1" source="topic_sel" target="t2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_ts_t3" value="" style="rounded=1;strokeColor=#D6B656;strokeWidth=1;" edge="1" parent="1" source="topic_sel" target="t3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_ts_t4" value="" style="rounded=1;strokeColor=#D6B656;strokeWidth=1;" edge="1" parent="1" source="topic_sel" target="t4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_ts_t5" value="" style="rounded=1;strokeColor=#B85450;strokeWidth=1;" edge="1" parent="1" source="topic_sel" target="t5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_ts_t6" value="" style="rounded=1;strokeColor=#B85450;strokeWidth=1;" edge="1" parent="1" source="topic_sel" target="t6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Topics → Apex -->
+        <mxCell id="e_t1_a1" value="" style="rounded=1;strokeColor=#6C8EBF;strokeWidth=1.5;fontSize=9;fontColor=#666666;" edge="1" parent="1" source="t1" target="a1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_t2_a2" value="" style="rounded=1;strokeColor=#6C8EBF;strokeWidth=1.5;fontSize=9;fontColor=#666666;" edge="1" parent="1" source="t2" target="a2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_t3_a3" value="" style="rounded=1;strokeColor=#6C8EBF;strokeWidth=1.5;fontSize=9;fontColor=#666666;" edge="1" parent="1" source="t3" target="a3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_t4_a4" value="" style="rounded=1;strokeColor=#6C8EBF;strokeWidth=1.5;fontSize=9;fontColor=#666666;" edge="1" parent="1" source="t4" target="a4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Apex → DLM (CdpQuery) -->
+        <mxCell id="e_a1_d1" value="CdpQuery" style="rounded=1;strokeColor=#996699;strokeWidth=1.5;fontSize=9;fontColor=#666666;" edge="1" parent="1" source="a1" target="d1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_a2_d2" value="CdpQuery" style="rounded=1;strokeColor=#996699;strokeWidth=1.5;fontSize=9;fontColor=#666666;" edge="1" parent="1" source="a2" target="d2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_a3_d3" value="CdpQuery" style="rounded=1;strokeColor=#996699;strokeWidth=1.5;fontSize=9;fontColor=#666666;" edge="1" parent="1" source="a3" target="d3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_a4_d4" value="CdpQuery" style="rounded=1;strokeColor=#996699;strokeWidth=1.5;fontSize=9;fontColor=#666666;" edge="1" parent="1" source="a4" target="d4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- DLM ← CRM (dashed, CRM Connector) -->
+        <mxCell id="e_c1_d1" value="" style="rounded=1;strokeColor=#82B366;strokeWidth=1;dashed=1;fontSize=9;fontColor=#666666;" edge="1" parent="1" source="c1" target="d1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_c2_d2" value="" style="rounded=1;strokeColor=#82B366;strokeWidth=1;dashed=1;fontSize=9;fontColor=#666666;" edge="1" parent="1" source="c2" target="d2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_c3_d3" value="" style="rounded=1;strokeColor=#82B366;strokeWidth=1;dashed=1;fontSize=9;fontColor=#666666;" edge="1" parent="1" source="c3" target="d3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_c4_d4" value="" style="rounded=1;strokeColor=#82B366;strokeWidth=1;dashed=1;fontSize=9;fontColor=#666666;" edge="1" parent="1" source="c4" target="d4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_c5_d5" value="" style="rounded=1;strokeColor=#82B366;strokeWidth=1;dashed=1;fontSize=9;fontColor=#666666;" edge="1" parent="1" source="c5" target="d5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

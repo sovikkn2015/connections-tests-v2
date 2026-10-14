@@ -1,0 +1,134 @@
+# Project 007 FSI Platform — CI Pipeline
+# Rule 20: Zero credentials in git. All secrets via GitHub Secrets.
+# Rule 26: CI/CD via GitHub Actions.
+name: CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "my-agent-project-007-fsi-interoperability/**"
+  pull_request:
+    branches: [main]
+    paths:
+      - "my-agent-project-007-fsi-interoperability/**"
+
+env:
+  WORK_DIR: my-agent-project-007-fsi-interoperability
+  PYTHON_VERSION: "3.12"
+  OPA_VERSION: "0.70.0"
+
+jobs:
+  # ─── Python Module Tests ──────────────────────────────────────
+  test-python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install test dependencies
+        run: |
+          pip install pytest httpx pydantic pydantic-settings
+          for req in src/*/requirements.txt; do
+            pip install -r "$req" || true
+          done
+        working-directory: ${{ env.WORK_DIR }}
+
+      - name: Run all module tests
+        run: bash run_all_tests.sh
+        working-directory: ${{ env.WORK_DIR }}
+
+  # ─── OPA Rego Tests ───────────────────────────────────────────
+  test-opa:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install OPA
+        run: |
+          curl -L -o opa "https://openpolicyagent.org/downloads/v${{ env.OPA_VERSION }}/opa_linux_amd64_static"
+          chmod +x opa
+          sudo mv opa /usr/local/bin/
+
+      - name: Check Rego syntax
+        run: opa check opa-bundles/
+        working-directory: ${{ env.WORK_DIR }}
+
+      - name: Run Rego tests
+        run: opa test opa-bundles/ -v
+        working-directory: ${{ env.WORK_DIR }}
+
+  # ─── Schema Validation ───────────────────────────────────────
+  validate-schemas:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install jsonschema
+        run: pip install jsonschema
+
+      - name: Validate canonical schemas
+        run: python scripts/validate-schemas.py
+        working-directory: ${{ env.WORK_DIR }}
+
+  # ─── Lint ─────────────────────────────────────────────────────
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install ruff
+        run: pip install ruff
+
+      - name: Lint Python source
+        run: ruff check src/
+        working-directory: ${{ env.WORK_DIR }}
+
+  # ─── Schema Breaking-Change Detection ─────────────────────────
+  detect-breaking-changes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Detect schema breaking changes
+        run: python scripts/detect-schema-changes.py
+        working-directory: ${{ env.WORK_DIR }}
+
+  # ─── Docker Build Verification (main only) ───────────────────
+  docker-build:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    needs: [test-python, test-opa, validate-schemas, lint, detect-breaking-changes]
+    strategy:
+      fail-fast: false
+      matrix:
+        module:
+          - { context: src/m1-identity, tag: m1-identity }
+          - { context: src/m2-m4-policy-engine, tag: m2-m4-policy }
+          - { context: src/m6-mcp-gateway, tag: m6-mcp-gateway }
+          - { context: src/m8-pipeline-engine, tag: m8-pipeline }
+          - { context: src/m9-intent-router, tag: m9-intent-router }
+          - { context: src/m10-audit-logger, tag: m10-audit-logger }
+          - { context: src/smarsh-archiver, tag: smarsh-archiver }
+          - { context: src/client-service-specialist, tag: client-service-specialist }
+          - { context: src/memory-service, tag: memory-service }
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build ${{ matrix.module.tag }}
+        run: |
+          docker build \
+            -t 007-fsi/${{ matrix.module.tag }}:ci-${{ github.sha }} \
+            ${{ matrix.module.context }}
+        working-directory: ${{ env.WORK_DIR }}

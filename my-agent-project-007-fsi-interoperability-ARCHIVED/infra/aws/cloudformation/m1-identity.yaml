@@ -1,0 +1,64 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: |
+  M1 Agent Identity — AWS resources.
+  Owner: trust-layer team.
+
+  Resources:
+    - AID registry DynamoDB table (PITR, SSE with platform KMS)
+    - Secrets Manager secret for the RSA keypair used to sign JWTs
+
+  Depends on: platform-common (for KmsKeyArn).
+  Consumers: m6-mcp-gateway (calls M1 via REST — no IAM dep), irsa stack.
+
+Parameters:
+  Prefix:       { Type: String, Default: fsi007 }
+  Environment:  { Type: String, Default: dev }
+
+Resources:
+
+  # PK = AID (random UUID). Every live agent has one row here.
+  AidRegistry:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub '${Prefix}-${Environment}-m1-aid-registry'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - { AttributeName: aid, AttributeType: S }
+      KeySchema:
+        - { AttributeName: aid, KeyType: HASH }
+      PointInTimeRecoverySpecification: { PointInTimeRecoveryEnabled: true }
+      SSESpecification:
+        SSEEnabled: true
+        SSEType: KMS
+        KMSMasterKeyId: !ImportValue '007-platform-KmsKeyId'
+      Tags:
+        - { Key: project, Value: '007' }
+        - { Key: environment, Value: !Ref Environment }
+        - { Key: module, Value: m1-identity }
+
+  # RSA keypair for JWT RS256 signing. DO NOT hardcode the key material here.
+  # The secret is created empty; an out-of-band bootstrap job populates it
+  # (or cert-manager rotates it). App reads via Secrets Manager at startup.
+  M1JwtKeypairSecret:
+    Type: AWS::SecretsManager::Secret
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      Name: !Sub '${Prefix}/${Environment}/m1/jwt-keypair'
+      Description: 'M1 RSA-2048 private+public key for JWT RS256. Populated out-of-band.'
+      KmsKeyId: !ImportValue '007-platform-KmsKeyArn'
+      Tags:
+        - { Key: project, Value: '007' }
+        - { Key: environment, Value: !Ref Environment }
+        - { Key: module, Value: m1-identity }
+
+Outputs:
+  AidRegistryTableName:
+    Value: !Ref AidRegistry
+    Export: { Name: '007-m1-identity-AidRegistryTableName' }
+  AidRegistryTableArn:
+    Value: !GetAtt AidRegistry.Arn
+    Export: { Name: '007-m1-identity-AidRegistryTableArn' }
+  JwtKeypairSecretArn:
+    Value: !Ref M1JwtKeypairSecret
+    Export: { Name: '007-m1-identity-JwtKeypairSecretArn' }

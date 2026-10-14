@@ -1,0 +1,81 @@
+{
+  "mcpServers": {
+    "financial-news": {
+      "command": "npx",
+      "args": ["-y", "@anthropic/mcp-server-news"],
+      "env": {
+        "NEWS_API_KEY": "${NEWS_API_KEY}",
+        "NEWS_API_BASE_URL": "https://newsapi.org/v2",
+        "DEFAULT_CATEGORY": "business",
+        "MAX_ARTICLES": "5",
+        "CACHE_TTL_SECONDS": "600"
+      },
+      "description": "MCP server for financial news via NewsAPI",
+      "capabilities": {
+        "tools": [
+          {
+            "name": "search_news",
+            "description": "Search for financial news articles by keyword, company, or topic",
+            "inputSchema": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "type": "string",
+                  "description": "Search query (company name, ticker, topic)"
+                },
+                "category": {
+                  "type": "string",
+                  "description": "News category filter",
+                  "enum": ["business", "technology", "general"]
+                },
+                "maxResults": {
+                  "type": "integer",
+                  "description": "Maximum number of articles to return",
+                  "default": 5
+                }
+              },
+              "required": ["query"]
+            }
+          },
+          {
+            "name": "get_market_headlines",
+            "description": "Get top financial market headlines",
+            "inputSchema": {
+              "type": "object",
+              "properties": {
+                "country": {
+                  "type": "string",
+                  "description": "Country code for headlines",
+                  "default": "us"
+                },
+                "maxResults": {
+                  "type": "integer",
+                  "default": 5
+                }
+              }
+            }
+          },
+          {
+            "name": "get_company_news",
+            "description": "Get news specific to a company by ticker symbol",
+            "inputSchema": {
+              "type": "object",
+              "properties": {
+                "symbol": {
+                  "type": "string",
+                  "description": "Stock ticker symbol (e.g., AAPL, MSFT)"
+                },
+                "days": {
+                  "type": "integer",
+                  "description": "Number of days to look back",
+                  "default": 7
+                }
+              },
+              "required": ["symbol"]
+            }
+          }
+        ]
+      }
+    }
+  }
+}

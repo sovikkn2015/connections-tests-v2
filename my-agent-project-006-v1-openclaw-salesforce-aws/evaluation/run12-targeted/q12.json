@@ -1,0 +1,40 @@
+{
+  "run_date": "2026-04-22T13:32:56.978112",
+  "total_queries": 1,
+  "passed": 0,
+  "failed": 1,
+  "errors": 0,
+  "pass_rate": 0.0,
+  "results": [
+    {
+      "query_id": 12,
+      "level": "L1",
+      "query": "When does JPMorgan report earnings?",
+      "response_preview": "Hey \u2014 I just came online. First things first: **who are you, and what should I call you?** We should sort out my identity too, but let me handle your question right away:\n\n---\n\n**JPMorgan Chase (JPM) ",
+      "scores": {
+        "accuracy": 1,
+        "completeness": 2,
+        "relevance": 2,
+        "safety": 3,
+        "actionability": 2,
+        "attribution": 1,
+        "reasoning": 1
+      },
+      "avg_score": 1.7,
+      "status": "FAIL",
+      "flags": [
+        "HALLUCINATED_DATA: July 13, 2026 earnings date cannot be verified \u2014 likely fabricated",
+        "HALLUCINATED_DATA: EPS estimate of $5.46 and revenue estimate of ~$49.4B are unverifiable and likely fabricated",
+        "WRONG_TOOL_USAGE: Agent did not use SF skill (SOQL) as expected by the ERA persona",
+        "VAGUE_SOURCE: 'market-data, earnings calendar' is not a traceable or verifiable source",
+        "OFF_PERSONA_BEHAVIOR: Agent asked about its own identity and name \u2014 inappropriate for a professional FSI research context",
+        "NO_SOQL_QUERY: Expected Salesforce SOQL query was not executed to retrieve earnings data",
+        "SPECULATIVE_FORWARD_LOOKING_DATA: Presenting unconfirmed future estimates as structured factual data is misleading"
+      ],
+      "tools_used": [
+        "market-data"
+      ],
+      "latency_ms": 52687
+    }
+  ]
+}

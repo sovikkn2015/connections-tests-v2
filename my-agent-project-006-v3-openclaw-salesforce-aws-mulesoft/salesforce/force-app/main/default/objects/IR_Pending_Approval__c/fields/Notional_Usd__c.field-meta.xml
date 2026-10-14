@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Notional_Usd__c</fullName>
+    <label>Notional USD</label>
+    <description>Transaction size in USD; drives the dual-auth threshold.</description>
+    <type>Number</type>
+    <precision>18</precision>
+    <scale>2</scale>
+</CustomField>

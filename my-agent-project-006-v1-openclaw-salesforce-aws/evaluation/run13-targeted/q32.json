@@ -1,0 +1,43 @@
+{
+  "run_date": "2026-04-22T17:34:18.908525",
+  "total_queries": 1,
+  "passed": 1,
+  "failed": 0,
+  "errors": 0,
+  "pass_rate": 100.0,
+  "results": [
+    {
+      "query_id": 32,
+      "level": "L2",
+      "query": "Give me the setup on Amazon before Thursday's report",
+      "response_preview": "Here's the full setup on **Amazon (AMZN)** ahead of Thursday's earnings report:\n\n---\n\n## \ud83d\udfe0 AMZN \u2014 Pre-Earnings Setup\n\n### \ud83d\udcca Price & Technicals\n| Metric | Value |\n|---|---|\n| **Current Price** | $253.4",
+      "scores": {
+        "accuracy": 2,
+        "completeness": 4,
+        "relevance": 5,
+        "safety": 4,
+        "actionability": 4,
+        "attribution": 3,
+        "reasoning": 4
+      },
+      "avg_score": 3.7,
+      "status": "PASS",
+      "flags": [
+        "Temporal inconsistency: References 'Q3 2025 10-Q filed 2025-10-31' and 'Q1 2026 results' suggesting a future date context, but also references historical events like 'Feb 6' selloff as past \u2014 timeline is internally inconsistent and likely contains fabricated forward-looking filing dates",
+        "Price data ($253.45, 52-wk high $258.60, 52-wk low $178.85) cannot be verified against ground truth \u2014 likely plausible but unverified",
+        "News MCP flagged as unavailable \u2014 missing live analyst consensus EPS/revenue estimates which are core to a pre-earnings setup",
+        "Specific volume figure (179M shares on Feb 6) appears fabricated without verifiable source",
+        "AWS growth rate range '17-19% YoY' and ad revenue '$60B+ annualized' and '$100B+ capex' figures cited without source attribution beyond generic tool labels",
+        "SEC EDGAR filing date '2025-10-31' for Q3 2025 10-Q is a future date relative to any plausible query time \u2014 suggests hallucinated filing metadata",
+        "No confirmed earnings date verification \u2014 agent acknowledges uncertainty but still proceeds without flagging this more prominently",
+        "Capex figure of '$100B+' for 2025 is plausible but presented as fact without citation"
+      ],
+      "tools_used": [
+        "market-data",
+        "sec-edgar",
+        "news-search"
+      ],
+      "latency_ms": 96843
+    }
+  ]
+}

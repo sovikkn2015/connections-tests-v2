@@ -1,0 +1,16 @@
+apiVersion: v2
+name: m6-mcp-gateway
+description: M6 Trust-Aware MCP Gateway -- central trust hub; every MCP call routes through here (Project 007 trust layer).
+type: application
+version: 0.1.0
+appVersion: "0.3.0"
+keywords:
+  - fsi
+  - mcp
+  - gateway
+  - trust
+  - rate-limit
+  - circuit-breaker
+maintainers:
+  - name: Project 007 Platform Team
+    email: platform@example.invalid

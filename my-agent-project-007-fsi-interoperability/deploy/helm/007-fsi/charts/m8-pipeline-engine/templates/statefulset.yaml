@@ -1,0 +1,109 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: m8-pipeline-engine
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: m8-pipeline-engine
+    app.kubernetes.io/part-of: 007-fsi
+    app.kubernetes.io/component: intelligence
+spec:
+  serviceName: m8-pipeline-engine
+  replicas: {{ .Values.replicas }}
+  selector:
+    matchLabels:
+      app: m8-pipeline-engine
+  template:
+    metadata:
+      labels:
+        app: m8-pipeline-engine
+        app.kubernetes.io/name: m8-pipeline-engine
+        app.kubernetes.io/part-of: 007-fsi
+        app.kubernetes.io/component: intelligence
+    spec:
+      serviceAccountName: m8-pipeline-engine
+      priorityClassName: {{ .Values.priorityClassName }}
+      # Pod-level securityContext (R5.6).
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: m8-pipeline-engine
+          image: "{{ .Values.image.repository }}{{ if .Values.image.digest }}@{{ .Values.image.digest }}{{ else }}:{{ .Values.image.tag }}{{ end }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          # Container-level securityContext (R5.6).
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          ports:
+            - name: tls
+              containerPort: 8443
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: m8-pipeline-engine-config
+          # Probes (R5.4).
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.probes.readiness.path }}
+              port: tls
+              scheme: HTTP
+            initialDelaySeconds: {{ .Values.probes.readiness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.probes.readiness.periodSeconds }}
+            failureThreshold: {{ .Values.probes.readiness.failureThreshold }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.probes.liveness.path }}
+              port: tls
+              scheme: HTTP
+            initialDelaySeconds: {{ .Values.probes.liveness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.probes.liveness.periodSeconds }}
+            failureThreshold: {{ .Values.probes.liveness.failureThreshold }}
+          resources:
+            requests:
+              cpu: {{ .Values.resources.requests.cpu }}
+              memory: {{ .Values.resources.requests.memory }}
+            limits:
+              cpu: {{ .Values.resources.limits.cpu }}
+              memory: {{ .Values.resources.limits.memory }}
+          volumeMounts:
+            # mTLS cert mount (R2.4).
+            - name: mtls-cert
+              mountPath: /etc/007/mtls
+              readOnly: true
+            # Writable /tmp (readOnlyRootFilesystem compat).
+            - name: tmp
+              mountPath: /tmp
+            # Checkpointer overflow PVC (R5.5).
+            {{- if .Values.persistence.enabled }}
+            - name: checkpointer-overflow
+              mountPath: {{ .Values.persistence.mountPath }}
+            {{- end }}
+      volumes:
+        - name: mtls-cert
+          secret:
+            secretName: {{ .Values.mtls.secretName }}
+            defaultMode: 0400
+        - name: tmp
+          emptyDir: {}
+  {{- if .Values.persistence.enabled }}
+  volumeClaimTemplates:
+    - metadata:
+        name: checkpointer-overflow
+        labels:
+          app.kubernetes.io/name: m8-pipeline-engine
+          app.kubernetes.io/part-of: 007-fsi
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        storageClassName: {{ .Values.persistence.storageClass }}
+        resources:
+          requests:
+            storage: {{ .Values.persistence.size }}
+  {{- end }}

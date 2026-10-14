@@ -1,0 +1,26 @@
+{
+  "id": 20,
+  "text": "DCF valuation for NVDA",
+  "expected_category": "valuation",
+  "expected_path": "ORCH->GW->STRANDS:financial-analysis-agent",
+  "judge_pass": true,
+  "judge_score": 0.95,
+  "judge_reason": "Response fully satisfies valuation category requirements. Provides DCF methodology with fair value number ($869.88/share), explicit assumpti",
+  "response_excerpt": "{\"ticker\": \"NVDA\", \"company\": \"NVIDIA Corp.\", \"data_source\": \"live\", \"fair_value_per_share\": 869.88, \"current_price\": 208.27, \"upside_pct\": 317.7, \"assumptions\": {\"growth_rate\": 0.12, \"discount_rate\": 0.1, \"terminal_growth\": 0.03, \"fcf_marg",
+  "latency_ms": 4728,
+  "http_status": 200,
+  "status_verdict": "PASS",
+  "skip_reason": null,
+  "tool_calls": [
+    "financial-analysis.run_dcf"
+  ],
+  "langfuse_trace_id": "2b874bb3-dc06-4034-9610-f69342945135",
+  "audit_records_found": 0,
+  "audit_has_gateway_stage": false,
+  "mnpi_redactions_observed": 0,
+  "circuit_breaker_tripped": false,
+  "v2_status": "PASS",
+  "error": null,
+  "mcp_direct_route": "/financial-analysis/run_dcf",
+  "mcp_direct_correlation_id": "2b874bb3-dc06-4034-9610-f69342945135"
+}

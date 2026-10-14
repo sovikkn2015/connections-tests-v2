@@ -1,0 +1,112 @@
+# ──────────────────────────────────────────────────────────────────────────
+# ApiInstance: fsi-mcp-servers
+# ──────────────────────────────────────────────────────────────────────────
+# This is the logical API instance that all five PolicyBindings in
+# agent-fabric/policies/*.yaml attach to via
+#     targetRef:
+#       kind: ApiInstance
+#       name: fsi-mcp-servers
+#
+# Deploy order:
+#   1. aws/flex-gateway-sam.yaml   (Flex Gateway running on ECS)
+#   2. this file via Anypoint CLI  (creates the API instance)
+#   3. policies/*.yaml             (bind to this instance)
+#
+# The `host` field is the DNS name the SAM stack output as FlexGatewayUrl
+# (or FlexGatewayInternalFqdn if a Route53 record was created).
+# ──────────────────────────────────────────────────────────────────────────
+
+apiVersion: gateway.mulesoft.com/v1alpha1
+kind: ApiInstance
+metadata:
+  name: fsi-mcp-servers
+  labels:
+    project: "005-v3"
+    domain: "fsi"
+    component: "mcp-gateway"
+  annotations:
+    description: >-
+      Front door for the three MCP servers (sec-edgar, market-data,
+      news-search) and two Strands analysis agents deployed in V2.
+      Fronted by Flex Gateway in ECS Fargate. Policies below bind to
+      this resource, not to individual upstream routes.
+spec:
+  # ── Address the agents talk TO ───────────────────────────────────
+  # Flex listens on 8080 inside the VPC; the ALB terminates TLS on 443
+  # and forwards plaintext to the task. Clients always hit 443.
+  address: "https://0.0.0.0:443/"
+
+  # ── Upstream MCP servers (V2 API Gateway URLs) ───────────────────
+  # During Phase 1 Flex proxies to the existing V2 paths. Phase 3 will
+  # replace these with direct-to-Lambda ALB target groups and retire
+  # the V2 API Gateway entirely.
+  upstreams:
+    - name: sec-edgar
+      url: "${V2_API_GATEWAY_URL}/sec-edgar"
+      pathPrefix: /sec-edgar
+      # API key is currently injected by V2 — retained until mTLS cutover
+      headers:
+        x-api-key: "${V2_API_KEY}"
+
+    - name: market-data
+      url: "${V2_API_GATEWAY_URL}/market-data"
+      pathPrefix: /market-data
+      headers:
+        x-api-key: "${V2_API_KEY}"
+
+    - name: news-search
+      url: "${V2_API_GATEWAY_URL}/news-search"
+      pathPrefix: /news-search
+      headers:
+        x-api-key: "${V2_API_KEY}"
+
+    - name: financial-analysis
+      url: "${V2_API_GATEWAY_URL}/financial-analysis"
+      pathPrefix: /financial-analysis
+      headers:
+        x-api-key: "${V2_API_KEY}"
+
+    - name: sentiment-analysis
+      url: "${V2_API_GATEWAY_URL}/sentiment-analysis"
+      pathPrefix: /sentiment-analysis
+      headers:
+        x-api-key: "${V2_API_KEY}"
+
+  # ── Route rules ──────────────────────────────────────────────────
+  # Simple prefix-based routing; deeper matching (by MCP tool name)
+  # is handled inside each MCP server, not at the gateway.
+  routes:
+    - name: mcp-sec-edgar
+      match:
+        pathPrefix: /sec-edgar
+      backend: sec-edgar
+
+    - name: mcp-market-data
+      match:
+        pathPrefix: /market-data
+      backend: market-data
+
+    - name: mcp-news-search
+      match:
+        pathPrefix: /news-search
+      backend: news-search
+
+    - name: strands-financial-analysis
+      match:
+        pathPrefix: /financial-analysis
+      backend: financial-analysis
+
+    - name: strands-sentiment-analysis
+      match:
+        pathPrefix: /sentiment-analysis
+      backend: sentiment-analysis
+
+  # ── Health passthrough ───────────────────────────────────────────
+  # /health is served by Flex itself (see flex-gateway-config.yaml);
+  # ALB + ECS probe it directly, no policy required.
+
+  # ── Observability ────────────────────────────────────────────────
+  observability:
+    metrics: true
+    tracing: true
+    logLevel: INFO

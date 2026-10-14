@@ -1,0 +1,602 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  OpenClaw Salesforce MCP Servers — SEC EDGAR, Market Data, News Search.
+  Deploy with: sam deploy --guided
+
+##############################################################################
+# Parameters
+##############################################################################
+Parameters:
+  SfInstanceUrl:
+    Type: String
+    NoEcho: true
+    Description: Salesforce instance URL
+
+  SfAccessToken:
+    Type: String
+    NoEcho: true
+    Description: Salesforce access token
+
+  AlphaVantageApiKey:
+    Type: String
+    NoEcho: true
+    Description: DEPRECATED — kept for backwards compat. Real value lives in Secrets Manager /006-v2/vendors/market-data. Leave as placeholder.
+    Default: "placeholder"
+
+  FinnhubApiKey:
+    Type: String
+    NoEcho: true
+    Description: DEPRECATED — kept for backwards compat. Real value lives in Secrets Manager /006-v2/vendors/market-data. Leave as placeholder.
+    Default: "placeholder"
+
+  TavilyApiKey:
+    Type: String
+    NoEcho: true
+    Description: DEPRECATED — kept for backwards compat. Real value lives in Secrets Manager /006-v2/vendors/news-search. Leave as placeholder.
+    Default: "placeholder"
+
+  LangfuseSecretKey:
+    Type: String
+    NoEcho: true
+    Description: Langfuse secret key for observability
+
+  LangfusePublicKey:
+    Type: String
+    NoEcho: true
+    Description: Langfuse public key for observability
+
+  LangfuseBaseUrl:
+    Type: String
+    Default: https://us.cloud.langfuse.com
+    Description: Langfuse base URL
+
+  AgentCoreAgentId:
+    Type: String
+    NoEcho: true
+    Description: AgentCore agent ID for the FSI research agent proxy
+
+  # Fix #4: CORS origin parameter (locked down, not wildcard)
+  # Default: CloudFront production URL. For local dev, override with http://localhost:5173
+  FrontendOrigin:
+    Type: String
+    Default: "https://d3t2yuearw7l53.cloudfront.net"
+    Description: Frontend origin for CORS (CloudFront production URL)
+
+  # Phase 6: MuleSoft MCP server mode switch.
+  # mock       -> returns canned responses (no MuleSoft API calls). Default for eval.
+  # sandbox    -> calls MuleSoft Anypoint sandbox environment (real API, mock vendor data).
+  # production -> calls live MuleSoft production environment (gated behind deploy-all.sh prompts).
+  MuleSoftMode:
+    Type: String
+    Default: mock
+    AllowedValues:
+      - mock
+      - sandbox
+      - production
+    Description: MuleSoft Actions MCP server mode (Phase 6)
+
+##############################################################################
+# Globals (Fix #12: X-Ray tracing, Fix #21: timeout 45s)
+##############################################################################
+Globals:
+  Function:
+    Runtime: python3.12
+    Architectures:
+      - x86_64
+    Tracing: Active
+    Tags:
+      Project: 006-fsi
+      Environment: production
+
+
+##############################################################################
+# Resources
+##############################################################################
+Resources:
+
+  # ---- DLQ for Lambda error handling (Fix #13) ----------------------------
+  McpDeadLetterQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub "${AWS::StackName}-dlq"
+      MessageRetentionPeriod: 1209600
+      Tags:
+        - Key: Project
+          Value: 006-fsi
+        - Key: Environment
+          Value: production
+
+  # ---- API Gateway (Fix #2: API key auth, Fix #4: CORS locked down) ------
+  # REGIONAL endpoint type required for integration timeout >29s (quota L-E5AE38E3).
+  # Edge-optimized APIs are hard-limited to 29s regardless of quota.
+  ApiGateway:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: prod
+      EndpointConfiguration:
+        Type: REGIONAL
+      Auth:
+        ApiKeyRequired: true
+      Cors:
+        AllowMethods: "'GET,POST,OPTIONS'"
+        AllowHeaders: "'Content-Type,Authorization,x-api-key'"
+        AllowOrigin: !Sub "'${FrontendOrigin}'"
+      Tags:
+        Project: 006-fsi
+        Environment: production
+
+  # ---- API Key and Usage Plan (Fix #2) ------------------------------------
+  McpApiKey:
+    Type: AWS::ApiGateway::ApiKey
+    DependsOn:
+      - ApiGatewayprodStage
+    Properties:
+      Name: !Sub "${AWS::StackName}-api-key"
+      Enabled: true
+      StageKeys:
+        - RestApiId: !Ref ApiGateway
+          StageName: prod
+
+  McpUsagePlan:
+    Type: AWS::ApiGateway::UsagePlan
+    DependsOn:
+      - ApiGatewayprodStage
+    Properties:
+      UsagePlanName: !Sub "${AWS::StackName}-usage-plan"
+      ApiStages:
+        - ApiId: !Ref ApiGateway
+          Stage: prod
+      Throttle:
+        BurstLimit: 50
+        RateLimit: 25
+
+  McpUsagePlanKey:
+    Type: AWS::ApiGateway::UsagePlanKey
+    Properties:
+      KeyId: !Ref McpApiKey
+      KeyType: API_KEY
+      UsagePlanId: !Ref McpUsagePlan
+
+
+  # ---- SF Auth Token Proxy (CORS workaround for PKCE token exchange) ------
+  # Salesforce's /services/oauth2/token doesn't return CORS headers for
+  # browser-based SPAs on CloudFront. This Lambda proxies the token exchange
+  # server-side. No API key required — this is a public OAuth endpoint.
+  # No secrets needed — PKCE flow uses code_verifier, not client_secret.
+  SfAuthProxyFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${AWS::StackName}-sf-auth-proxy"
+      CodeUri: sf-auth-proxy/
+      Handler: app.lambda_handler
+      Timeout: 15
+      MemorySize: 128
+      ReservedConcurrentExecutions: 5
+      Environment:
+        Variables:
+          CORS_ALLOW_ORIGIN: !Ref FrontendOrigin
+          SF_TOKEN_URL: "https://login.salesforce.com/services/oauth2/token"
+      Events:
+        TokenExchange:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /auth/token
+            Method: POST
+            Auth:
+              ApiKeyRequired: false
+        TokenExchangeOptions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /auth/token
+            Method: OPTIONS
+            Auth:
+              ApiKeyRequired: false
+
+  # ---- Agent Query Proxy (REST bridge: CloudFront → AgentCore → OpenClaw) --
+  # Browsers can't do IAM SigV4 on WebSocket upgrade requests, so CloudFront
+  # deployments POST here instead. This Lambda invokes AgentCore server-side
+  # (has IAM permissions) and returns the agent response with CORS headers.
+  #
+  # Uses REST API with 120s integration timeout (quota increased from 29s
+  # default via Service Quotas L-E5AE38E3). The individual API method
+  # integration timeout must also be set to 120000ms after deploy.
+  # No API key required — uses SF OAuth Bearer token for user identity.
+  AgentProxyFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${AWS::StackName}-agent-proxy"
+      CodeUri: agent-proxy/
+      Handler: app.lambda_handler
+      Timeout: 120
+      MemorySize: 256
+      ReservedConcurrentExecutions: 10
+      Environment:
+        Variables:
+          CORS_ALLOW_ORIGIN: !Ref FrontendOrigin
+          AGENTCORE_AGENT_ID: !Ref AgentCoreAgentId
+      Policies:
+        - Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Action:
+                - bedrock:InvokeAgent
+                - bedrock-agentcore:InvokeAgentRuntime
+              Resource: "*"
+      Events:
+        AgentQuery:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /agent/query
+            Method: POST
+            Auth:
+              ApiKeyRequired: false
+        AgentQueryOptions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /agent/query
+            Method: OPTIONS
+            Auth:
+              ApiKeyRequired: false
+
+  # ---- SEC EDGAR MCP Server -----------------------------------------------
+  # Fix #3: removed bedrock:InvokeModel (MCP servers don't call Bedrock)
+  # Fix #13: DLQ, Fix #21: timeout 45s, Fix #22: ReservedConcurrentExecutions
+  SecEdgarMcpServer:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${AWS::StackName}-sec-edgar"
+      CodeUri: mcp-servers/sec-edgar/
+      Handler: app.lambda_handler
+      Timeout: 45
+      MemorySize: 256
+      ReservedConcurrentExecutions: 10
+      DeadLetterQueue:
+        Type: SQS
+        TargetArn: !GetAtt McpDeadLetterQueue.Arn
+      Environment:
+        Variables:
+          LANGFUSE_SECRET_KEY: !Ref LangfuseSecretKey
+          LANGFUSE_PUBLIC_KEY: !Ref LangfusePublicKey
+          LANGFUSE_BASE_URL: !Ref LangfuseBaseUrl
+          LANGFUSE_PROJECT: !Ref LangfuseProject
+          CORS_ALLOW_ORIGIN: !Ref FrontendOrigin
+      Events:
+        RootGet:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /sec-edgar
+            Method: GET
+            Auth:
+              ApiKeyRequired: true
+        ToolsList:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /sec-edgar/tools/list
+            Method: POST
+            Auth:
+              ApiKeyRequired: true
+        ToolsCall:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /sec-edgar/tools/call
+            Method: POST
+            Auth:
+              ApiKeyRequired: true
+
+  # ---- Market Data MCP Server ----------------------------------------------
+  MarketDataMcpServer:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${AWS::StackName}-market-data"
+      CodeUri: mcp-servers/market-data/
+      Handler: app.lambda_handler
+      Timeout: 45
+      MemorySize: 256
+      ReservedConcurrentExecutions: 10
+      DeadLetterQueue:
+        Type: SQS
+        TargetArn: !GetAtt McpDeadLetterQueue.Arn
+      Policies:
+        - Statement:
+            - Sid: ReadMarketDataVendorSecret
+              Effect: Allow
+              Action:
+                - secretsmanager:GetSecretValue
+                - secretsmanager:DescribeSecret
+              Resource:
+                - !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:/006-v2/vendors/market-data*"
+      Environment:
+        Variables:
+          VENDOR_SECRET_NAME: /006-v2/vendors/market-data
+          LANGFUSE_SECRET_KEY: !Ref LangfuseSecretKey
+          LANGFUSE_PUBLIC_KEY: !Ref LangfusePublicKey
+          LANGFUSE_BASE_URL: !Ref LangfuseBaseUrl
+          LANGFUSE_PROJECT: !Ref LangfuseProject
+          CORS_ALLOW_ORIGIN: !Ref FrontendOrigin
+      Events:
+        RootGet:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /market-data
+            Method: GET
+            Auth:
+              ApiKeyRequired: true
+        ToolsList:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /market-data/tools/list
+            Method: POST
+            Auth:
+              ApiKeyRequired: true
+        ToolsCall:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /market-data/tools/call
+            Method: POST
+            Auth:
+              ApiKeyRequired: true
+
+  # ---- News Search MCP Server ----------------------------------------------
+  NewsSearchMcpServer:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${AWS::StackName}-news-search"
+      CodeUri: mcp-servers/news-search/
+      Handler: app.lambda_handler
+      Timeout: 45
+      MemorySize: 256
+      ReservedConcurrentExecutions: 10
+      DeadLetterQueue:
+        Type: SQS
+        TargetArn: !GetAtt McpDeadLetterQueue.Arn
+      Policies:
+        - Statement:
+            - Sid: ReadNewsSearchVendorSecret
+              Effect: Allow
+              Action:
+                - secretsmanager:GetSecretValue
+                - secretsmanager:DescribeSecret
+              Resource:
+                - !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:/006-v2/vendors/news-search*"
+      Environment:
+        Variables:
+          VENDOR_SECRET_NAME: /006-v2/vendors/news-search
+          LANGFUSE_SECRET_KEY: !Ref LangfuseSecretKey
+          LANGFUSE_PUBLIC_KEY: !Ref LangfusePublicKey
+          LANGFUSE_BASE_URL: !Ref LangfuseBaseUrl
+          LANGFUSE_PROJECT: !Ref LangfuseProject
+          CORS_ALLOW_ORIGIN: !Ref FrontendOrigin
+      Events:
+        RootGet:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /news-search
+            Method: GET
+            Auth:
+              ApiKeyRequired: true
+        ToolsList:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /news-search/tools/list
+            Method: POST
+            Auth:
+              ApiKeyRequired: true
+        ToolsCall:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /news-search/tools/call
+            Method: POST
+            Auth:
+              ApiKeyRequired: true
+
+  # ---- Salesforce CRM MCP Server -------------------------------------------
+  SalesforceCrmMcpServer:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${AWS::StackName}-salesforce-crm"
+      CodeUri: mcp-servers/salesforce-crm/
+      Handler: app.lambda_handler
+      Timeout: 45
+      MemorySize: 256
+      ReservedConcurrentExecutions: 10
+      DeadLetterQueue:
+        Type: SQS
+        TargetArn: !GetAtt McpDeadLetterQueue.Arn
+      Environment:
+        Variables:
+          SF_INSTANCE_URL: !Ref SfInstanceUrl
+          SF_ACCESS_TOKEN: !Ref SfAccessToken
+          CORS_ALLOW_ORIGIN: !Ref FrontendOrigin
+      Events:
+        RootGet:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /salesforce-crm
+            Method: GET
+            Auth:
+              ApiKeyRequired: true
+        ToolsList:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /salesforce-crm/tools/list
+            Method: POST
+            Auth:
+              ApiKeyRequired: true
+        ToolsCall:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /salesforce-crm/tools/call
+            Method: POST
+            Auth:
+              ApiKeyRequired: true
+
+  # ---- HITL Decision Bridge (Tier-4 #13) ------------------------------------
+  # REST fallback for the HitlPanel frontend's `sendHitlDecision`. Browsers
+  # prefer the OpenClaw WebSocket, but fall back to POST /prod/hitl/decision
+  # when the WS is unavailable. Without this route, approvals drop silently.
+  #
+  # Phase 6 stub: writes HITL_DECISION_RECEIVED to IR_Audit_Log__c and returns
+  # 202 Accepted. The DynamoDB-backed reconciliation (look up pending approval
+  # by token_hash, verify HMAC, emit hitl.completed) is documented as a TODO
+  # inside the handler. See aws/mcp-servers/hitl-decision-bridge/app.py.
+  HitlDecisionBridgeFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${AWS::StackName}-hitl-decision-bridge"
+      CodeUri: mcp-servers/hitl-decision-bridge/
+      Handler: app.lambda_handler
+      Timeout: 15
+      MemorySize: 128
+      ReservedConcurrentExecutions: 5
+      Policies:
+        - Statement:
+            - Sid: ReadHitlSigningKey
+              Effect: Allow
+              Action:
+                - secretsmanager:GetSecretValue
+                - secretsmanager:DescribeSecret
+              Resource:
+                - !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:/006-v2/hitl/*"
+      Environment:
+        Variables:
+          CORS_ALLOW_ORIGIN: !Ref FrontendOrigin
+          MULESOFT_ACTIONS_URL: !Sub "https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/prod/mulesoft-actions"
+          SF_INSTANCE_URL: !Ref SfInstanceUrl
+          SF_ACCESS_TOKEN: !Ref SfAccessToken
+          HITL_SECRET_NAME: /006-v2/hitl/signing-key
+      Events:
+        HitlDecisionPost:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /hitl/decision
+            Method: POST
+            Auth:
+              ApiKeyRequired: false
+        HitlDecisionOptions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /hitl/decision
+            Method: OPTIONS
+            Auth:
+              ApiKeyRequired: false
+
+  # ---- MuleSoft Actions MCP Server (Phase 6) --------------------------------
+  # Mock mode by default. Set MULESOFT_MODE=sandbox to hit real MuleSoft Anypoint.
+  # Credentials come from AWS Secrets Manager — NEVER from env vars directly.
+  # Every tool call goes through the mulesoft-api skill first (HITL + dual-auth + audit).
+  MuleSoftActionsMcpServer:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${AWS::StackName}-mulesoft-actions"
+      CodeUri: mcp-servers/mulesoft-actions/
+      Handler: app.lambda_handler
+      Timeout: 45
+      MemorySize: 256
+      ReservedConcurrentExecutions: 10
+      DeadLetterQueue:
+        Type: SQS
+        TargetArn: !GetAtt McpDeadLetterQueue.Arn
+      Policies:
+        - Statement:
+            - Sid: ReadMuleSoftSecret
+              Effect: Allow
+              Action:
+                - secretsmanager:GetSecretValue
+                - secretsmanager:DescribeSecret
+              Resource:
+                - !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:/006-v2/mulesoft/*"
+      Environment:
+        Variables:
+          MULESOFT_MODE: !Ref MuleSoftMode
+          MULESOFT_SECRET_NAME: /006-v2/mulesoft/credentials
+          LANGFUSE_SECRET_KEY: !Ref LangfuseSecretKey
+          LANGFUSE_PUBLIC_KEY: !Ref LangfusePublicKey
+          LANGFUSE_BASE_URL: !Ref LangfuseBaseUrl
+          LANGFUSE_PROJECT: !Ref LangfuseProject
+          CORS_ALLOW_ORIGIN: !Ref FrontendOrigin
+      Events:
+        RootGet:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /mulesoft-actions
+            Method: GET
+            Auth:
+              ApiKeyRequired: true
+        ToolsList:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /mulesoft-actions/tools/list
+            Method: POST
+            Auth:
+              ApiKeyRequired: true
+        ToolsCall:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /mulesoft-actions/tools/call
+            Method: POST
+            Auth:
+              ApiKeyRequired: true
+
+
+##############################################################################
+# Outputs
+##############################################################################
+Outputs:
+  ApiGatewayUrl:
+    Description: Base URL for the MCP API Gateway
+    Value: !Sub "https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/prod"
+
+  SecEdgarEndpoint:
+    Description: SEC EDGAR MCP server endpoint
+    Value: !Sub "https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/prod/sec-edgar"
+
+  MarketDataEndpoint:
+    Description: Market Data MCP server endpoint
+    Value: !Sub "https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/prod/market-data"
+
+  NewsSearchEndpoint:
+    Description: News Search MCP server endpoint
+    Value: !Sub "https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/prod/news-search"
+
+  SalesforceCrmEndpoint:
+    Description: Salesforce CRM MCP server endpoint
+    Value: !Sub "https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/prod/salesforce-crm"
+
+  SfAuthProxyEndpoint:
+    Description: SF OAuth token proxy endpoint (CORS workaround for PKCE)
+    Value: !Sub "https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/prod/auth/token"
+
+  AgentProxyEndpoint:
+    Description: Agent query proxy endpoint (REST API, 120s timeout via quota increase L-E5AE38E3)
+    Value: !Sub "https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/prod/agent/query"
+
+  HitlDecisionEndpoint:
+    Description: HITL decision REST fallback endpoint (used when WebSocket is unavailable)
+    Value: !Sub "https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/prod/hitl/decision"
+
+  # Fix #2: output the API key ID for retrieval
+  ApiKeyId:
+    Description: API Key ID (retrieve value with aws apigateway get-api-key --api-key <id> --include-value)
+    Value: !Ref McpApiKey

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>MuleSoft_Reference__c</fullName>
+    <description>Reference ID returned by MuleSoft Anypoint. Null when no MuleSoft call was made (e.g. COMPLIANCE_BLOCKED).</description>
+    <externalId>true</externalId>
+    <label>MuleSoft Reference</label>
+    <length>255</length>
+    <required>false</required>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>

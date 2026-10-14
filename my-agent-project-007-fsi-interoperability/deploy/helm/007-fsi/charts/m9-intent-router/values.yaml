@@ -1,0 +1,85 @@
+# M9 Intent Router -- sub-chart values.
+# Spec: .kiro/specs/ops-hardening-wave2-intelligence-layer.md v0.2.0.
+
+image:
+  repository: ghcr.io/project-007/m9-intent-router
+  tag: "0.1.0"
+  digest: ""
+  pullPolicy: IfNotPresent
+
+replicas: 3
+
+irsa:
+  roleArn: "arn:aws:iam::REPLACE_ME:role/REPLACE_ME"
+
+# Resources (R5.7) -- Haiku routing is light.
+resources:
+  requests:
+    cpu: 200m
+    memory: 256Mi
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+
+# PriorityClass (R7.2) -- request fast path.
+priorityClassName: system-node-critical
+
+# Non-secret config (R3.12-R3.18). Vault path template held in ConfigMap;
+# library substitutes <tenant_id> at lookup time.
+config:
+  awsRegion: us-east-1
+  provider: bedrock
+  modelId: anthropic.claude-3-5-haiku-20241022-v1:0
+  timeoutMs: 1500
+  fallbackEnabled: true
+  confidenceHigh: 0.95
+  confidenceMed: 0.80
+  tenantHmacKeyVaultPath: "secret/data/m9/tenants/TENANT_ID_PLACEHOLDER/hmac_key"
+  schemaVersion: "1.1.0"
+  configSchemaVersion: "m5:v0.3.0"
+
+mtls:
+  secretName: m9-mtls-cert
+
+certificate:
+  enabled: true
+  issuerRef:
+    name: internal-ca
+    kind: ClusterIssuer
+  duration: 24h
+  renewBefore: 2h
+
+networkPolicy:
+  enabled: true
+  gatewayPodLabel: m6-mcp-gateway
+  extraIngressFrom: []
+
+pdb:
+  enabled: true
+  minAvailable: 1
+
+# HPA (R6) -- target 70% CPU.
+hpa:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+
+probes:
+  readiness:
+    path: /ready
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    failureThreshold: 3
+  liveness:
+    path: /health
+    initialDelaySeconds: 10
+    periodSeconds: 30
+    failureThreshold: 3
+
+# Wave 4 egress narrowing.
+egressAllowlist: []
+
+awsPrivateLink:
+  bedrockRuntime:
+    enabled: false

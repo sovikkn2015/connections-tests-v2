@@ -1,0 +1,11 @@
+apiVersion: v2
+name: m8-pipeline-engine
+description: M8 -- LangGraph 23-stage research pipeline with 3 HITL gates (stateful).
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+keywords:
+  - 007-fsi
+  - intelligence-layer
+  - langgraph
+  - research

@@ -1,0 +1,16 @@
+apiVersion: v2
+name: m2-m4-policy-engine
+description: M2/M4 Policy Engine -- OPA/Rego-style authority + MNPI policy evaluator (Project 007 trust layer).
+type: application
+version: 0.1.0
+appVersion: "0.3.0"
+keywords:
+  - fsi
+  - opa
+  - rego
+  - authority
+  - mnpi
+  - policy
+maintainers:
+  - name: Project 007 Platform Team
+    email: platform@example.invalid

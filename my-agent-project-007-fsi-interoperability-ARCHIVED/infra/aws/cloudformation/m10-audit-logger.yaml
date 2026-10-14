@@ -1,0 +1,139 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: |
+  M10 Audit Logger — AWS resources.
+  Owner: trust-layer team (data-retention-critical).
+
+  Resources:
+    - Audit index DynamoDB table (trace_id + timestamp)
+    - S3 Object Lock bucket (Compliance mode, 6yr retention, SEC Rule 17a-4)
+    - SQS audit DLQ with its own dead-letter (failure isolation)
+
+  Every resource has DeletionPolicy: Retain - once audit data exists, it is
+  legally immutable. Stack deletion will NOT delete the WORM bucket.
+
+  Depends on: platform-common (KmsKeyArn).
+
+Parameters:
+  Prefix:              { Type: String, Default: fsi007 }
+  Environment:         { Type: String, Default: dev }
+  WormRetentionDays:
+    Type: Number
+    Default: 2190
+    MinValue: 2190
+    Description: 6-year minimum per SEC Rule 17a-4.
+
+Resources:
+
+  AuditLog:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      TableName: !Sub '${Prefix}-${Environment}-m10-audit-log'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - { AttributeName: trace_id, AttributeType: S }
+        - { AttributeName: timestamp, AttributeType: S }
+      KeySchema:
+        - { AttributeName: trace_id, KeyType: HASH }
+        - { AttributeName: timestamp, KeyType: RANGE }
+      PointInTimeRecoverySpecification: { PointInTimeRecoveryEnabled: true }
+      SSESpecification:
+        SSEEnabled: true
+        SSEType: KMS
+        KMSMasterKeyId: !ImportValue '007-platform-KmsKeyId'
+      Tags:
+        - { Key: project, Value: '007' }
+        - { Key: environment, Value: !Ref Environment }
+        - { Key: module, Value: m10-audit-logger }
+
+  AuditWormBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      BucketName: !Sub '${Prefix}-${Environment}-m10-audit-worm-${AWS::Region}'
+      ObjectLockEnabled: true
+      ObjectLockConfiguration:
+        ObjectLockEnabled: Enabled
+        Rule:
+          DefaultRetention:
+            Mode: COMPLIANCE
+            Days: !Ref WormRetentionDays
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: aws:kms
+              KMSMasterKeyID: !ImportValue '007-platform-KmsKeyArn'
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        IgnorePublicAcls: true
+        BlockPublicPolicy: true
+        RestrictPublicBuckets: true
+      VersioningConfiguration: { Status: Enabled }
+      Tags:
+        - { Key: project, Value: '007' }
+        - { Key: environment, Value: !Ref Environment }
+        - { Key: module, Value: m10-audit-logger }
+
+  AuditWormBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref AuditWormBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: DenyInsecureTransport
+            Effect: Deny
+            Principal: '*'
+            Action: 's3:*'
+            Resource:
+              - !GetAtt AuditWormBucket.Arn
+              - !Sub '${AuditWormBucket.Arn}/*'
+            Condition:
+              Bool: { 'aws:SecureTransport': false }
+
+  AuditDlqDeadLetter:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub '${Prefix}-${Environment}-m10-audit-dlq-deadletter'
+      MessageRetentionPeriod: 1209600
+      KmsMasterKeyId: !ImportValue '007-platform-KmsKeyArn'
+      Tags:
+        - { Key: project, Value: '007' }
+        - { Key: environment, Value: !Ref Environment }
+        - { Key: module, Value: m10-audit-logger }
+
+  AuditDlq:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub '${Prefix}-${Environment}-m10-audit-dlq'
+      MessageRetentionPeriod: 1209600
+      KmsMasterKeyId: !ImportValue '007-platform-KmsKeyArn'
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt AuditDlqDeadLetter.Arn
+        maxReceiveCount: 5
+      Tags:
+        - { Key: project, Value: '007' }
+        - { Key: environment, Value: !Ref Environment }
+        - { Key: module, Value: m10-audit-logger }
+
+Outputs:
+  AuditLogTableName:
+    Value: !Ref AuditLog
+    Export: { Name: '007-m10-audit-logger-AuditLogTableName' }
+  AuditLogTableArn:
+    Value: !GetAtt AuditLog.Arn
+    Export: { Name: '007-m10-audit-logger-AuditLogTableArn' }
+  AuditWormBucketName:
+    Value: !Ref AuditWormBucket
+    Export: { Name: '007-m10-audit-logger-AuditWormBucketName' }
+  AuditWormBucketArn:
+    Value: !GetAtt AuditWormBucket.Arn
+    Export: { Name: '007-m10-audit-logger-AuditWormBucketArn' }
+  AuditDlqUrl:
+    Value: !Ref AuditDlq
+    Export: { Name: '007-m10-audit-logger-AuditDlqUrl' }
+  AuditDlqArn:
+    Value: !GetAtt AuditDlq.Arn
+    Export: { Name: '007-m10-audit-logger-AuditDlqArn' }

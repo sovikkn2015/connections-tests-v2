@@ -1,0 +1,403 @@
+{
+  "$defs": {
+    "GoalAssumptions": {
+      "description": "Goal planning assumptions.",
+      "properties": {
+        "inflation_rate": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Assumed inflation rate.",
+          "title": "Inflation Rate"
+        },
+        "return_rate": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Assumed return rate.",
+          "title": "Return Rate"
+        },
+        "tax_rate": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Assumed tax rate.",
+          "title": "Tax Rate"
+        }
+      },
+      "title": "GoalAssumptions",
+      "type": "object"
+    },
+    "GoalStatus": {
+      "description": "5 goal status values.",
+      "enum": [
+        "on_track",
+        "at_risk",
+        "behind",
+        "achieved",
+        "abandoned"
+      ],
+      "title": "GoalStatus",
+      "type": "string"
+    },
+    "GoalType": {
+      "description": "11 financial goal types. M7 normalizes vendor goal picklists to this enum.",
+      "enum": [
+        "retirement",
+        "education",
+        "home_purchase",
+        "emergency_fund",
+        "wealth_transfer",
+        "charitable_giving",
+        "debt_payoff",
+        "major_purchase",
+        "income_replacement",
+        "legacy",
+        "custom"
+      ],
+      "title": "GoalType",
+      "type": "string"
+    },
+    "GoalVendorEMoney": {
+      "description": "eMoney goal identifiers.",
+      "properties": {
+        "goal_id": {
+          "description": "eMoney goal ID.",
+          "title": "Goal Id",
+          "type": "string"
+        },
+        "goal_category": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "eMoney goal category.",
+          "title": "Goal Category"
+        }
+      },
+      "required": [
+        "goal_id"
+      ],
+      "title": "GoalVendorEMoney",
+      "type": "object"
+    },
+    "GoalVendorMappings": {
+      "description": "Preserves vendor-specific goal semantics.",
+      "properties": {
+        "salesforce_fsc": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GoalVendorSFSC"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "SF FSC mapping."
+        },
+        "emoney": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GoalVendorEMoney"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "eMoney mapping."
+        },
+        "moneyguidepro": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GoalVendorMoneyGuidePro"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "MoneyGuidePro mapping."
+        }
+      },
+      "title": "GoalVendorMappings",
+      "type": "object"
+    },
+    "GoalVendorMoneyGuidePro": {
+      "description": "MoneyGuidePro goal identifiers.",
+      "properties": {
+        "goal_id": {
+          "description": "MoneyGuidePro goal ID.",
+          "title": "Goal Id",
+          "type": "string"
+        },
+        "goal_type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "MoneyGuidePro goal type.",
+          "title": "Goal Type"
+        }
+      },
+      "required": [
+        "goal_id"
+      ],
+      "title": "GoalVendorMoneyGuidePro",
+      "type": "object"
+    },
+    "GoalVendorSFSC": {
+      "description": "SF FSC goal identifiers.",
+      "properties": {
+        "financial_goal_id": {
+          "description": "SF FSC FinancialGoal record ID.",
+          "title": "Financial Goal Id",
+          "type": "string"
+        },
+        "goal_type_picklist": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "SF FSC goal type picklist value.",
+          "title": "Goal Type Picklist"
+        }
+      },
+      "required": [
+        "financial_goal_id"
+      ],
+      "title": "GoalVendorSFSC",
+      "type": "object"
+    }
+  },
+  "description": "Canonical financial goal. M7 normalizes vendor goal picklists to canonical enum.",
+  "properties": {
+    "canonical_id": {
+      "description": "Primary key for this goal.",
+      "format": "uuid",
+      "title": "Canonical Id",
+      "type": "string"
+    },
+    "client_ref": {
+      "description": "Canonical Client ID.",
+      "format": "uuid",
+      "title": "Client Ref",
+      "type": "string"
+    },
+    "household_ref": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Canonical Household ID if goal is household-level.",
+      "title": "Household Ref"
+    },
+    "plan_ref": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Canonical PlanSummary ID this goal belongs to.",
+      "title": "Plan Ref"
+    },
+    "goal_type": {
+      "$ref": "#/$defs/GoalType",
+      "description": "Goal classification."
+    },
+    "goal_name": {
+      "description": "Display name (e.g., 'Retire at 65').",
+      "title": "Goal Name",
+      "type": "string"
+    },
+    "target_amount": {
+      "description": "Target dollar amount for the goal.",
+      "minimum": 0,
+      "title": "Target Amount",
+      "type": "number"
+    },
+    "current_amount": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Current funded amount toward the goal.",
+      "title": "Current Amount"
+    },
+    "funding_pct": {
+      "anyOf": [
+        {
+          "maximum": 100,
+          "minimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Percentage funded.",
+      "title": "Funding Pct"
+    },
+    "target_date": {
+      "description": "Target completion date.",
+      "format": "date",
+      "title": "Target Date",
+      "type": "string"
+    },
+    "priority": {
+      "description": "Goal priority: critical, high, medium, low.",
+      "title": "Priority",
+      "type": "string"
+    },
+    "status": {
+      "$ref": "#/$defs/GoalStatus",
+      "description": "Current goal status."
+    },
+    "monthly_contribution": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Monthly savings allocated to this goal.",
+      "title": "Monthly Contribution"
+    },
+    "linked_accounts": {
+      "description": "Canonical Account IDs funding this goal.",
+      "items": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "title": "Linked Accounts",
+      "type": "array"
+    },
+    "assumptions": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/GoalAssumptions"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Goal planning assumptions."
+    },
+    "vendor_mappings": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/GoalVendorMappings"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Preserves vendor-specific goal semantics."
+    },
+    "as_of_date": {
+      "description": "Date this goal data is valid for.",
+      "format": "date",
+      "title": "As Of Date",
+      "type": "string"
+    },
+    "source_system": {
+      "description": "Source system.",
+      "title": "Source System",
+      "type": "string"
+    },
+    "source_id": {
+      "description": "Vendor-specific goal ID.",
+      "title": "Source Id",
+      "type": "string"
+    },
+    "created_at": {
+      "description": "Goal creation timestamp.",
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "updated_at": {
+      "description": "Goal last update timestamp.",
+      "format": "date-time",
+      "title": "Updated At",
+      "type": "string"
+    }
+  },
+  "required": [
+    "canonical_id",
+    "client_ref",
+    "goal_type",
+    "goal_name",
+    "target_amount",
+    "target_date",
+    "priority",
+    "status",
+    "as_of_date",
+    "source_system",
+    "source_id",
+    "created_at",
+    "updated_at"
+  ],
+  "title": "Goal",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://007.fsi/schemas/canonical/goal/v0.1.0"
+}

@@ -1,0 +1,522 @@
+{
+  "$defs": {
+    "PlanAssumptions": {
+      "description": "Financial plan assumptions.",
+      "properties": {
+        "inflation_rate": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Assumed inflation rate as decimal.",
+          "title": "Inflation Rate"
+        },
+        "return_assumption": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Assumed investment return rate as decimal.",
+          "title": "Return Assumption"
+        },
+        "life_expectancy": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Assumed life expectancy in years.",
+          "title": "Life Expectancy"
+        },
+        "retirement_age": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Assumed retirement age.",
+          "title": "Retirement Age"
+        },
+        "tax_rate_assumption": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Assumed tax rate as decimal.",
+          "title": "Tax Rate Assumption"
+        }
+      },
+      "title": "PlanAssumptions",
+      "type": "object"
+    },
+    "PlanRecommendation": {
+      "description": "Plan recommendation (summary level only \u2014 raw data never to LLM).",
+      "properties": {
+        "category": {
+          "description": "Recommendation category.",
+          "title": "Category",
+          "type": "string"
+        },
+        "description": {
+          "description": "Recommendation description.",
+          "title": "Description",
+          "type": "string"
+        },
+        "priority": {
+          "description": "Priority: high, medium, low.",
+          "title": "Priority",
+          "type": "string"
+        }
+      },
+      "required": [
+        "category",
+        "description",
+        "priority"
+      ],
+      "title": "PlanRecommendation",
+      "type": "object"
+    },
+    "PlanVendorEMoney": {
+      "description": "eMoney plan identifiers.",
+      "properties": {
+        "plan_id": {
+          "description": "eMoney plan ID.",
+          "title": "Plan Id",
+          "type": "string"
+        },
+        "scenario_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "eMoney scenario ID.",
+          "title": "Scenario Id"
+        }
+      },
+      "required": [
+        "plan_id"
+      ],
+      "title": "PlanVendorEMoney",
+      "type": "object"
+    },
+    "PlanVendorMappings": {
+      "description": "Preserves vendor-specific plan identifiers.",
+      "properties": {
+        "emoney": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PlanVendorEMoney"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "eMoney mapping."
+        },
+        "moneyguidepro": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PlanVendorMoneyGuidePro"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "MoneyGuidePro mapping."
+        },
+        "rightcapital": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PlanVendorRightCapital"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "RightCapital mapping."
+        }
+      },
+      "title": "PlanVendorMappings",
+      "type": "object"
+    },
+    "PlanVendorMoneyGuidePro": {
+      "description": "MoneyGuidePro plan identifiers.",
+      "properties": {
+        "plan_id": {
+          "description": "MoneyGuidePro plan ID.",
+          "title": "Plan Id",
+          "type": "string"
+        },
+        "scenario_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "MoneyGuidePro scenario name.",
+          "title": "Scenario Name"
+        }
+      },
+      "required": [
+        "plan_id"
+      ],
+      "title": "PlanVendorMoneyGuidePro",
+      "type": "object"
+    },
+    "PlanVendorRightCapital": {
+      "description": "RightCapital plan identifiers.",
+      "properties": {
+        "plan_id": {
+          "description": "RightCapital plan ID.",
+          "title": "Plan Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "plan_id"
+      ],
+      "title": "PlanVendorRightCapital",
+      "type": "object"
+    }
+  },
+  "description": "Canonical financial plan summary. Raw plan data NEVER sent to LLM \u2014 M4 filters to summary-level only.",
+  "properties": {
+    "canonical_id": {
+      "description": "Primary key for this plan summary.",
+      "format": "uuid",
+      "title": "Canonical Id",
+      "type": "string"
+    },
+    "client_ref": {
+      "description": "Canonical Client ID.",
+      "format": "uuid",
+      "title": "Client Ref",
+      "type": "string"
+    },
+    "household_ref": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Canonical Household ID.",
+      "title": "Household Ref"
+    },
+    "plan_name": {
+      "description": "Plan display name.",
+      "title": "Plan Name",
+      "type": "string"
+    },
+    "plan_type": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Plan type: comprehensive, retirement_only, education_only, estate, tax, insurance.",
+      "title": "Plan Type"
+    },
+    "probability_of_success": {
+      "description": "Overall plan success probability (0-100).",
+      "maximum": 100,
+      "minimum": 0,
+      "title": "Probability Of Success",
+      "type": "number"
+    },
+    "as_of_date": {
+      "description": "Date this plan summary is valid for.",
+      "format": "date",
+      "title": "As Of Date",
+      "type": "string"
+    },
+    "total_assets": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Total assets in plan.",
+      "title": "Total Assets"
+    },
+    "total_liabilities": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Total liabilities in plan.",
+      "title": "Total Liabilities"
+    },
+    "net_worth": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Net worth (assets - liabilities).",
+      "title": "Net Worth"
+    },
+    "retirement_goal_amount": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Retirement goal target amount.",
+      "title": "Retirement Goal Amount"
+    },
+    "retirement_target_date": {
+      "anyOf": [
+        {
+          "format": "date",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Retirement target date.",
+      "title": "Retirement Target Date"
+    },
+    "retirement_income_gap": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Annual income shortfall in retirement (negative = surplus).",
+      "title": "Retirement Income Gap"
+    },
+    "monte_carlo_success_pct": {
+      "anyOf": [
+        {
+          "maximum": 100,
+          "minimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Monte Carlo success percentage.",
+      "title": "Monte Carlo Success Pct"
+    },
+    "monte_carlo_iterations": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Number of Monte Carlo iterations.",
+      "title": "Monte Carlo Iterations"
+    },
+    "annual_savings_rate": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "As decimal (0.15 = 15%).",
+      "title": "Annual Savings Rate"
+    },
+    "annual_spending": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Annual spending amount.",
+      "title": "Annual Spending"
+    },
+    "social_security_estimate": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Estimated annual SS benefit.",
+      "title": "Social Security Estimate"
+    },
+    "pension_income": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Annual pension income.",
+      "title": "Pension Income"
+    },
+    "goals": {
+      "description": "Canonical Goal IDs linked to this plan.",
+      "items": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "title": "Goals",
+      "type": "array"
+    },
+    "assumptions": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/PlanAssumptions"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Plan assumptions."
+    },
+    "recommendations": {
+      "description": "Plan recommendations (summary level only \u2014 raw data never to LLM).",
+      "items": {
+        "$ref": "#/$defs/PlanRecommendation"
+      },
+      "title": "Recommendations",
+      "type": "array"
+    },
+    "vendor_mappings": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/PlanVendorMappings"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Preserves vendor-specific plan identifiers."
+    },
+    "source_system": {
+      "description": "Source system: emoney, moneyguidepro, rightcapital, manual.",
+      "title": "Source System",
+      "type": "string"
+    },
+    "source_id": {
+      "description": "Vendor-specific plan ID.",
+      "title": "Source Id",
+      "type": "string"
+    },
+    "created_at": {
+      "description": "Plan creation timestamp.",
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "updated_at": {
+      "description": "Plan last update timestamp.",
+      "format": "date-time",
+      "title": "Updated At",
+      "type": "string"
+    }
+  },
+  "required": [
+    "canonical_id",
+    "client_ref",
+    "plan_name",
+    "probability_of_success",
+    "as_of_date",
+    "source_system",
+    "source_id",
+    "created_at",
+    "updated_at"
+  ],
+  "title": "PlanSummary",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://007.fsi/schemas/canonical/plan-summary/v0.1.0"
+}

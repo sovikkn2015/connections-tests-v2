@@ -1,0 +1,28 @@
+{
+  "name": "@project-007/m11-emoney-adapter",
+  "version": "0.1.0",
+  "description": "M11-REST eMoney adapter — 1 tool (plan summary) with strict output Zod matching M7 EMoneyPlanSummary.",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "start": "node dist/index.js"
+  },
+  "engines": { "node": ">=20.0.0" },
+  "dependencies": {
+    "@project-007/mcp-sdk": "0.1.0",
+    "zod": "^3.23.0",
+    "undici": "^6.19.0",
+    "pino": "^9.0.0",
+    "fastify": "^4.28.0",
+    "lru-cache": "^11.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "typescript": "^5.4.5",
+    "vitest": "^1.6.0",
+    "fast-check": "^3.19.0"
+  }
+}

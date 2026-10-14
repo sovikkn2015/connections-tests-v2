@@ -1,0 +1,22 @@
+{
+  "name": "mnpi_redaction",
+  "passed": true,
+  "details": {
+    "mode": "live",
+    "route": "/sec-edgar/tools/call",
+    "request_body": {
+      "name": "get_10k",
+      "arguments": {
+        "ticker": "NVDA"
+      }
+    },
+    "http_status": 200,
+    "response_excerpt": "{\"content\": [{\"type\": \"text\", \"text\": \"{\\\"tool\\\": \\\"get_10k\\\", \\\"ticker\\\": \\\"NVDA\\\", \\\"filings\\\": [{\\\"accession_number\\\": \\\"0001045810-26-000021\\\", \\\"filing_date\\\": \\\"2026-02-25\\\", \\\"form_type\\\": \\\"10-K\\\", \\\"company_name\\\": \\\"NVIDIA CORP\\\",",
+    "correlation_id": "syn-mnpi-a30a0e60-72e7-49af-8a87-b7dc1d870224",
+    "leaked_fields": [],
+    "gateway_redaction_header": null,
+    "audit_redactions_observed": 0,
+    "audit_has_gateway_stage": false
+  },
+  "error": null
+}

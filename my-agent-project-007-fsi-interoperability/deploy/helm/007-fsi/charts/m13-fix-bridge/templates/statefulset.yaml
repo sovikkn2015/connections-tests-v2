@@ -1,0 +1,124 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "007.fullname" . }}
+  labels:
+    {{- include "007.labels" . | nindent 4 }}
+spec:
+  # Steering Rule 11: replicaCount HARD-CODED to 1. See values.yaml.
+  replicas: 1
+  serviceName: {{ include "007.headlessServiceName" . }}
+  selector:
+    matchLabels:
+      {{- include "007.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "007.labels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "007.serviceAccountName" . }}
+      automountServiceAccountToken: true
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      # Give sessions up to 30s to send Logout + fsync seqnums before
+      # SIGKILL. Spec §R4.6.
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: {{ .Chart.Name }}
+          image: {{ include "007.image" . | quote }}
+          imagePullPolicy: {{ include "007.imagePullPolicy" . }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.probePort }}
+              protocol: TCP
+          env:
+            - name: HTTP_PORT
+              value: {{ .Values.service.probePort | quote }}
+            - name: FIX_ENABLED
+              value: {{ .Values.fix.enabled | quote }}
+            - name: FIX_DROP_COPY_ENABLED
+              value: {{ .Values.fix.dropCopyEnabled | quote }}
+            - name: FIX_SEQNUM_STORE_DIR
+              value: {{ .Values.fix.seqnumStoreDir | quote }}
+            - name: FIX_KILL_SWITCH_STATE_PATH
+              value: {{ .Values.fix.killSwitchStatePath | quote }}
+            - name: FIX_AID_VERIFY_MODE
+              value: {{ .Values.fix.aidVerifyMode | quote }}
+            - name: FIX_SESSIONS_CONFIG_VAULT_PATH
+              value: {{ .Values.fix.sessionsConfigVaultPath | quote }}
+            - name: FIX_ACCOUNT_HASH_SALT_VAULT_PATH
+              value: {{ .Values.fix.accountHashSaltVaultPath | quote }}
+            - name: FIX_AID_VERIFY_SHARED_SECRET_VAULT_PATH
+              value: {{ .Values.fix.aidVerifySharedSecretVaultPath | quote }}
+            - name: FIX_SECRETS_BACKEND
+              value: "vault"
+            - name: LOG_LEVEL
+              value: {{ .Values.log_level | default "info" | quote }}
+          envFrom:
+            - secretRef:
+                name: {{ include "007.fullname" . }}-secrets
+                optional: true
+          readinessProbe:
+            httpGet:
+              path: /
+              port: {{ .Values.service.probePort }}
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /
+              port: {{ .Values.service.probePort }}
+            initialDelaySeconds: 30
+            periodSeconds: 20
+            timeoutSeconds: 3
+            failureThreshold: 3
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          securityContext:
+            {{- toYaml .Values.containerSecurityContext | nindent 12 }}
+          volumeMounts:
+            - name: m13-data
+              mountPath: /var/lib/m13
+            - name: mtls
+              mountPath: /etc/007/mtls
+              readOnly: true
+            - name: vault-token
+              mountPath: /var/run/secrets/vault
+              readOnly: true
+            {{- range .Values.tmpVolumes }}
+            - name: {{ .name }}
+              mountPath: {{ .mountPath }}
+            {{- end }}
+      volumes:
+        - name: mtls
+          secret:
+            secretName: {{ include "007.fullname" . }}-mtls
+            defaultMode: 0400
+            optional: true
+        - name: vault-token
+          secret:
+            secretName: {{ include "007.fullname" . }}-vault-token
+            defaultMode: 0400
+            optional: true
+        {{- range .Values.tmpVolumes }}
+        - name: {{ .name }}
+          emptyDir:
+            medium: Memory
+            sizeLimit: 64Mi
+        {{- end }}
+  volumeClaimTemplates:
+    - metadata:
+        name: m13-data
+        labels:
+          {{- include "007.labels" . | nindent 10 }}
+      spec:
+        accessModes:
+          - {{ .Values.persistence.accessMode | default "ReadWriteOnce" }}
+        {{- if .Values.persistence.storageClassName }}
+        storageClassName: {{ .Values.persistence.storageClassName | quote }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.persistence.size | default "10Gi" }}

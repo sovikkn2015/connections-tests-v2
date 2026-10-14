@@ -1,0 +1,9 @@
+.DS_Store
+.git/
+.gitignore
+*.tgz
+OWNERS
+README.md.bak
+*.swp
+*.tmp
+*.orig

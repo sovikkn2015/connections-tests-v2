@@ -1,0 +1,16 @@
+{{- if .Values.pdb.enabled }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: m8-pipeline-engine
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: m8-pipeline-engine
+    app.kubernetes.io/part-of: 007-fsi
+    app.kubernetes.io/component: intelligence
+spec:
+  minAvailable: {{ .Values.pdb.minAvailable }}
+  selector:
+    matchLabels:
+      app: m8-pipeline-engine
+{{- end }}

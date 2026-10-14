@@ -1,0 +1,231 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://007.fsi/schemas/canonical/goal/v0.1.0",
+  "title": "Goal",
+  "description": "Canonical financial goal. Maps from SF FSC FinancialGoal, eMoney goals, MoneyGuidePro goals. Linked to PlanSummary.",
+  "type": "object",
+  "required": [
+    "canonical_id",
+    "client_ref",
+    "goal_type",
+    "target_amount",
+    "target_date",
+    "status",
+    "source_system"
+  ],
+  "properties": {
+    "canonical_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Primary key for this goal"
+    },
+    "client_ref": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Canonical Client ID"
+    },
+    "household_ref": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid",
+      "description": "Canonical Household ID if goal is household-level"
+    },
+    "plan_ref": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid",
+      "description": "Canonical PlanSummary ID this goal belongs to"
+    },
+    "goal_type": {
+      "type": "string",
+      "enum": [
+        "retirement",
+        "education",
+        "home_purchase",
+        "emergency_fund",
+        "wealth_transfer",
+        "charitable_giving",
+        "debt_payoff",
+        "major_purchase",
+        "income_replacement",
+        "legacy",
+        "custom"
+      ],
+      "description": "Goal classification. SF FSC uses FinancialGoal.Type__c, eMoney uses goal categories."
+    },
+    "goal_name": {
+      "type": "string",
+      "description": "Display name (e.g., 'Retire at 65', 'College Fund - Sarah')"
+    },
+    "target_amount": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Target dollar amount for the goal"
+    },
+    "current_amount": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0,
+      "description": "Current funded amount toward the goal"
+    },
+    "funding_pct": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Percentage funded (current_amount / target_amount * 100)"
+    },
+    "target_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Target completion date"
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "critical",
+        "high",
+        "medium",
+        "low"
+      ],
+      "description": "Goal priority for planning trade-offs"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "on_track",
+        "at_risk",
+        "behind",
+        "achieved",
+        "abandoned"
+      ],
+      "description": "Current goal status based on latest plan run"
+    },
+    "monthly_contribution": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0,
+      "description": "Monthly savings allocated to this goal"
+    },
+    "linked_accounts": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "description": "Canonical Account IDs funding this goal"
+    },
+    "assumptions": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "inflation_rate": {
+          "type": "number",
+          "description": "Assumed inflation rate as decimal"
+        },
+        "return_rate": {
+          "type": "number",
+          "description": "Assumed return rate as decimal"
+        },
+        "tax_rate": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "Assumed tax rate as decimal"
+        }
+      },
+      "description": "Goal planning assumptions"
+    },
+    "vendor_mappings": {
+      "type": "object",
+      "description": "Preserves vendor-specific goal semantics",
+      "properties": {
+        "salesforce_fsc": {
+          "type": "object",
+          "properties": {
+            "financial_goal_id": {
+              "type": "string",
+              "description": "SF FinancialGoal Record ID"
+            },
+            "goal_type_picklist": {
+              "type": "string",
+              "description": "SF FSC picklist value"
+            }
+          },
+          "description": "Salesforce FSC goal mapping"
+        },
+        "emoney": {
+          "type": "object",
+          "properties": {
+            "goal_id": {
+              "type": "string",
+              "description": "eMoney goal ID"
+            },
+            "goal_category": {
+              "type": "string",
+              "description": "eMoney goal category"
+            }
+          },
+          "description": "eMoney goal mapping"
+        },
+        "moneyguidepro": {
+          "type": "object",
+          "properties": {
+            "goal_id": {
+              "type": "string",
+              "description": "MoneyGuidePro goal ID"
+            },
+            "goal_type": {
+              "type": "string",
+              "description": "MoneyGuidePro goal type"
+            }
+          },
+          "description": "MoneyGuidePro goal mapping"
+        }
+      }
+    },
+    "as_of_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date this goal data is valid for"
+    },
+    "source_system": {
+      "type": "string",
+      "enum": [
+        "salesforce_fsc",
+        "emoney",
+        "moneyguidepro",
+        "rightcapital",
+        "manual"
+      ],
+      "description": "Source system"
+    },
+    "source_id": {
+      "type": "string",
+      "description": "Vendor-specific goal ID"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Goal creation timestamp"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Goal last update timestamp"
+    }
+  }
+}

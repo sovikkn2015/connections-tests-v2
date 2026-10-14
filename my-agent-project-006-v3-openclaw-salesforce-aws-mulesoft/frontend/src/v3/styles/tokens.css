@@ -1,0 +1,240 @@
+/*
+ * v3 design tokens — FSI Workforce 360 branded, THEME-AWARE.
+ *
+ * Scope: only applies inside `.v3-root` descendants. Does not leak into
+ * v1 or v2 UI. Activates when `?v3=1` is on the URL.
+ *
+ * Theming (roadmap item #5):
+ *   - Default theme is DARK (forensic surfaces) — unchanged from v2 aesthetic.
+ *   - Light theme activates when the root carries `data-theme="light"`.
+ *   - CSS vars in the two theme blocks override the same identifiers, so
+ *     every component that reads `var(--forensic-*)` or `var(--fsi-*)`
+ *     automatically re-skins.
+ *   - `useTheme()` hook writes `data-theme` on `.v3-root` + persists to
+ *     localStorage. Header has a toggle button.
+ *
+ * Renamed (done in TASK 6): --w360-* → --fsi-* (FSI Workforce 360 brand).
+ * Added (this pass): theme-aware surfaces + inverted forensic tokens for light.
+ */
+
+.v3-root {
+  /* =========================================================
+   * BRAND COLORS — shared across both themes
+   * ========================================================= */
+  --fsi-brand-050: #EAF4FF;
+  --fsi-brand-100: #CEE7FA;
+  --fsi-brand-200: #9FCAF5;
+  --fsi-brand-300: #5AAAEC;
+  --fsi-brand-500: #1B96FF;
+  --fsi-brand-600: #0176D3;
+  --fsi-brand-700: #014486;
+  --fsi-brand-900: #032D60;
+
+  /* ===== Neutral SLDS-ish (shared, meaning is position-based) ===== */
+  --n-000: #FFFFFF;
+  --n-025: #FAFAFA;
+  --n-050: #F3F3F3;
+  --n-100: #ECECEC;
+  --n-200: #D5D5D5;
+  --n-300: #C9C9C9;
+  --n-400: #A0A0A0;
+  --n-500: #706E6B;
+  --n-600: #514F4D;
+  --n-700: #3E3E3C;
+  --n-800: #2B2826;
+  --n-900: #181818;
+
+  /* ===== Semantic (shared) ===== */
+  --success-300: #56D364;
+  --success-500: #2E844A;
+  --success-700: #174A24;
+  --warning-300: #FFD166;
+  --warning-500: #FE9339;
+  --warning-700: #7A5F12;
+  --error-300: #F47067;
+  --error-500: #EA001E;
+  --error-700: #5A1C19;
+
+  /* ===== Trust-spine role colors ===== */
+  --role-coord: #5A7699;
+  --role-orch: #4C6A8A;
+  --role-specialist: #6B88AB;
+  --role-skill: #7B5A99;
+  --role-mcp: #3B7A6E;
+  --role-gate: #B07A3D;
+  --role-trust: #9FB6CF;
+
+  /* ===== Channel (WhatsApp surface — intentionally stays green in both themes) ===== */
+  --channel-header: #075E54;
+  --channel-accent: #25D366;
+  --channel-out: #DCF8C6;
+  --channel-in: #FFFFFF;
+  --channel-bg: #ECE5DD;
+
+  /* ===== Typography ===== */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+  --font-serif: 'Source Serif 4', 'Source Serif Pro', Georgia, serif;
+
+  /* ===== Rhythm ===== */
+  --radius-xs: 2px;
+  --radius-sm: 3px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+  --radius-pill: 999px;
+  --shadow-1: 0 1px 2px rgba(0,0,0,0.06);
+  --shadow-2: 0 4px 12px rgba(0,0,0,0.12);
+
+  font-family: var(--font-sans);
+}
+
+/* ============================================================
+ * DARK THEME (default) — forensic surfaces
+ * Activates implicitly (no `data-theme` attr) and explicitly
+ * when `data-theme="dark"` is set.
+ * ============================================================ */
+.v3-root,
+.v3-root[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* Forensic surfaces (deep to shallow) */
+  --forensic-bg-0: #02080F;
+  --forensic-bg-1: #061220;
+  --forensic-bg-2: #0B1B2F;
+  --forensic-bg-3: #0F2239;
+  --forensic-bg-4: #132B46;
+  --forensic-elevated: #162D47;
+  --forensic-line: #1C2B3F;
+  --forensic-line-2: #284872;
+
+  /* Forensic text (hi to low contrast) */
+  --forensic-text-0: #FFFFFF;
+  --forensic-text-1: #E6EDF3;
+  --forensic-text-2: #D9E3EF;
+  --forensic-text-3: #C9D1D9;
+  --forensic-text-4: #9FB6CF;
+  --forensic-text-5: #6E7681;
+  --forensic-text-6: #3B4A5F;
+
+  /* Role node backgrounds (tinted dark to make borders pop) */
+  --role-skill-bg: #120C1A;
+  --role-mcp-bg: #0A1612;
+  --role-gate-bg: #1A130A;
+
+  /* Map polish extras */
+  --fsi-info: var(--fsi-brand-500);
+  --fsi-focus: var(--fsi-brand-500);
+  --fsi-tooltip-bg: #0B1B2F;
+  --fsi-tooltip-text: #FFFFFF;
+  --fsi-tooltip-border: rgba(27, 150, 255, 0.35);
+  --fsi-caption-bg: rgba(22, 45, 71, 0.85);
+  --shadow-tooltip: 0 8px 24px rgba(0,0,0,0.35), 0 0 0 1px var(--fsi-tooltip-border);
+
+  color: var(--forensic-text-1);
+}
+
+/* ============================================================
+ * LIGHT THEME
+ * Activates when `data-theme="light"` is set on `.v3-root`.
+ * Forensic tokens are REMAPPED to light-surface equivalents so
+ * every component reading `var(--forensic-*)` auto-reskins.
+ * ============================================================ */
+.v3-root[data-theme="light"] {
+  color-scheme: light;
+
+  /* Forensic surfaces remapped to near-white ladder */
+  --forensic-bg-0: #FFFFFF;
+  --forensic-bg-1: #FAFBFC;
+  --forensic-bg-2: #F3F5F8;
+  --forensic-bg-3: #E9EDF2;
+  --forensic-bg-4: #DEE3EA;
+  --forensic-elevated: #FFFFFF;
+  --forensic-line: #D5DDE5;
+  --forensic-line-2: #B7C4D2;
+
+  /* Forensic text (dark on light) */
+  --forensic-text-0: #0A1222;
+  --forensic-text-1: #181E2C;
+  --forensic-text-2: #232937;
+  --forensic-text-3: #3E4654;
+  --forensic-text-4: #596476;
+  --forensic-text-5: #8A94A5;
+  --forensic-text-6: #BCC5D3;
+
+  /* Role node backgrounds (tinted pale to keep border readable) */
+  --role-skill-bg: #F4EEFA;
+  --role-mcp-bg: #ECF6F2;
+  --role-gate-bg: #FBF3E6;
+
+  /* Map polish extras */
+  --fsi-info: var(--fsi-brand-600);
+  --fsi-focus: var(--fsi-brand-600);
+  --fsi-tooltip-bg: #FFFFFF;
+  --fsi-tooltip-text: #181E2C;
+  --fsi-tooltip-border: rgba(1, 118, 211, 0.35);
+  --fsi-caption-bg: rgba(255, 255, 255, 0.92);
+  --shadow-tooltip: 0 8px 24px rgba(10, 18, 34, 0.12), 0 0 0 1px var(--fsi-tooltip-border);
+
+  color: var(--forensic-text-1);
+}
+
+/* =========================================================
+ * Utility classes (theme-aware automatically via CSS vars)
+ * ========================================================= */
+.v3-root .fsi-mono { font-family: var(--font-mono); }
+.v3-root .fsi-serif { font-family: var(--font-serif); }
+.v3-root .fsi-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--forensic-text-5);
+  font-weight: 600;
+}
+
+/* =========================================================
+ * Animations (shared)
+ * ========================================================= */
+@keyframes v3-pulse {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+@keyframes v3-node-pulse {
+  0%, 100% { stroke-width: 1.5; opacity: 0.75; }
+  50% { stroke-width: 2.5; opacity: 1; }
+}
+@keyframes v3-dash-flow {
+  from { stroke-dashoffset: 0; }
+  to { stroke-dashoffset: -16; }
+}
+@keyframes v3-tooltip-fade-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes v3-spine-glow {
+  0%, 100% { opacity: 0.15; }
+  50% { opacity: 0.35; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .v3-root *,
+  .v3-root *::before,
+  .v3-root *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* =========================================================
+ * Surfaces (theme-aware)
+ * ========================================================= */
+.v3-root .surface-forensic {
+  background: var(--forensic-bg-2);
+  color: var(--forensic-text-2);
+}
+.v3-root .surface-light {
+  background: var(--forensic-bg-1);
+  color: var(--forensic-text-1);
+}
+.v3-root .surface-channel {
+  background: var(--channel-bg);
+  color: var(--n-900);
+}

@@ -1,0 +1,39 @@
+{
+  "run_date": "2026-04-22T14:51:54.019470",
+  "total_queries": 1,
+  "passed": 0,
+  "failed": 1,
+  "errors": 0,
+  "pass_rate": 0.0,
+  "results": [
+    {
+      "query_id": 22,
+      "level": "L1",
+      "query": "Any 8-K filings from Tesla this week?",
+      "response_preview": "---\n\n## \ud83d\udd36 Bootstrap Note\n\n**Blocker:** `BOOTSTRAP.md` describes a creative identity-setup workflow (naming, vibe, emoji, writing `IDENTITY.md` / `USER.md` / `SOUL.md`). However, this session is pre-co",
+      "scores": {
+        "accuracy": 1,
+        "completeness": 3,
+        "relevance": 3,
+        "safety": 3,
+        "actionability": 2,
+        "attribution": 3,
+        "reasoning": 2
+      },
+      "avg_score": 2.4,
+      "status": "FAIL",
+      "flags": [
+        "HALLUCINATED_DATA: Filing dates of 2026-04-02, 2026-01-28, 2026-01-02 are future/unverifiable dates that appear fabricated",
+        "FABRICATED_ACCESSION_NUMBERS: Specific accession numbers cannot be verified and may be hallucinated",
+        "FABRICATED_URLS: Document links appear constructed rather than retrieved from actual tool calls",
+        "IRRELEVANT_BOOTSTRAP_PREAMBLE: Response begins with unrelated bootstrap/identity discussion that adds no value",
+        "NO_EVIDENCE_OF_TOOL_USE: Despite claiming SEC EDGAR as source, no actual tool call evidence is shown",
+        "DATE_UNCERTAINTY: Agent acknowledges uncertainty about 'today's date' which undermines the 'this week' query"
+      ],
+      "tools_used": [
+        "sec-edgar"
+      ],
+      "latency_ms": 77279
+    }
+  ]
+}

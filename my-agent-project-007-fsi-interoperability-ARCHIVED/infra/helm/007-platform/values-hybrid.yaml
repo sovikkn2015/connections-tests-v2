@@ -1,0 +1,283 @@
+# Project 007 — Hybrid topology (Tier 1/2 firms)
+# On-prem data processing + cloud LLM access via VPN/PrivateLink
+# Runtime: Strands SDK (not Managed Agents)
+# Usage: helm install 007 . -f values.yaml -f values-hybrid.yaml
+#
+# Key differences from cloud topology:
+# - Strands SDK runtime (not Managed Agents)
+# - Self-hosted or Bedrock via VPN LLM
+# - PostgreSQL for M8 checkpoints (not DynamoDB)
+# - MinIO for WORM tier (not S3 Object Lock)
+# - M13 FIX Bridge enabled (StatefulSet)
+# - Reduced replicas (on-prem resource constraints)
+# - PersistentVolumeClaims for stateful modules
+# - mTLS via cert-manager (24hr rotation, Rule 21)
+
+# ─── Global Overrides ────────────────────────────────────────────
+
+global:
+  # Strands SDK for hybrid/on-prem (Rule 1, Rule 3)
+  agentRuntime: strands-sdk
+  # Self-hosted LLM or Bedrock via VPN (Rule 15)
+  llmProvider: self-hosted
+  awsRegion: us-east-1
+  # On-prem image registry (customer-provided)
+  imageRegistry: ""
+  imagePullPolicy: IfNotPresent
+  # Storage class for PVCs (customer sets to local-path, longhorn, etc.)
+  storageClass: ""
+
+# ─── Trust Layer (THE MOAT — M1+M2+M4+M6+M10) ──────────────────
+
+m1Identity:
+  enabled: true
+  replicas: 1  # Reduced for on-prem resource constraints
+  port: 8001
+  env:
+    KEYCLOAK_URL: http://keycloak:8080
+    # mTLS: cert-manager issues certs, mounted via projected volumes
+    # TLS_CERT_PATH: /etc/certs/tls.crt
+    # TLS_KEY_PATH: /etc/certs/tls.key
+  resources:
+    requests: { cpu: 100m, memory: 128Mi }
+    limits: { cpu: 500m, memory: 256Mi }
+
+m2m4Policy:
+  enabled: true
+  replicas: 1
+  port: 8002
+  env:
+    OPA_URL: http://opa:8181
+  resources:
+    requests: { cpu: 100m, memory: 128Mi }
+    limits: { cpu: 500m, memory: 256Mi }
+
+m6McpGateway:
+  enabled: true
+  replicas: 2  # Minimum HA for gateway (cloud uses 3)
+  port: 8006
+  env:
+    REDIS_URL: redis://redis:6379
+    M1_URL: http://m1-identity:8001
+    M2_URL: http://m2-m4-policy:8002
+    M4_URL: http://m2-m4-policy:8002
+    M10_URL: http://m10-audit-logger:8010
+    # On-prem LLM endpoint (customer-provided, or Bedrock via VPN)
+    LLM_ENDPOINT: ""
+  resources:
+    requests: { cpu: 250m, memory: 256Mi }
+    limits: { cpu: "1", memory: 512Mi }
+
+# ─── Intelligence Layer ──────────────────────────────────────────
+
+m8Pipeline:
+  enabled: true
+  replicas: 1  # Single replica on-prem (cloud uses 2)
+  port: 8008
+  env:
+    M6_URL: http://m6-mcp-gateway:8006
+    LLM_MODEL_RESEARCH: claude-sonnet-v4
+    # PostgreSQL for checkpoints on-prem (not DynamoDB)
+    CHECKPOINT_BACKEND: postgresql
+    CHECKPOINT_DB_URL: postgresql://fsi007:@postgres:5432/fsi007_m8
+  resources:
+    requests: { cpu: 250m, memory: 512Mi }
+    limits: { cpu: "1", memory: "1Gi" }
+  # PVC for pipeline state (hybrid uses local storage, not DynamoDB)
+  persistence:
+    enabled: true
+    size: 5Gi
+    storageClass: ""
+
+m9IntentRouter:
+  enabled: true
+  replicas: 1
+  port: 8009
+  env:
+    M1_URL: http://m1-identity:8001
+    M6_URL: http://m6-mcp-gateway:8006
+    LLM_MODEL_ROUTING: claude-haiku-v4
+  resources:
+    requests: { cpu: 100m, memory: 128Mi }
+    limits: { cpu: 500m, memory: 256Mi }
+
+# ─── Audit & Compliance ─────────────────────────────────────────
+
+m10AuditLogger:
+  enabled: true
+  replicas: 2  # HA for audit — fail-closed (Rule 8)
+  port: 8010
+  env:
+    # MinIO for WORM tier on-prem (S3-compatible, not S3 Object Lock)
+    WORM_BACKEND: minio
+    MINIO_ENDPOINT: http://minio:9000
+    MINIO_BUCKET: audit-worm
+    # Langfuse for observability tier
+    LANGFUSE_URL: http://langfuse:3000
+    DATABASE_URL: postgresql://fsi007:@postgres:5432/fsi007_m10
+  resources:
+    requests: { cpu: 100m, memory: 128Mi }
+    limits: { cpu: 500m, memory: 256Mi }
+  # PVC for local audit buffer (survives pod restart before flush to MinIO)
+  persistence:
+    enabled: true
+    size: 10Gi
+    storageClass: ""
+
+# ─── M11 MCP Adapters (Phase 4 — Tier 2/5 expansion) ────────────
+
+m11Adapters:
+  # REST adapters (TypeScript, MCP SDK) — same as cloud
+  rest:
+    enabled: true
+    replicas: 1
+
+  # Bloomberg B-PIPE adapter (Python, blpapi SDK)
+  # Binary protocol, subscription model, 10K+ fields
+  # Requires Bloomberg license + cert, PrivateLink on AWS
+  bloomberg:
+    enabled: true
+    image:
+      repository: 007-fsi/m11-bloomberg-blpapi
+      tag: "0.1.0"
+    replicas: 1
+    port: 8040
+    env:
+      # Bloomberg B-PIPE connection (customer-provided)
+      BLPAPI_SERVER_HOST: ""
+      BLPAPI_SERVER_PORT: "8194"
+      # PrivateLink endpoint for Bloomberg on AWS (Rule 22)
+      BLOOMBERG_PRIVATELINK_ENDPOINT: ""
+      # Subscription topics (comma-separated)
+      BLOOMBERG_TOPICS: ""
+    resources:
+      requests: { cpu: 250m, memory: 512Mi }
+      limits: { cpu: "1", memory: "1Gi" }
+
+  # SS&C Eze xAPI adapter (Python, grpcio)
+  # gRPC proto definitions, hedge fund OMS/EMS
+  ezeGrpc:
+    enabled: true
+    image:
+      repository: 007-fsi/m11-eze-grpc
+      tag: "0.1.0"
+    replicas: 1
+    port: 8041
+    env:
+      EZE_GRPC_ENDPOINT: ""
+      EZE_GRPC_TLS_ENABLED: "true"
+    resources:
+      requests: { cpu: 100m, memory: 256Mi }
+      limits: { cpu: 500m, memory: 512Mi }
+
+  # FactSet MCP-native passthrough (routes through M6 for trust/MNPI)
+  factsetNative:
+    enabled: true
+    image:
+      repository: 007-fsi/m11-factset-native
+      tag: "0.1.0"
+    replicas: 1
+    port: 8042
+    env:
+      FACTSET_MCP_ENDPOINT: ""
+      FACTSET_CLIENT_ID: ""
+      FACTSET_CLIENT_SECRET: ""
+    resources:
+      requests: { cpu: 100m, memory: 128Mi }
+      limits: { cpu: 500m, memory: 256Mi }
+
+# ─── M13 FIX Bridge (StatefulSet — Phase 4) ─────────────────────
+# Stateful FIX 4.2 TCP sessions. Sequence numbers must survive restarts.
+# Separate module from M11 (Rule 11). Called only by M6 (Rule 4).
+
+m13FixBridge:
+  enabled: true  # Enabled in hybrid (disabled in cloud values.yaml)
+  image:
+    repository: 007-fsi/m13-fix-bridge
+    tag: "0.1.0"
+  replicas: 1  # StatefulSet — single instance per broker
+  port: 8030
+  storage:
+    sessionState:
+      size: 10Gi
+      storageClass: ""
+    messageStore:
+      size: 20Gi
+      storageClass: ""
+  env:
+    # FIX session config (customer-provided, no creds in values — Rule 20)
+    FIX_BROKER_HOST: ""
+    FIX_BROKER_PORT: "9876"
+    FIX_SENDER_COMP_ID: ""
+    FIX_TARGET_COMP_ID: ""
+    FIX_PROTOCOL_VERSION: "FIX.4.2"
+    # PostgreSQL for session state on-prem (DynamoDB in cloud)
+    STATE_BACKEND: postgresql
+    STATE_DB_URL: postgresql://fsi007:@postgres:5432/fsi007_m13
+    # Heartbeat interval (seconds)
+    FIX_HEARTBEAT_INTERVAL: "30"
+    # Reconnect policy
+    FIX_RECONNECT_INTERVAL: "5"
+    FIX_MAX_RECONNECT_ATTEMPTS: "10"
+  resources:
+    requests: { cpu: 250m, memory: 256Mi }
+    limits: { cpu: "1", memory: 512Mi }
+
+# ─── Infrastructure (on-prem hosted) ────────────────────────────
+
+postgresql:
+  enabled: true
+  auth:
+    database: fsi007
+  persistence:
+    enabled: true
+    size: 50Gi
+    storageClass: ""
+
+redis:
+  enabled: true
+  persistence:
+    enabled: true
+    size: 5Gi
+    storageClass: ""
+
+opa:
+  enabled: true
+
+minio:
+  enabled: true
+  persistence:
+    enabled: true
+    size: 100Gi
+    storageClass: ""
+
+# ─── Network Policies (on-prem adjustments) ─────────────────────
+# On-prem networks may use non-RFC1918 ranges or custom CIDRs.
+# These overrides allow M6 egress to reach on-prem LLM endpoints
+# and M11-BLPAPI to reach Bloomberg B-PIPE on the local network.
+
+networkPolicy:
+  enabled: true
+  # Additional CIDR blocks for on-prem egress (customer-provided)
+  additionalEgressCIDRs:
+    - ""  # e.g., 10.0.0.0/8 for internal LLM gateway
+  # Allow M13 egress to broker endpoints
+  m13EgressCIDRs:
+    - ""  # e.g., 172.16.0.0/12 for FIX broker network
+  # Allow M11-BLPAPI egress to Bloomberg B-PIPE
+  bloombergEgressCIDRs:
+    - ""  # e.g., Bloomberg PrivateLink CIDR or on-prem B-PIPE
+
+# ─── TLS / mTLS Configuration ───────────────────────────────────
+# All inter-module communication uses mTLS (Rule 21).
+# cert-manager issues short-lived certs (24hr rotation).
+# Customers must install cert-manager and configure an Issuer.
+
+tls:
+  enabled: true
+  # cert-manager ClusterIssuer name (customer-provided)
+  issuerName: ""
+  issuerKind: ClusterIssuer
+  # Certificate duration and renewal
+  duration: 24h
+  renewBefore: 8h

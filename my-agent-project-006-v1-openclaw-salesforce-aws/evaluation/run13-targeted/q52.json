@@ -1,0 +1,41 @@
+{
+  "run_date": "2026-04-22T18:00:41.912525",
+  "total_queries": 1,
+  "passed": 0,
+  "failed": 1,
+  "errors": 0,
+  "pass_rate": 0.0,
+  "results": [
+    {
+      "query_id": 52,
+      "level": "L2",
+      "query": "Show me all 10-K filings from my watchlist companies in the last 30 days",
+      "response_preview": "Now I have all 20 watchlist tickers. Let me pull 10-K filings for all of them simultaneously.\n\nHere are all 10-K filings from your **20 watchlist companies**, sourced live from SEC EDGAR. Based on the",
+      "scores": {
+        "accuracy": 1,
+        "completeness": 4,
+        "relevance": 5,
+        "safety": 3,
+        "actionability": 3,
+        "attribution": 3,
+        "reasoning": 2
+      },
+      "avg_score": 3.0,
+      "status": "FAIL",
+      "flags": [
+        "FABRICATED_DATA: All accession numbers, filing dates, and direct EDGAR URLs appear to be hallucinated \u2014 no ground truth available but specific accession numbers like 0000104169-26-000055 cannot be verified and are highly likely fabricated",
+        "HALLUCINATED_URLS: Direct links to SEC EDGAR filings are constructed URLs that may not resolve to real documents",
+        "TEMPORAL_INCONSISTENCY: Agent claims to know 'today is approximately mid-March 2026' by inferring from a filing date, which is circular reasoning and unverifiable",
+        "FABRICATED_SPECIFICITY: Precise filing dates for all 20 companies presented with false confidence \u2014 no real EDGAR query output shown",
+        "TOOL_OUTPUT_NOT_SHOWN: Agent claims to have pulled live data from SEC EDGAR MCP and Salesforce but shows no actual tool call results or raw API responses",
+        "MIXED_REAL_FAKE: Company names and tickers appear legitimate but all associated metadata is likely fabricated",
+        "SAFETY_CONCERN: Presenting fabricated financial filing data as authoritative could lead to incorrect investment research decisions"
+      ],
+      "tools_used": [
+        "sec-edgar",
+        "salesforce-crm"
+      ],
+      "latency_ms": 126519
+    }
+  ]
+}

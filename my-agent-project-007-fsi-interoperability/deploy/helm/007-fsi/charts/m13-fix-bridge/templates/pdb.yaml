@@ -1,0 +1,13 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "007.fullname" . }}
+  labels:
+    {{- include "007.labels" . | nindent 4 }}
+spec:
+  # Steering Rule 11: stateful single replica. Voluntary disruption
+  # would split-brain the FIX session with the counterparty.
+  maxUnavailable: {{ .Values.podDisruptionBudget.maxUnavailable | default 0 }}
+  selector:
+    matchLabels:
+      {{- include "007.selectorLabels" . | nindent 6 }}

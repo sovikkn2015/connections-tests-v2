@@ -1,0 +1,41 @@
+{
+  "run_date": "2026-04-22T15:43:38.103527",
+  "total_queries": 1,
+  "passed": 0,
+  "failed": 1,
+  "errors": 0,
+  "pass_rate": 0.0,
+  "results": [
+    {
+      "query_id": 53,
+      "level": "L2",
+      "query": "What did Apple's CFO say about services revenue on the last call, and what's the Street expecting?",
+      "response_preview": "**Bootstrap note:** BOOTSTRAP.md asks me to discover my identity collaboratively \u2014 but my system prompt already establishes me as an **FSI Equity Research Agent** with strict tool-use and compliance r",
+      "scores": {
+        "accuracy": 3,
+        "completeness": 2,
+        "relevance": 3,
+        "safety": 5,
+        "actionability": 3,
+        "attribution": 3,
+        "reasoning": 4
+      },
+      "avg_score": 3.3,
+      "status": "FAIL",
+      "flags": [
+        "TOOL_FAILURE: Primary tools (news-search, market-data consensus) unavailable \u2014 core query unanswerable",
+        "INCOMPLETE: No CFO quote provided \u2014 central ask unmet",
+        "INCOMPLETE: No Street estimates provided \u2014 second half of query unmet",
+        "BOOTSTRAP_INJECTION: Response opens with irrelevant BOOTSTRAP.md meta-commentary that pollutes a client-facing output",
+        "UNVERIFIED_CONTEXT: Background paragraph on Services segment is from pre-training, not cited tools \u2014 risk of stale data",
+        "CFO_NAME_RISK: Names Kevan Parekh as CFO without tool verification \u2014 could be outdated"
+      ],
+      "tools_used": [
+        "market-data",
+        "sec-edgar",
+        "news-search"
+      ],
+      "latency_ms": 140078
+    }
+  ]
+}

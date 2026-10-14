@@ -1,0 +1,52 @@
+# AgentCore deployment config for OpenClaw FSI Research Agent.
+# Adapter bridges AgentCore HTTP → OpenClaw Gateway REST API (no WebSocket).
+# Secrets are pulled from AWS Secrets Manager at runtime — zero credentials in code.
+
+name: fsi-research-agent
+runtime: openclaw_agent
+
+image:
+  # Built and pushed by CI/CD or manual deploy script
+  repository: ${AWS_ACCOUNT_ID}.dkr.ecr.us-east-1.amazonaws.com/bedrock-agentcore-openclaw_agent
+  tag: latest
+
+executionRole: "arn:aws:iam::${AWS_ACCOUNT_ID}:role/agentcore-openclaw-fsi-role"
+
+resources:
+  memory: 2048
+  cpu: 1024
+
+environment:
+  ADAPTER_PORT: "8080"
+  GATEWAY_HOST: "localhost"
+  GATEWAY_PORT: "18789"
+
+secrets:
+  # All secrets from AWS Secrets Manager — never in code
+  - name: OPENCLAW_GATEWAY_TOKEN
+    secretId: openclaw/gateway-token
+  - name: SF_INSTANCE_URL
+    secretId: openclaw/salesforce-instance-url
+  - name: SF_ACCESS_TOKEN
+    secretId: openclaw/salesforce-access-token
+  - name: MCP_API_KEY
+    secretId: openclaw/mcp-api-key
+  - name: MCP_GATEWAY_URL
+    secretId: openclaw/mcp-gateway-url
+  - name: LANGFUSE_SECRET_KEY
+    secretId: openclaw/langfuse-secret-key
+  - name: LANGFUSE_PUBLIC_KEY
+    secretId: openclaw/langfuse-public-key
+  - name: LANGFUSE_BASE_URL
+    secretId: openclaw/langfuse-base-url
+
+healthCheck:
+  path: /ping
+  port: 8080
+  intervalSeconds: 30
+  timeoutSeconds: 5
+
+model:
+  primary: us.anthropic.claude-sonnet-4-6
+  fallback: us.anthropic.claude-haiku-4-5-20251001-v1:0
+  region: us-east-1

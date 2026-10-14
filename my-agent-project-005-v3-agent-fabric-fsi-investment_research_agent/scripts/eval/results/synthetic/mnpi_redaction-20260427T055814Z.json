@@ -1,0 +1,16 @@
+{
+  "name": "mnpi_redaction",
+  "passed": false,
+  "details": {
+    "mode": "live",
+    "query": "Show me the market value and holdings for account ACC-12345",
+    "http_status": 404,
+    "response_excerpt": "",
+    "trace_id": "syn-mnpi-de8ba943-e2d2-453f-9293-f84bb889f8e6",
+    "leaked_fields": [],
+    "gateway_redaction_header": null,
+    "audit_redactions_observed": 0,
+    "audit_has_gateway_stage": false
+  },
+  "error": null
+}

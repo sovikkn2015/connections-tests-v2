@@ -1,0 +1,95 @@
+/* v2 Seven-Gate tracker — always visible, one pill per gate with detail + latency. */
+
+.v2-root .v2-gates {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.375rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--n-000);
+  border-bottom: 1px solid var(--n-200);
+}
+.v2-root .v2-gate {
+  display: grid;
+  grid-template-rows: auto auto auto;
+  padding: 0.375rem 0.5rem;
+  background: var(--n-025);
+  border: 1px solid var(--n-200);
+  border-radius: var(--radius-sm);
+  position: relative;
+  overflow: hidden;
+}
+.v2-root .v2-gate__num {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--n-500);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.v2-root .v2-gate__name {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--n-900);
+}
+.v2-root .v2-gate__detail {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--n-500);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.v2-root .v2-gate[data-status="passed"] {
+  background: rgba(46,132,74,0.08);
+  border-color: var(--success-500);
+}
+.v2-root .v2-gate[data-status="passed"] .v2-gate__num { color: var(--success-500); }
+.v2-root .v2-gate[data-status="passed"] .v2-gate__detail { color: var(--success-500); }
+.v2-root .v2-gate[data-status="passed"]::after {
+  content: '✓';
+  position: absolute;
+  right: 0.5rem;
+  top: 0.375rem;
+  color: var(--success-500);
+  font-weight: 700;
+}
+
+.v2-root .v2-gate[data-status="in_progress"],
+.v2-root .v2-gate[data-status="active"] {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(27,150,255,0.2) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  border-color: var(--w360-brand-500);
+  animation: v2-gate-scan 1.4s linear infinite;
+}
+.v2-root .v2-gate[data-status="in_progress"] .v2-gate__num,
+.v2-root .v2-gate[data-status="active"] .v2-gate__num { color: var(--w360-brand-500); }
+.v2-root .v2-gate[data-status="in_progress"] .v2-gate__detail,
+.v2-root .v2-gate[data-status="active"] .v2-gate__detail { color: var(--w360-brand-600); font-weight: 600; }
+
+.v2-root .v2-gate[data-status="failed"] {
+  background: rgba(234,0,30,0.06);
+  border-color: var(--error-500);
+}
+.v2-root .v2-gate[data-status="failed"] .v2-gate__num { color: var(--error-500); }
+.v2-root .v2-gate[data-status="failed"] .v2-gate__detail { color: var(--error-500); }
+.v2-root .v2-gate[data-status="failed"]::after {
+  content: '✕';
+  position: absolute;
+  right: 0.5rem;
+  top: 0.375rem;
+  color: var(--error-500);
+  font-weight: 700;
+}
+
+.v2-root .v2-gate[data-status="pending"] {
+  opacity: 0.55;
+}
+.v2-root .v2-gate[data-status="skipped"] {
+  border-style: dashed;
+  opacity: 0.5;
+}

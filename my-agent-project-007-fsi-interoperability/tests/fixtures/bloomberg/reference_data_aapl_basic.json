@@ -1,0 +1,20 @@
+{
+  "data": {
+    "ReferenceDataResponse": {
+      "securityData": [
+        {
+          "security": "AAPL US Equity",
+          "fieldData": {
+            "PX_LAST": 189.46,
+            "MKT_CAP": 2950000000000,
+            "INDUSTRY_SECTOR": "Technology",
+            "INDUSTRY_GROUP": "Consumer Electronics",
+            "NAME": "Apple Inc"
+          }
+        }
+      ]
+    }
+  },
+  "partial": false,
+  "vendor_response_code": 0
+}

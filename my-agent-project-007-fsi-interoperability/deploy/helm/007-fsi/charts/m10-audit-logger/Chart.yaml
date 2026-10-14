@@ -1,0 +1,15 @@
+apiVersion: v2
+name: m10-audit-logger
+description: M10 Audit Logger -- 3-tier WORM audit (Langfuse + S3 Object Lock + CRM) for Project 007 trust layer.
+type: application
+version: 0.1.0
+appVersion: "0.3.0"
+keywords:
+  - fsi
+  - audit
+  - worm
+  - langfuse
+  - s3-object-lock
+maintainers:
+  - name: Project 007 Platform Team
+    email: platform@example.invalid

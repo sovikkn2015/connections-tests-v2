@@ -1,0 +1,39 @@
+{
+  "run_date": "2026-04-22T17:07:54.096861",
+  "total_queries": 1,
+  "passed": 1,
+  "failed": 0,
+  "errors": 0,
+  "pass_rate": 100.0,
+  "results": [
+    {
+      "query_id": 5,
+      "level": "L1",
+      "query": "MSFT volume today vs 30-day average",
+      "response_preview": "**MSFT Volume Today vs. 30-Day Average**\n\n| Metric | Value |\n|---|---|\n| **Today's Volume (Apr 22)** | 14,773,396 |\n| **30-Day Avg Daily Volume** | ~32,878,840 |\n| **vs. 30-Day Avg** | **~45% of avera",
+      "scores": {
+        "accuracy": 2,
+        "completeness": 4,
+        "relevance": 5,
+        "safety": 4,
+        "actionability": 4,
+        "attribution": 3,
+        "reasoning": 3
+      },
+      "avg_score": 3.6,
+      "status": "PASS",
+      "flags": [
+        "no_ground_truth_available",
+        "possible_hallucinated_numbers",
+        "intraday_partial_data_not_flagged_prominently",
+        "30day_average_cannot_be_verified",
+        "specific_historical_volume_dates_unverifiable",
+        "date_2026_is_future_date_suggesting_fabrication"
+      ],
+      "tools_used": [
+        "market-data"
+      ],
+      "latency_ms": 74418
+    }
+  ]
+}

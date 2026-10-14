@@ -1,0 +1,13 @@
+# Project 006 v3 - initiate-wire Process API configuration.
+# NON-SECRET only. Flat keys, all values quoted strings (Mule 4.9 requires String type).
+
+dwolla.endpoint_host: "api-sandbox.dwolla.com"
+dwolla.endpoint_path: "/"
+dwolla.token_host: "api-sandbox.dwolla.com"
+dwolla.token_path: "/token"
+
+ofac.sdn_url: "https://www.treasury.gov/ofac/downloads/sdn.xml"
+
+wire.dual_auth_threshold_usd: "100000"
+
+mock_mode: "false"

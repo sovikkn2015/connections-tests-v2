@@ -1,0 +1,210 @@
+{
+  "$defs": {
+    "ComplianceCheckInputContext": {
+      "description": "What was checked in a compliance evaluation.",
+      "properties": {
+        "security_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Security identifier checked.",
+          "title": "Security Id"
+        },
+        "client_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Client ID checked.",
+          "title": "Client Id"
+        },
+        "action": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Action being evaluated.",
+          "title": "Action"
+        },
+        "archetype": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Firm archetype context.",
+          "title": "Archetype"
+        },
+        "account_type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Account type context.",
+          "title": "Account Type"
+        }
+      },
+      "title": "ComplianceCheckInputContext",
+      "type": "object"
+    },
+    "ComplianceCheckType": {
+      "description": "12 compliance check types evaluated by M2 OPA rules.",
+      "enum": [
+        "restricted_list",
+        "concentration_limit",
+        "trading_window",
+        "suitability",
+        "chinese_wall",
+        "pod_isolation",
+        "mnpi_filter",
+        "erisa_prohibited_transaction",
+        "rmd_check",
+        "bsa_aml_ctr",
+        "bsa_aml_sar",
+        "sanctions_screen"
+      ],
+      "title": "ComplianceCheckType",
+      "type": "string"
+    },
+    "ComplianceDecision": {
+      "description": "5 compliance decision outcomes from OPA evaluation.",
+      "enum": [
+        "ALLOW",
+        "DENY",
+        "WARN",
+        "REQUIRE_APPROVAL",
+        "ESCALATE"
+      ],
+      "title": "ComplianceDecision",
+      "type": "string"
+    }
+  },
+  "description": "Result of a deterministic OPA compliance check. NOT LLM-generated.",
+  "properties": {
+    "check_id": {
+      "description": "Primary key for this compliance check result.",
+      "format": "uuid",
+      "title": "Check Id",
+      "type": "string"
+    },
+    "check_type": {
+      "$ref": "#/$defs/ComplianceCheckType",
+      "description": "Type of compliance check performed."
+    },
+    "decision": {
+      "$ref": "#/$defs/ComplianceDecision",
+      "description": "Compliance decision: ALLOW, DENY, WARN, REQUIRE_APPROVAL, ESCALATE."
+    },
+    "reason": {
+      "description": "Human-readable reason for the decision.",
+      "title": "Reason",
+      "type": "string"
+    },
+    "rule_applied": {
+      "description": "OPA rule path (e.g., authority/restricted_list.rego:check_restricted_list).",
+      "title": "Rule Applied",
+      "type": "string"
+    },
+    "policy_bundle_version": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "OPA bundle version for audit trail.",
+      "title": "Policy Bundle Version"
+    },
+    "wsp_section": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "WSP section this rule maps to (ARCH-06 Gap 3, steering rule 19).",
+      "title": "Wsp Section"
+    },
+    "input_context": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ComplianceCheckInputContext"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "What was checked."
+    },
+    "details": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Additional context (e.g., concentration percentage).",
+      "title": "Details"
+    },
+    "evaluated_at": {
+      "description": "When the check was evaluated.",
+      "format": "date-time",
+      "title": "Evaluated At",
+      "type": "string"
+    },
+    "trace_id": {
+      "description": "Links to M10 audit trail.",
+      "title": "Trace Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "check_id",
+    "check_type",
+    "decision",
+    "reason",
+    "rule_applied",
+    "evaluated_at",
+    "trace_id"
+  ],
+  "title": "ComplianceCheck",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://007.fsi/schemas/canonical/compliance-check/v0.1.0"
+}

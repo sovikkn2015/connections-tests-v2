@@ -1,0 +1,147 @@
+{
+  "run_date": "2026-04-26T11:29:43.780052",
+  "total_queries": 5,
+  "passed": 3,
+  "failed": 2,
+  "errors": 0,
+  "pass_rate": 60.0,
+  "results": [
+    {
+      "query_id": 1,
+      "level": "L1",
+      "query": "What's NVIDIA trading at?",
+      "response_preview": "The market-data MCP server is not reachable in this environment, and fallback data APIs are also unavailable (Yahoo Finance returned 429; Finnhub demo key returned 401). Per my operating rules, **I ca",
+      "scores": {
+        "accuracy": 5,
+        "completeness": 3,
+        "relevance": 4,
+        "safety": 5,
+        "actionability": 4,
+        "attribution": 4,
+        "reasoning": 5
+      },
+      "avg_score": 4.3,
+      "status": "PASS",
+      "flags": [
+        "Unable to provide requested price data",
+        "MCP server unavailable",
+        "No BOOTSTRAP.md found indicating incomplete workspace setup"
+      ],
+      "tools_used": [
+        "market-data"
+      ],
+      "latency_ms": 84835
+    },
+    {
+      "query_id": 3,
+      "level": "L1",
+      "query": "Give me TSLA's 52-week high and low",
+      "response_preview": "No BOOTSTRAP.md exists in this workspace \u2014 nothing to execute. Proceeding directly to the question.\n\nThe market-data MCP is not available in this environment, and the fallback web fetch calls to Yahoo",
+      "scores": {
+        "accuracy": 5,
+        "completeness": 2,
+        "relevance": 3,
+        "safety": 5,
+        "actionability": 3,
+        "attribution": 3,
+        "reasoning": 4
+      },
+      "avg_score": 3.6,
+      "status": "PASS",
+      "flags": [
+        "tool_unavailable",
+        "incomplete_answer",
+        "no_actual_data_returned",
+        "rate_limiting_encountered"
+      ],
+      "tools_used": [
+        "market-data"
+      ],
+      "latency_ms": 82275
+    },
+    {
+      "query_id": 10,
+      "level": "L1",
+      "query": "Where's crude oil trading?",
+      "response_preview": "No `BOOTSTRAP.md` was found in the workspace \u2014 there's nothing to execute. Moving directly to your question.\n\nWTI Crude Oil (front-month futures, **CL=F**) last traded at **$94.40/bbl**, based on the ",
+      "scores": {
+        "accuracy": 1,
+        "completeness": 3,
+        "relevance": 3,
+        "safety": 4,
+        "actionability": 3,
+        "attribution": 2,
+        "reasoning": 2
+      },
+      "avg_score": 2.6,
+      "status": "FAIL",
+      "flags": [
+        "FABRICATED_DATA: Specific price figures ($94.40, $96.62, $97.85, $92.68) cannot be verified and are likely hallucinated \u2014 no ground truth available and Stooq CSV feed claim is unverifiable",
+        "UNVERIFIED_SOURCE: Agent claims data from 'Stooq CSV feed' but there is no confirmation this was actually retrieved vs. confabulated",
+        "TOOL_FAILURE: Expected tool was Market Data MCP which was not used \u2014 fallback methodology is questionable",
+        "DATE_PLAUSIBILITY: Session date of April 24, 2026 is a future date relative to most training data, raising serious concerns about data authenticity",
+        "EXCESSIVE_BOILERPLATE: BOOTSTRAP.md commentary is irrelevant noise for a PM asking a simple market question"
+      ],
+      "tools_used": [
+        "market-data"
+      ],
+      "latency_ms": 78791
+    },
+    {
+      "query_id": 21,
+      "level": "L1",
+      "query": "Show me NVIDIA's latest 10-Q",
+      "response_preview": "No BOOTSTRAP.md exists in the workspace \u2014 nothing to execute there. Moving directly to your request.\n\nThe most recent 10-Q is for the period ending **October 26, 2025** (filed November 19, 2025). Let ",
+      "scores": {
+        "accuracy": 2,
+        "completeness": 3,
+        "relevance": 4,
+        "safety": 4,
+        "actionability": 3,
+        "attribution": 2,
+        "reasoning": 2
+      },
+      "avg_score": 2.9,
+      "status": "FAIL",
+      "flags": [
+        "UNVERIFIED_FUTURE_DATES: Filing dates of Oct 26 2025 and Nov 19 2025 are plausible but cannot be verified without ground truth \u2014 agent presents these as confirmed facts",
+        "TOOL_MISREPRESENTATION: Agent claims sec-edgar MCP was not connected yet presents structured data as if retrieved from EDGAR API \u2014 unclear provenance",
+        "POTENTIAL_HALLUCINATION: Accession numbers, filing history table, and specific document filenames (nvda-20251026.htm) may be fabricated or extrapolated rather than actually retrieved",
+        "NO_FINANCIAL_CONTENT: Query asked to 'show' the 10-Q but no actual financial data (revenue, EPS, balance sheet) was extracted from the filing",
+        "BOOTSTRAP_MD_REFERENCE: Irrelevant mention of BOOTSTRAP.md at the start adds confusion and suggests agent is operating in unexpected context",
+        "SOURCE_AMBIGUITY: Attribution says 'retrieved via web fetch' but no actual URL fetch confirmation or raw data shown to validate claims"
+      ],
+      "tools_used": [
+        "sec-edgar"
+      ],
+      "latency_ms": 63922
+    },
+    {
+      "query_id": 25,
+      "level": "L1",
+      "query": "Any news about Tesla today?",
+      "response_preview": "I don't have a `news-search MCP` tool available in this environment. Per my operating rules, I must call the news-search MCP for any news/headlines question \u2014 and since that tool is not present in my ",
+      "scores": {
+        "accuracy": 5,
+        "completeness": 2,
+        "relevance": 3,
+        "safety": 5,
+        "actionability": 3,
+        "attribution": 3,
+        "reasoning": 4
+      },
+      "avg_score": 3.6,
+      "status": "PASS",
+      "flags": [
+        "Tool not available \u2014 news MCP missing from environment",
+        "No actual Tesla news delivered",
+        "Partial completeness \u2014 query unanswered, only a redirect offered"
+      ],
+      "tools_used": [
+        "market-data",
+        "news-search"
+      ],
+      "latency_ms": 44527
+    }
+  ]
+}

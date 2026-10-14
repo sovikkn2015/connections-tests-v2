@@ -1,0 +1,32 @@
+# -----------------------------------------------------------------------------
+# Project 007 FSI Interoperability Platform -- umbrella defaults.
+#
+# This file is the helm-defaults fallback for when no topology-specific
+# values file is supplied. For production installs, ALWAYS pass one of:
+#
+#   helm install 007-fsi . -f values-cloud.yaml
+#   helm install 007-fsi . -f values-cloud.yaml -f values-hybrid.yaml   (Phase 4)
+#   helm install 007-fsi . -f values-onprem.yaml                        (deferred)
+#
+# Wave 1 shipped values-cloud.yaml; Wave 4 adds values-hybrid.yaml and
+# values-egress-narrowing defaults (see VALUES-EGRESS-README.md).
+# On-prem is deferred (Steering Rule 27).
+# -----------------------------------------------------------------------------
+
+global:
+  # Wave 4 egress narrowing. `allow-all` is the helm-default posture for
+  # Wave 1 backward compat -- every NetworkPolicy renders `egress: [{}]`
+  # so no-values installs still produce a runnable workload for CI smoke
+  # tests. values-cloud.yaml flips this to `allowlist` for the production
+  # SOC 2 CC6.1 posture.
+  networkPolicy:
+    egressMode: allow-all
+
+# Intelligence-layer sub-charts disabled by default -- see values-cloud.yaml
+# for topology-specific overrides.
+m8-pipeline-engine:
+  enabled: false
+m9-intent-router:
+  enabled: false
+m12-supervisor:
+  enabled: false

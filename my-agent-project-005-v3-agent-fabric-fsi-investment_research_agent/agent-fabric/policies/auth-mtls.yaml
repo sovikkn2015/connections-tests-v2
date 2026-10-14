@@ -1,0 +1,16 @@
+# mTLS Authentication — replaces plain API key
+apiVersion: gateway.mulesoft.com/v1alpha1
+kind: PolicyBinding
+metadata:
+  name: mtls-auth
+spec:
+  targetRef:
+    kind: ApiInstance
+    name: fsi-mcp-servers
+  policyRef:
+    name: tls-inbound
+  config:
+    requireClientCertificate: true
+    trustedCAs:
+      - secretRef: fsi-agent-ca-cert
+    fallbackToApiKey: true  # allow API key during migration from V2

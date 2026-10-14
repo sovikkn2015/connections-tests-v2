@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<AiEvaluationDefinition xmlns="http://soap.sforce.com/2006/04/metadata">
+    <name>WA_Advisor_v2_Test</name>
+    <subjectName>WA_Advisor_v2</subjectName>
+    <subjectType>AGENT</subjectType>
+    <testCase>
+        <number>1</number>
+        <inputs>
+            <utterance>Tell me about the Johnsons</utterance>
+        </inputs>
+        <expectation>
+            <expectedValue>client_lookup</expectedValue>
+            <name>topic_sequence_match</name>
+        </expectation>
+        <expectation>
+            <expectedValue>[&apos;get_client_360&apos;]</expectedValue>
+            <name>action_sequence_match</name>
+        </expectation>
+        <expectation>
+            <expectedValue>The agent returns information about the Johnson household including members and AUM</expectedValue>
+            <name>bot_response_rating</name>
+        </expectation>
+    </testCase>
+    <testCase>
+        <number>2</number>
+        <inputs>
+            <utterance>How is Wei Chen&apos;s portfolio?</utterance>
+        </inputs>
+        <expectation>
+            <expectedValue>portfolio_review</expectedValue>
+            <name>topic_sequence_match</name>
+        </expectation>
+        <expectation>
+            <expectedValue>[&apos;get_portfolio_summary&apos;]</expectedValue>
+            <name>action_sequence_match</name>
+        </expectation>
+        <expectation>
+            <expectedValue>The agent returns portfolio allocation and YTD returns for Wei Chen</expectedValue>
+            <name>bot_response_rating</name>
+        </expectation>
+    </testCase>
+    <testCase>
+        <number>3</number>
+        <inputs>
+            <utterance>What are the Patels&apos; goals?</utterance>
+        </inputs>
+        <expectation>
+            <expectedValue>goal_planning</expectedValue>
+            <name>topic_sequence_match</name>
+        </expectation>
+        <expectation>
+            <expectedValue>[&apos;get_financial_goals&apos;]</expectedValue>
+            <name>action_sequence_match</name>
+        </expectation>
+        <expectation>
+            <expectedValue>The agent returns financial goals with progress for the Patel family</expectedValue>
+            <name>bot_response_rating</name>
+        </expectation>
+    </testCase>
+    <testCase>
+        <number>4</number>
+        <inputs>
+            <utterance>Prep me for my meeting with Carlos</utterance>
+        </inputs>
+        <expectation>
+            <expectedValue>meeting_prep</expectedValue>
+            <name>topic_sequence_match</name>
+        </expectation>
+        <expectation>
+            <expectedValue>[&apos;get_meeting_prep&apos;]</expectedValue>
+            <name>action_sequence_match</name>
+        </expectation>
+        <expectation>
+            <expectedValue>The agent returns a meeting brief for Carlos Martinez</expectedValue>
+            <name>bot_response_rating</name>
+        </expectation>
+    </testCase>
+    <testCase>
+        <number>5</number>
+        <inputs>
+            <utterance>Transfer me to compliance</utterance>
+        </inputs>
+        <expectation>
+            <expectedValue>escalation</expectedValue>
+            <name>topic_sequence_match</name>
+        </expectation>
+        <expectation>
+            <expectedValue>[&apos;escalate_to_human&apos;]</expectedValue>
+            <name>action_sequence_match</name>
+        </expectation>
+        <expectation>
+            <expectedValue>The agent escalates to a human specialist</expectedValue>
+            <name>bot_response_rating</name>
+        </expectation>
+    </testCase>
+    <testCase>
+        <number>6</number>
+        <inputs>
+            <utterance>What&apos;s the stock price of Apple?</utterance>
+        </inputs>
+        <expectation>
+            <expectedValue>off_topic</expectedValue>
+            <name>topic_sequence_match</name>
+        </expectation>
+        <expectation>
+            <expectedValue>The agent redirects the user to relevant wealth advisory topics</expectedValue>
+            <name>bot_response_rating</name>
+        </expectation>
+    </testCase>
+</AiEvaluationDefinition>

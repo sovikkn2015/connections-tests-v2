@@ -1,0 +1,180 @@
+# Agent Network Definition — 005 V3
+# Defines all agents, MCP servers, and routing policies for Agent Fabric
+# Created in Anypoint Code Builder: "MuleSoft: Create an Agent Network Project"
+
+apiVersion: agent-fabric/v1
+kind: AgentNetwork
+metadata:
+  name: fsi-investment-research-v3
+  description: >-
+    FSI Investment Research multi-agent network. Agentforce orchestrator
+    + Strands analysis agents + MCP data servers. Governed by Flex Gateway.
+  labels:
+    project: "005-v3"
+    domain: "fsi"
+    environment: "production"
+
+# ── Agent Registry: all discoverable agents ──────────────────────────
+agents:
+  - id: ir-research-orchestrator
+    name: IR Research Orchestrator
+    type: agentforce
+    platform: salesforce
+    description: >-
+      Primary orchestrator agent. Routes queries to CRM actions, MCP tools,
+      or Strands analysis agents based on query complexity (L1-L4).
+    capabilities:
+      - company-lookup
+      - coverage-check
+      - earnings-calendar
+      - watchlist-management
+      - research-brief-orchestration
+      - compliance-screening
+    endpoint:
+      type: salesforce-agent-api
+      agentId: "IR_Research_Agent"
+
+  - id: ir-compliance-agent
+    name: IR Compliance Agent
+    type: agentforce
+    platform: salesforce
+    description: >-
+      Compliance screening agent. Checks restricted list, MNPI flags,
+      trading windows, and concentration limits.
+    capabilities:
+      - restricted-list-check
+      - mnpi-check
+      - trading-window-check
+      - concentration-check
+    endpoint:
+      type: salesforce-agent-api
+      agentId: "IR_Compliance_Agent"
+
+  - id: financial-analysis-agent
+    name: Financial Analysis Agent
+    type: strands
+    platform: aws-lambda
+    description: >-
+      Strands SDK agent on Lambda. Runs DCF, comps, Monte Carlo, and
+      fair value calculations using Bedrock Claude.
+    capabilities:
+      - dcf-valuation
+      - comparable-analysis
+      - monte-carlo-simulation
+      - fair-value-estimate
+    endpoint:
+      type: http
+      url: "${MCP_GATEWAY_URL}/financial-analysis/agent"
+      auth: api-key
+
+  - id: sentiment-analysis-agent
+    name: Sentiment Analysis Agent
+    type: strands
+    platform: aws-lambda
+    description: >-
+      Strands SDK agent on Lambda. Analyzes earnings transcripts, news
+      sentiment, and tone shifts using Bedrock Claude + Comprehend.
+    capabilities:
+      - transcript-analysis
+      - news-sentiment-scoring
+      - tone-shift-detection
+      - sentiment-aggregation
+    endpoint:
+      type: http
+      url: "${MCP_GATEWAY_URL}/sentiment-analysis/agent"
+      auth: api-key
+
+# ── MCP Servers: all discoverable tools ──────────────────────────────
+mcpServers:
+  - id: sec-edgar
+    name: SEC EDGAR MCP Server
+    description: SEC filing retrieval — 10-K, 10-Q, 8-K, insider transactions
+    tools:
+      - get_10k
+      - get_10q
+      - get_8k
+      - get_insider_transactions
+    endpoint:
+      url: "${MCP_GATEWAY_URL}/sec-edgar"
+      auth: api-key
+    dataSource: SEC EDGAR API (public)
+
+  - id: market-data
+    name: Market Data MCP Server
+    description: Real-time quotes, price history, analyst consensus, options
+    tools:
+      - get_quote
+      - get_price_history
+      - get_analyst_consensus
+      - get_options_chain
+    endpoint:
+      url: "${MCP_GATEWAY_URL}/market-data"
+      auth: api-key
+    dataSource: Alpha Vantage / Finnhub
+
+  - id: news-search
+    name: News Search MCP Server
+    description: Financial news search, headlines, sentiment
+    tools:
+      - search_financial_news
+      - get_headlines
+      - get_news_sentiment
+    endpoint:
+      url: "${MCP_GATEWAY_URL}/news-search"
+      auth: api-key
+    dataSource: Tavily
+
+# ── Agent Broker: routing policies ───────────────────────────────────
+routing:
+  defaultAgent: ir-research-orchestrator
+
+  policies:
+    - name: l1-l2-direct-tools
+      description: Simple lookups go directly to MCP tools via orchestrator
+      match:
+        queryPatterns:
+          - "price of *"
+          - "quote for *"
+          - "who covers *"
+          - "latest 10-K *"
+          - "news on *"
+      route:
+        agent: ir-research-orchestrator
+        model: haiku
+
+    - name: l3-l4-analysis
+      description: Deep analysis routes to Strands agents
+      match:
+        queryPatterns:
+          - "deep dive *"
+          - "research brief *"
+          - "DCF valuation *"
+          - "fair value *"
+          - "initiate coverage *"
+      route:
+        agent: ir-research-orchestrator
+        model: sonnet
+        delegateTo:
+          - financial-analysis-agent
+          - sentiment-analysis-agent
+
+    - name: compliance-routing
+      description: Compliance queries route to dedicated compliance agent
+      match:
+        queryPatterns:
+          - "restricted list *"
+          - "can I trade *"
+          - "compliance check *"
+          - "MNPI *"
+      route:
+        agent: ir-compliance-agent
+
+# ── Governance: Flex Gateway policies ────────────────────────────────
+governance:
+  gateway: flex-gateway
+  policies:
+    - $ref: "./policies/mnpi-filter.yaml"
+    - $ref: "./policies/rate-limit.yaml"
+    - $ref: "./policies/circuit-breaker.yaml"
+    - $ref: "./policies/finra-audit.yaml"
+    - $ref: "./policies/auth-mtls.yaml"

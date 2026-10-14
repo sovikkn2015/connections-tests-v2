@@ -1,0 +1,22 @@
+[
+  {"id":1,"level":"L1","category":"L1-MKT","persona":"ERA","query":"What's NVIDIA trading at?","tools":["Market Data MCP"],"expectedBehavior":"Returns current NVDA price"},
+  {"id":2,"level":"L1","category":"L1-MKT","persona":"PM","query":"AAPL bid-ask spread right now","tools":["Market Data MCP"],"expectedBehavior":"Returns current AAPL bid-ask spread"},
+  {"id":3,"level":"L1","category":"L1-MKT","persona":"ERA","query":"Give me TSLA's 52-week high and low","tools":["Market Data MCP"],"expectedBehavior":"Returns TSLA 52-week range"},
+  {"id":4,"level":"L1","category":"L1-MKT","persona":"PM","query":"What's the S&P 500 at?","tools":["Market Data MCP"],"expectedBehavior":"Returns current S&P 500 level"},
+  {"id":5,"level":"L1","category":"L1-MKT","persona":"ERA","query":"MSFT volume today vs 30-day average","tools":["Market Data MCP"],"expectedBehavior":"Returns MSFT current volume and 30-day average comparison"},
+  {"id":6,"level":"L1","category":"L1-MKT","persona":"ERA","query":"What's AMD's market cap?","tools":["Market Data MCP"],"expectedBehavior":"Returns AMD market capitalization"},
+  {"id":9,"level":"L1","category":"L1-MKT","persona":"PM","query":"10-year Treasury yield right now","tools":["Market Data MCP"],"expectedBehavior":"Returns current 10-year Treasury yield"},
+  {"id":10,"level":"L1","category":"L1-MKT","persona":"PM","query":"Where's crude oil trading?","tools":["Market Data MCP"],"expectedBehavior":"Returns current crude oil price"},
+  {"id":21,"level":"L1","category":"L1-EXT","persona":"ERA","query":"Show me NVIDIA's latest 10-Q","tools":["SEC EDGAR MCP"],"expectedBehavior":"Returns NVDA latest 10-Q filing"},
+  {"id":24,"level":"L1","category":"L1-EXT","persona":"ERA","query":"Any insider transactions at Microsoft recently?","tools":["SEC EDGAR MCP"],"expectedBehavior":"Returns recent MSFT insider transaction filings"},
+  {"id":25,"level":"L1","category":"L1-EXT","persona":"ERA","query":"Any news about Tesla today?","tools":["News MCP"],"expectedBehavior":"Returns today's TSLA news headlines"},
+  {"id":26,"level":"L1","category":"L1-EXT","persona":"PM","query":"What's the latest on the Fed rate decision?","tools":["News MCP"],"expectedBehavior":"Returns latest Fed rate decision news"},
+  {"id":28,"level":"L1","category":"L1-EXT","persona":"ERA","query":"Headlines on the NVDA-ARM deal","tools":["News MCP"],"expectedBehavior":"Returns news headlines about NVDA-ARM deal"},
+  {"id":30,"level":"L1","category":"L1-EXT","persona":"ERA","query":"Any news about layoffs in the tech sector?","tools":["News MCP"],"expectedBehavior":"Returns tech sector layoff news"},
+  {"id":11,"level":"L1","category":"L1-CRM","persona":"ERA","query":"Who covers Apple on our team?","tools":["SF skill (SOQL)"],"expectedBehavior":"Returns analyst covering AAPL from CRM"},
+  {"id":13,"level":"L1","category":"L1-CRM","persona":"ERA","query":"What's on my watchlist?","tools":["SF skill (SOQL)"],"expectedBehavior":"Returns user's watchlist from IR_Watchlist__c"},
+  {"id":31,"level":"L2","category":"L2-EARN","persona":"ERA","query":"What's happening with NVIDIA ahead of earnings?","tools":["Market Data MCP","News MCP","SF skill (SOQL)"],"expectedBehavior":"Returns NVDA pre-earnings summary combining price action, news, and CRM context"},
+  {"id":33,"level":"L2","category":"L2-EARN","persona":"ERA","query":"What's consensus expecting for MSFT this quarter?","tools":["Market Data MCP","SF skill (SOQL)"],"expectedBehavior":"Returns MSFT consensus estimates from market data and CRM"},
+  {"id":34,"level":"L2","category":"L2-EARN","persona":"ERA","query":"How has GOOGL stock reacted to the last 4 earnings?","tools":["Market Data MCP"],"expectedBehavior":"Returns GOOGL historical earnings reactions"},
+  {"id":36,"level":"L2","category":"L2-EARN","persona":"ERA","query":"Which of my covered stocks report next week?","tools":["SF skill (SOQL)","Market Data MCP"],"expectedBehavior":"Returns upcoming earnings from user's coverage universe"}
+]

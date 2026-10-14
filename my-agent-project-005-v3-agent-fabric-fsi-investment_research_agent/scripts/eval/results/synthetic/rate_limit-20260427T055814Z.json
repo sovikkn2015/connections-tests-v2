@@ -1,0 +1,13 @@
+{
+  "name": "rate_limit",
+  "passed": false,
+  "details": {
+    "mode": "live",
+    "total_sent": 60,
+    "elapsed_s": 1.386,
+    "status_2xx": 0,
+    "status_429": 0,
+    "status_other": 60
+  },
+  "error": null
+}

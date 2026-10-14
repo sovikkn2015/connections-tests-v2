@@ -1,0 +1,11 @@
+# Project 006 v3 - order-status-webhook Process API configuration.
+# NON-SECRET only. All string values (Mule 4.9 requires String type).
+#
+# mcp.endpoint_host default is localhost so the HTTP request config
+# resolves at Mule startup. The real MCP API Gateway host is injected
+# via CloudHub Runtime Manager properties at deploy time, which
+# overrides this default before runtime flows execute.
+
+mcp.endpoint_host: "localhost"
+mcp.endpoint_path: "/v3/mcp/mulesoft-actions/tools/call"
+mock_mode: "false"

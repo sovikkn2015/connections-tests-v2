@@ -1,0 +1,24 @@
+{
+  "minMuleVersion": "4.9.0",
+  "name": "order-status-webhook-process-api",
+  "configs": [
+    "order-status-webhook.xml"
+  ],
+  "redeploymentEnabled": true,
+  "secureProperties": [
+    "webhook.hmac_secret",
+    "mcp.api_key"
+  ],
+  "requiredProduct": "MULE_EE",
+  "supportedJavaVersions": ["17"],
+  "classLoaderModelLoaderDescriptor": {
+    "id": "mule",
+    "attributes": {
+      "exportedResources": [
+        "config.yaml",
+        "transforms/mcp-call.dwl",
+        "api/order-status-webhook.raml"
+      ]
+    }
+  }
+}

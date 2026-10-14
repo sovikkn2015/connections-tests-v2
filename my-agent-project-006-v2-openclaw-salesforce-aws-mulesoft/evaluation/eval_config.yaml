@@ -1,0 +1,19 @@
+# v2 Phase 6: AgentCore is the default runtime. No localhost fallback
+# (.kiro/steering/006-v2-mulesoft.md rule 17). The eval suite uses the
+# AgentCore SDK (boto3 invoke_agent_runtime); gateway_url is retained for
+# any HTTP-based eval tooling and must be the AgentCore invoke endpoint.
+gateway_url: "${AGENTCORE_GATEWAY_URL}"  # no localhost fallback
+gateway_token: "${OPENCLAW_GATEWAY_TOKEN}"
+agent_id: "fsi-research"
+judge_model: "us.anthropic.claude-sonnet-4-6"
+langfuse:
+  secret_key: "${LANGFUSE_SECRET_KEY}"
+  public_key: "${LANGFUSE_PUBLIC_KEY}"
+  base_url: "${LANGFUSE_BASE_URL}"
+thresholds:
+  L1: 4.5
+  L2: 4.0
+  L3: 3.5
+  L4: 3.0
+  L5: 3.5
+  Edge: "refusal"

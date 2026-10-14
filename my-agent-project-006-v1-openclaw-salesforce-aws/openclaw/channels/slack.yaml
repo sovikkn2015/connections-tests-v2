@@ -1,0 +1,28 @@
+# ==========================================================================
+# Slack Channel — FSI Research Agent
+# Project 006: OpenClaw + Salesforce + AWS
+#
+# Prerequisites:
+#   1. Create a Slack App at https://api.slack.com/apps
+#   2. Enable Socket Mode (generates App Token)
+#   3. Add Bot Token Scopes: chat:write, app_mentions:read, im:history
+#   4. Install the app to your workspace (generates Bot Token)
+#   5. Store tokens in AWS Secrets Manager or environment variables
+#
+# Setup guide: https://docs.openclaw.ai/channels/slack
+# ==========================================================================
+
+type: slack
+enabled: true
+
+config:
+  # Bot Token — starts with xoxb-
+  # From: Slack App → OAuth & Permissions → Bot User OAuth Token
+  bot_token: "${SLACK_BOT_TOKEN}"
+
+  # App Token — starts with xapp-
+  # From: Slack App → Basic Information → App-Level Tokens (connections:write scope)
+  app_token: "${SLACK_APP_TOKEN}"
+
+  # Default agent to route messages to
+  default_agent: "fsi-research"

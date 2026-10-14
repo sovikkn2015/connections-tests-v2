@@ -1,0 +1,26 @@
+{
+  "id": 4,
+  "text": "NVDA quote",
+  "expected_category": "live_quote",
+  "expected_path": "ORCH->GW->MCP:market-data.get_quote",
+  "judge_pass": true,
+  "judge_score": 1.0,
+  "judge_reason": "Response includes current price ($208.27) and multiple numeric data points (change, change_percent, volume, high, low, open, previous_close,",
+  "response_excerpt": "{\"tool\": \"get_quote\", \"ticker\": \"NVDA\", \"quote\": {\"price\": \"208.2700\", \"change\": \"8.6300\", \"change_percent\": \"4.3228%\", \"volume\": \"214134441\", \"high\": \"210.9500\", \"low\": \"199.8100\", \"open\": \"199.9600\", \"previous_close\": \"199.6400\", \"latest_",
+  "latency_ms": 630,
+  "http_status": 200,
+  "status_verdict": "PASS",
+  "skip_reason": null,
+  "tool_calls": [
+    "market-data.get_quote"
+  ],
+  "langfuse_trace_id": "cf138743-b4c2-4cf1-b060-d5e158677cd2",
+  "audit_records_found": 0,
+  "audit_has_gateway_stage": false,
+  "mnpi_redactions_observed": 0,
+  "circuit_breaker_tripped": false,
+  "v2_status": "DEGRADED",
+  "error": null,
+  "mcp_direct_route": "/market-data/tools/call",
+  "mcp_direct_correlation_id": "cf138743-b4c2-4cf1-b060-d5e158677cd2"
+}

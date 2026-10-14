@@ -1,0 +1,20 @@
+apiVersion: v2
+name: m11-grpc-adapter
+description: |
+  M11 gRPC Adapter -- ICE Data Services market-data API over gRPC.
+  Reference implementation for gRPC-native market-data vendors (ICE Data,
+  Refinitiv RTDS, Nasdaq Basic NLS). Phase 4 institutional tier.
+  Disabled by default in values-cloud.yaml; enable via the umbrella values
+  when the tenant has ICE entitlements + mTLS credentials in Vault.
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords:
+  - fsi
+  - mcp-adapter
+  - grpc
+  - ice-data
+  - market-data
+maintainers:
+  - name: Project 007 Platform Team
+    email: platform@example.invalid

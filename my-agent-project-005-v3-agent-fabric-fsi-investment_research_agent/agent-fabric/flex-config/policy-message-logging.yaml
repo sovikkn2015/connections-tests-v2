@@ -1,0 +1,21 @@
+# FINRA audit — log every agent-to-tool call with correlation id + agent id
+# Mirrors agent-fabric/policies/finra-audit.yaml in flex-gateway self-managed format
+apiVersion: gateway.mulesoft.com/v1alpha1
+kind: PolicyBinding
+metadata:
+  name: finra-audit-binding
+spec:
+  targetRef:
+    kind: ApiInstance
+    name: fsi-mcp-servers
+  policyRef:
+    name: message-logging-flex
+  config:
+    loggingConfiguration:
+      - logLevel: INFO
+        message: >-
+          FINRA_AUDIT | agent=#[attributes.headers['x-agent-id']]
+          | tool=#[attributes.headers['x-tool-name']]
+          | corr=#[attributes.headers['x-correlation-id']]
+          | path=#[attributes.requestPath]
+          | status=#[attributes.statusCode]

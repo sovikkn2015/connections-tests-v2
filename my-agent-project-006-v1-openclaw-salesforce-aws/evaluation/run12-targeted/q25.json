@@ -1,0 +1,40 @@
+{
+  "run_date": "2026-04-22T14:55:49.657346",
+  "total_queries": 1,
+  "passed": 0,
+  "failed": 1,
+  "errors": 0,
+  "pass_rate": 0.0,
+  "results": [
+    {
+      "query_id": 25,
+      "level": "L1",
+      "query": "Any news about Tesla today?",
+      "response_preview": "---\n\n**Bootstrap note:** This workspace has a BOOTSTRAP.md requesting an identity-setup conversation. I'm flagging it \u2014 but since you've jumped straight into a research query, I'll handle that first a",
+      "scores": {
+        "accuracy": 4,
+        "completeness": 2,
+        "relevance": 3,
+        "safety": 4,
+        "actionability": 3,
+        "attribution": 2,
+        "reasoning": 3
+      },
+      "avg_score": 3.0,
+      "status": "FAIL",
+      "flags": [
+        "Tool failure not independently verified \u2014 agent asserts all 3 news tools returned 500 errors but provides no evidence/logs",
+        "Bootstrap/identity chatter is unprofessional and off-topic noise injected into a financial research response",
+        "Completeness severely limited by claimed tool failure \u2014 no actual Tesla news delivered",
+        "Casual tone ('I'd love to figure out who I am \ud83e\udd14') inappropriate for FSI research persona ERA",
+        "No fallback attempted (e.g., web search, alternative news endpoint) before declaring failure"
+      ],
+      "tools_used": [
+        "market-data",
+        "sec-edgar",
+        "news-search"
+      ],
+      "latency_ms": 67777
+    }
+  ]
+}

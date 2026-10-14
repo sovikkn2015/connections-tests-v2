@@ -1,0 +1,33 @@
+{
+  "classes_copied": 13,
+  "classes_deleted": 1,
+  "classes_modified": 10,
+  "named_credentials_created": 1,
+  "named_credentials_deleted": 1,
+  "external_credentials_created": 1,
+  "external_credentials_deleted": 1,
+  "labels_created": 2,
+  "labels_deleted": 2,
+  "labels_files_created": ["FlexGateway.labels-meta.xml"],
+  "labels_files_deleted": ["IR_AWS_API_URL.labels-meta.xml"],
+  "resilience_code_lines_removed": 235,
+  "custom_circuit_breaker_classes_found": 0,
+  "flex_gateway_routes": [
+    "callout:IR_FlexGateway/market-data/*",
+    "callout:IR_FlexGateway/sec-edgar/*",
+    "callout:IR_FlexGateway/news-search/*",
+    "callout:IR_FlexGateway/financial-analysis/*",
+    "callout:IR_FlexGateway/sentiment-analysis/*"
+  ],
+  "validation": {
+    "sf_project_convert_source": "pass",
+    "sf_project_deploy_preview": "pending_source_tracked_org",
+    "sf_project_deploy_validate": "pending_target_org",
+    "v2_baseline_bug_fixed": "AWS_IR_MCP_API.remoteSiteSetting-meta.xml renamed to .remoteSite-meta.xml"
+  },
+  "docs": [
+    "docs/phase3-v2-inventory.md",
+    "docs/phase3-apex-refactor.md"
+  ],
+  "ready_for_review": true
+}

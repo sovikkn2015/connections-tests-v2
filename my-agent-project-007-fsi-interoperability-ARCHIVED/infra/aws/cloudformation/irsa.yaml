@@ -1,0 +1,349 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: |
+  007 IRSA - cross-module IAM roles for EKS service accounts.
+  Owner: platform team.
+
+  One role per 007 module. Each role:
+    - trusts only its own K8s ServiceAccount via OIDC (tight scoping)
+    - has least-privilege policies referencing ARNs exported by that
+      module's own stack (so policy churns only when that module changes)
+    - references shared platform resources via !ImportValue too
+
+  Depends on: platform-common + every module stack whose ARN is imported.
+
+  Deploy this LAST. Module stacks must exist first for !ImportValue to
+  succeed (this is what enforces the "platform-common -> module -> IRSA"
+  ordering during the parent deploy).
+
+Parameters:
+  Prefix:                       { Type: String, Default: fsi007 }
+  Environment:                  { Type: String, Default: dev }
+  EksOidcProviderArn:
+    Type: String
+    Description: OIDC provider ARN for the EKS cluster.
+    AllowedPattern: '^arn:aws:iam::\d+:oidc-provider/.+$'
+  EksOidcIssuer:
+    Type: String
+    Description: |
+      OIDC issuer URL (everything after 'oidc-provider/' in the ARN).
+      e.g. oidc.eks.us-east-1.amazonaws.com/id/ABC123DEF456
+  EksNamespace:                 { Type: String, Default: '007' }
+
+  M1ServiceAccountName:         { Type: String, Default: '007-m1-identity-sa' }
+  M10ServiceAccountName:        { Type: String, Default: '007-m10-audit-logger-sa' }
+  M8ServiceAccountName:         { Type: String, Default: '007-m8-pipeline-sa' }
+  M13ServiceAccountName:        { Type: String, Default: '007-m13-fix-bridge-sa' }
+  ExecutionServiceAccountName:  { Type: String, Default: '007-execution-specialist-sa' }
+  OnboardingServiceAccountName: { Type: String, Default: '007-onboarding-specialist-sa' }
+  MemoryServiceAccountName:     { Type: String, Default: '007-memory-service-sa' }
+
+Resources:
+
+  # ── M1 IRSA ────────────────────────────────────────────────────
+  M1IrsaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub '${Prefix}-${Environment}-m1-identity'
+      # AssumeRolePolicyDocument as a JSON string: CloudFormation won't
+      # accept dynamic map keys (the "${issuer}:sub" trick) in native YAML,
+      # so we build the full policy doc with Fn::Sub and ship JSON.
+      AssumeRolePolicyDocument: !Sub |
+        {
+          "Version": "2012-10-17",
+          "Statement": [{
+            "Effect": "Allow",
+            "Principal": { "Federated": "${EksOidcProviderArn}" },
+            "Action": "sts:AssumeRoleWithWebIdentity",
+            "Condition": {
+              "StringEquals": {
+                "${EksOidcIssuer}:sub": "system:serviceaccount:${EksNamespace}:${M1ServiceAccountName}",
+                "${EksOidcIssuer}:aud": "sts.amazonaws.com"
+              }
+            }
+          }]
+        }
+      Policies:
+        - PolicyName: m1-aid-registry
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: [dynamodb:GetItem, dynamodb:PutItem, dynamodb:UpdateItem, dynamodb:DeleteItem, dynamodb:Query]
+                Resource: !ImportValue '007-m1-identity-AidRegistryTableArn'
+        - PolicyName: m1-jwt-keypair
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: [secretsmanager:GetSecretValue, secretsmanager:DescribeSecret]
+                Resource: !ImportValue '007-m1-identity-JwtKeypairSecretArn'
+        - PolicyName: m1-kms
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: [kms:Decrypt, kms:DescribeKey]
+                Resource: !ImportValue '007-platform-KmsKeyArn'
+      Tags:
+        - { Key: project, Value: '007' }
+        - { Key: environment, Value: !Ref Environment }
+        - { Key: module, Value: m1-identity }
+
+  # ── M10 IRSA ───────────────────────────────────────────────────
+  M10IrsaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub '${Prefix}-${Environment}-m10-audit-logger'
+      AssumeRolePolicyDocument: !Sub |
+        {
+          "Version": "2012-10-17",
+          "Statement": [{
+            "Effect": "Allow",
+            "Principal": { "Federated": "${EksOidcProviderArn}" },
+            "Action": "sts:AssumeRoleWithWebIdentity",
+            "Condition": {
+              "StringEquals": {
+                "${EksOidcIssuer}:sub": "system:serviceaccount:${EksNamespace}:${M10ServiceAccountName}",
+                "${EksOidcIssuer}:aud": "sts.amazonaws.com"
+              }
+            }
+          }]
+        }
+      Policies:
+        - PolicyName: m10-audit-index
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: [dynamodb:PutItem, dynamodb:GetItem, dynamodb:Query, dynamodb:BatchWriteItem]
+                Resource: !ImportValue '007-m10-audit-logger-AuditLogTableArn'
+        - PolicyName: m10-worm-write
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: [s3:PutObject, s3:PutObjectRetention, s3:GetObject, s3:ListBucket]
+                Resource:
+                  - !ImportValue '007-m10-audit-logger-AuditWormBucketArn'
+                  - !Sub
+                      - '${Arn}/*'
+                      - Arn: !ImportValue '007-m10-audit-logger-AuditWormBucketArn'
+        - PolicyName: m10-dlq
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: [sqs:SendMessage, sqs:GetQueueUrl, sqs:GetQueueAttributes]
+                Resource: !ImportValue '007-m10-audit-logger-AuditDlqArn'
+        - PolicyName: m10-kms
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: [kms:Encrypt, kms:GenerateDataKey, kms:DescribeKey]
+                Resource: !ImportValue '007-platform-KmsKeyArn'
+      Tags:
+        - { Key: project, Value: '007' }
+        - { Key: environment, Value: !Ref Environment }
+        - { Key: module, Value: m10-audit-logger }
+
+  # ── M8 IRSA ────────────────────────────────────────────────────
+  M8IrsaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub '${Prefix}-${Environment}-m8-pipeline'
+      AssumeRolePolicyDocument: !Sub |
+        {
+          "Version": "2012-10-17",
+          "Statement": [{
+            "Effect": "Allow",
+            "Principal": { "Federated": "${EksOidcProviderArn}" },
+            "Action": "sts:AssumeRoleWithWebIdentity",
+            "Condition": {
+              "StringEquals": {
+                "${EksOidcIssuer}:sub": "system:serviceaccount:${EksNamespace}:${M8ServiceAccountName}",
+                "${EksOidcIssuer}:aud": "sts.amazonaws.com"
+              }
+            }
+          }]
+        }
+      Policies:
+        - PolicyName: m8-checkpoints
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: [dynamodb:GetItem, dynamodb:PutItem, dynamodb:UpdateItem, dynamodb:Query, dynamodb:DeleteItem]
+                Resource: !ImportValue '007-m8-pipeline-engine-PipelineCheckpointTableArn'
+        - PolicyName: m8-bedrock-sonnet
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: [bedrock:InvokeModel, bedrock:InvokeModelWithResponseStream]
+                Resource:
+                  - !Sub 'arn:aws:bedrock:*::foundation-model/anthropic.claude-sonnet-*'
+                  - !Sub 'arn:aws:bedrock:*:${AWS::AccountId}:inference-profile/us.anthropic.claude-sonnet-*'
+      Tags:
+        - { Key: project, Value: '007' }
+        - { Key: environment, Value: !Ref Environment }
+        - { Key: module, Value: m8-pipeline-engine }
+
+  # ── M13 IRSA ───────────────────────────────────────────────────
+  M13IrsaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub '${Prefix}-${Environment}-m13-fix-bridge'
+      AssumeRolePolicyDocument: !Sub |
+        {
+          "Version": "2012-10-17",
+          "Statement": [{
+            "Effect": "Allow",
+            "Principal": { "Federated": "${EksOidcProviderArn}" },
+            "Action": "sts:AssumeRoleWithWebIdentity",
+            "Condition": {
+              "StringEquals": {
+                "${EksOidcIssuer}:sub": "system:serviceaccount:${EksNamespace}:${M13ServiceAccountName}",
+                "${EksOidcIssuer}:aud": "sts.amazonaws.com"
+              }
+            }
+          }]
+        }
+      Policies:
+        - PolicyName: m13-sessions
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: [dynamodb:GetItem, dynamodb:PutItem, dynamodb:UpdateItem, dynamodb:Query]
+                Resource: !ImportValue '007-m13-fix-bridge-FixSessionsTableArn'
+        - PolicyName: m13-credentials
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: [secretsmanager:GetSecretValue, secretsmanager:DescribeSecret]
+                Resource: !ImportValue '007-m13-fix-bridge-FixCounterpartyCredentialsArn'
+      Tags:
+        - { Key: project, Value: '007' }
+        - { Key: environment, Value: !Ref Environment }
+        - { Key: module, Value: m13-fix-bridge }
+
+  # ── Execution Specialist IRSA ─────────────────────────────────
+  ExecutionIrsaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub '${Prefix}-${Environment}-execution-specialist'
+      AssumeRolePolicyDocument: !Sub |
+        {
+          "Version": "2012-10-17",
+          "Statement": [{
+            "Effect": "Allow",
+            "Principal": { "Federated": "${EksOidcProviderArn}" },
+            "Action": "sts:AssumeRoleWithWebIdentity",
+            "Condition": {
+              "StringEquals": {
+                "${EksOidcIssuer}:sub": "system:serviceaccount:${EksNamespace}:${ExecutionServiceAccountName}",
+                "${EksOidcIssuer}:aud": "sts.amazonaws.com"
+              }
+            }
+          }]
+        }
+      Policies:
+        - PolicyName: execution-orders
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: [dynamodb:GetItem, dynamodb:PutItem, dynamodb:UpdateItem, dynamodb:Query]
+                Resource: !ImportValue '007-execution-specialist-ExecutionOrdersTableArn'
+        - PolicyName: execution-bedrock-haiku
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: [bedrock:InvokeModel]
+                Resource:
+                  - !Sub 'arn:aws:bedrock:*::foundation-model/anthropic.claude-haiku-*'
+                  - !Sub 'arn:aws:bedrock:*:${AWS::AccountId}:inference-profile/us.anthropic.claude-haiku-*'
+      Tags:
+        - { Key: project, Value: '007' }
+        - { Key: environment, Value: !Ref Environment }
+        - { Key: module, Value: execution-specialist }
+
+  # ── Onboarding Specialist IRSA ────────────────────────────────
+  OnboardingIrsaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub '${Prefix}-${Environment}-onboarding-specialist'
+      AssumeRolePolicyDocument: !Sub |
+        {
+          "Version": "2012-10-17",
+          "Statement": [{
+            "Effect": "Allow",
+            "Principal": { "Federated": "${EksOidcProviderArn}" },
+            "Action": "sts:AssumeRoleWithWebIdentity",
+            "Condition": {
+              "StringEquals": {
+                "${EksOidcIssuer}:sub": "system:serviceaccount:${EksNamespace}:${OnboardingServiceAccountName}",
+                "${EksOidcIssuer}:aud": "sts.amazonaws.com"
+              }
+            }
+          }]
+        }
+      Policies:
+        - PolicyName: onboarding-sessions
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: [dynamodb:GetItem, dynamodb:PutItem, dynamodb:UpdateItem, dynamodb:Query]
+                Resource: !ImportValue '007-onboarding-specialist-OnboardingTableArn'
+      Tags:
+        - { Key: project, Value: '007' }
+        - { Key: environment, Value: !Ref Environment }
+        - { Key: module, Value: onboarding-specialist }
+
+  # ── Memory Service IRSA ───────────────────────────────────────
+  MemoryIrsaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub '${Prefix}-${Environment}-memory-service'
+      AssumeRolePolicyDocument: !Sub |
+        {
+          "Version": "2012-10-17",
+          "Statement": [{
+            "Effect": "Allow",
+            "Principal": { "Federated": "${EksOidcProviderArn}" },
+            "Action": "sts:AssumeRoleWithWebIdentity",
+            "Condition": {
+              "StringEquals": {
+                "${EksOidcIssuer}:sub": "system:serviceaccount:${EksNamespace}:${MemoryServiceAccountName}",
+                "${EksOidcIssuer}:aud": "sts.amazonaws.com"
+              }
+            }
+          }]
+        }
+      Policies:
+        - PolicyName: memory-l2-l3
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: [dynamodb:GetItem, dynamodb:PutItem, dynamodb:UpdateItem, dynamodb:Query, dynamodb:DeleteItem]
+                Resource:
+                  - !ImportValue '007-memory-service-MemoryL2TableArn'
+                  - !ImportValue '007-memory-service-MemoryL3TableArn'
+      Tags:
+        - { Key: project, Value: '007' }
+        - { Key: environment, Value: !Ref Environment }
+        - { Key: module, Value: memory-service }
+
+Outputs:
+  M1IrsaRoleArn:          { Value: !GetAtt M1IrsaRole.Arn,          Export: { Name: '007-irsa-M1IrsaRoleArn' } }
+  M10IrsaRoleArn:         { Value: !GetAtt M10IrsaRole.Arn,         Export: { Name: '007-irsa-M10IrsaRoleArn' } }
+  M8IrsaRoleArn:          { Value: !GetAtt M8IrsaRole.Arn,          Export: { Name: '007-irsa-M8IrsaRoleArn' } }
+  M13IrsaRoleArn:         { Value: !GetAtt M13IrsaRole.Arn,         Export: { Name: '007-irsa-M13IrsaRoleArn' } }
+  ExecutionIrsaRoleArn:   { Value: !GetAtt ExecutionIrsaRole.Arn,   Export: { Name: '007-irsa-ExecutionIrsaRoleArn' } }
+  OnboardingIrsaRoleArn:  { Value: !GetAtt OnboardingIrsaRole.Arn,  Export: { Name: '007-irsa-OnboardingIrsaRoleArn' } }
+  MemoryIrsaRoleArn:      { Value: !GetAtt MemoryIrsaRole.Arn,      Export: { Name: '007-irsa-MemoryIrsaRoleArn' } }

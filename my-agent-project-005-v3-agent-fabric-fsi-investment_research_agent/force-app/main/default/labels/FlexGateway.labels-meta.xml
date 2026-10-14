@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomLabels xmlns="http://soap.sforce.com/2006/04/metadata">
+    <labels>
+        <fullName>FlexGatewayUrl</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Flex Gateway Base URL</shortDescription>
+        <categories>IR_V3,Gateway</categories>
+        <value>https://d8t207e23gwg2.cloudfront.net</value>
+    </labels>
+    <labels>
+        <fullName>McpApiKey</fullName>
+        <language>en_US</language>
+        <protected>true</protected>
+        <shortDescription>Flex Gateway fallback API key placeholder (named-principal migration period)</shortDescription>
+        <categories>IR_V3,Gateway</categories>
+        <value>REPLACE_WITH_FALLBACK_API_KEY</value>
+    </labels>
+</CustomLabels>

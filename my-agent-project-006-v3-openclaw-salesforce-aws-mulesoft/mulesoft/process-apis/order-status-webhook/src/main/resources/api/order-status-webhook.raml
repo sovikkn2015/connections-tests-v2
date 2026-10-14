@@ -1,0 +1,93 @@
+#%RAML 1.0
+title: Order Status Webhook Process API (v3)
+version: v3
+baseUri: /api
+mediaType: application/json
+description: |
+  Project 006 v3 - MuleSoft Process API for Alpaca order-lifecycle callbacks.
+  Public HTTPS endpoint. Incoming requests carry an HMAC-SHA256 signature
+  in X-Alpaca-Signature; the flow verifies it before fanning out to the
+  mulesoft-actions MCP server (order_status_webhook tool).
+  This is the only Mule app where the IP allowlist policy should be
+  disabled or widened - see mulesoft/policies/process-api-policies.json.
+
+types:
+  OrderStatusCallback:
+    type: object
+    additionalProperties: false
+    properties:
+      event:
+        type: string
+        enum: [fill, partial_fill, canceled, replaced, rejected, expired, new]
+      order:
+        type: object
+        properties:
+          id: string
+          symbol: string
+          side:
+            type: string
+            enum: [buy, sell]
+          qty: string
+          filled_qty:
+            type: string
+            required: false
+          filled_avg_price:
+            type: string
+            required: false
+          status:
+            type: string
+          updated_at:
+            type: string
+      timestamp:
+        type: string
+        description: ISO 8601 timestamp
+
+  WebhookAck:
+    type: object
+    properties:
+      received: boolean
+      event_id: string
+      mulesoft_reference: string
+
+  ErrorResponse:
+    type: object
+    properties:
+      error: string
+      message: string
+
+/webhooks:
+  /orders:
+    post:
+      description: Alpaca order-lifecycle event callback.
+      headers:
+        X-Alpaca-Signature:
+          type: string
+          description: hex HMAC-SHA256 of the raw body using shared secret.
+      body:
+        application/json:
+          type: OrderStatusCallback
+      responses:
+        200:
+          body:
+            application/json:
+              type: WebhookAck
+        401:
+          description: HMAC signature missing or invalid.
+          body:
+            application/json:
+              type: ErrorResponse
+        400:
+          body:
+            application/json:
+              type: ErrorResponse
+        502:
+          description: Upstream MCP server returned an error.
+
+/health:
+  get:
+    responses:
+      200:
+        body:
+          application/json:
+            example: |
+              {"status": "ok", "api": "order-status-webhook-process-api", "version": "v3"}

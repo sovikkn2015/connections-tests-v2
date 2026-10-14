@@ -1,0 +1,9 @@
+{
+  "run_id": "arc-cafcb6d16388",
+  "stage": 9,
+  "lesson_type": "failure",
+  "detail": "Stage 9 failed permanently: DCF model error: revenue_ttm must be positive",
+  "severity": "error",
+  "ticker": "AAPL",
+  "timestamp": "2026-04-22T19:19:40.356581+00:00"
+}

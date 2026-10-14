@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>MNPI_Flag__c</fullName>
+    <defaultValue>false</defaultValue>
+    <externalId>false</externalId>
+    <inlineHelpText>Set to true if this action involved material non-public information. Triggers compliance review.</inlineHelpText>
+    <label>MNPI Flag</label>
+    <type>Checkbox</type>
+</CustomField>

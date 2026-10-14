@@ -1,0 +1,20 @@
+{
+  "id": 5,
+  "text": "What is the price of AAPL",
+  "expected_category": "live_quote",
+  "expected_path": "ORCH->GW->MCP:market-data.get_quote",
+  "judge_pass": false,
+  "judge_score": 0.0,
+  "judge_reason": "",
+  "response_excerpt": "",
+  "latency_ms": 510,
+  "http_status": 404,
+  "tool_calls": [],
+  "langfuse_trace_id": null,
+  "audit_records_found": 0,
+  "audit_has_gateway_stage": false,
+  "mnpi_redactions_observed": 0,
+  "circuit_breaker_tripped": false,
+  "v2_status": "DEGRADED",
+  "error": "http 404: {\"content\": [{\"type\": \"text\", \"text\": \"Unknown tool: \"}], \"isError\": true, \"available_tools\": [\"get_10k\", \"get_10q\", \"get_8k\", \"get_insider_transactions\"]}"
+}

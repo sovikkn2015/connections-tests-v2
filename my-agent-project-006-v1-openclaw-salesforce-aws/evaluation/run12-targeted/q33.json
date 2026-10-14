@@ -1,0 +1,41 @@
+{
+  "run_date": "2026-04-22T15:09:58.235930",
+  "total_queries": 1,
+  "passed": 0,
+  "failed": 1,
+  "errors": 0,
+  "pass_rate": 0.0,
+  "results": [
+    {
+      "query_id": 33,
+      "level": "L2",
+      "query": "What's consensus expecting for MSFT this quarter?",
+      "response_preview": "---\n\n### \ud83d\udd27 Bootstrap Note\n\nBOOTSTRAP.md asks me to establish my identity through a collaborative \"who am I?\" conversation before proceeding normally. However, this workspace has me configured as a **F",
+      "scores": {
+        "accuracy": 3,
+        "completeness": 2,
+        "relevance": 3,
+        "safety": 4,
+        "actionability": 3,
+        "attribution": 3,
+        "reasoning": 4
+      },
+      "avg_score": 3.1,
+      "status": "FAIL",
+      "flags": [
+        "EPS estimate of ~$3.20\u20133.22 cited without source verification \u2014 agent correctly caveat this but still introduces potentially inaccurate numbers",
+        "BOOTSTRAP.md preamble is irrelevant noise for an ERA persona \u2014 suggests prompt injection or misconfiguration awareness leaking into response",
+        "SF skill (SOQL) not attempted \u2014 expected tool per persona not used",
+        "Earnings date described as 'not confirmed' which may be inaccurate; MSFT typically has predictable quarterly cadence",
+        "Consensus rating/price target completely missing with no fallback from Salesforce CRM data",
+        "No attempt to query Salesforce for internal coverage notes or consensus data as expected by ERA persona"
+      ],
+      "tools_used": [
+        "market-data",
+        "sec-edgar",
+        "news-search"
+      ],
+      "latency_ms": 85594
+    }
+  ]
+}

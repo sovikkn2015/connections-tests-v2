@@ -1,0 +1,201 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://007.fsi/schemas/canonical/research-brief/v0.1.0",
+  "title": "ResearchBrief",
+  "description": "Structured output from Research Specialist (LangGraph pipeline). Source-attributed.",
+  "type": "object",
+  "required": [
+    "brief_id",
+    "security_identifier",
+    "analyst_id",
+    "rating",
+    "summary",
+    "sources"
+  ],
+  "properties": {
+    "brief_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Primary key for this research brief"
+    },
+    "security_identifier": {
+      "type": "object",
+      "properties": {
+        "ticker": {
+          "type": "string",
+          "description": "Exchange ticker symbol"
+        },
+        "cusip": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "CUSIP identifier (9-char alphanumeric)"
+        },
+        "company_name": {
+          "type": "string",
+          "description": "Company name"
+        }
+      },
+      "description": "Security being researched"
+    },
+    "analyst_id": {
+      "type": "string",
+      "description": "Analyst or agent ID that produced this brief"
+    },
+    "rating": {
+      "type": "string",
+      "enum": [
+        "strong_buy",
+        "buy",
+        "hold",
+        "sell",
+        "strong_sell"
+      ],
+      "description": "Rating: strong_buy, buy, hold, sell, strong_sell"
+    },
+    "target_price": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Analyst target price"
+    },
+    "current_price": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Current market price at time of brief"
+    },
+    "summary": {
+      "type": "string",
+      "description": "Executive summary (2-3 paragraphs)"
+    },
+    "thesis": {
+      "type": "string",
+      "description": "Investment thesis"
+    },
+    "catalysts": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Potential catalysts"
+    },
+    "risks": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Key risks"
+    },
+    "valuation": {
+      "type": "object",
+      "properties": {
+        "dcf_fair_value": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "DCF-derived fair value"
+        },
+        "comps_implied_value": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "Comparable companies implied value"
+        },
+        "monte_carlo_p5": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "Monte Carlo 5th percentile"
+        },
+        "monte_carlo_median": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "Monte Carlo median"
+        },
+        "monte_carlo_p95": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "Monte Carlo 95th percentile"
+        }
+      },
+      "description": "Valuation analysis"
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "source_type",
+          "description"
+        ],
+        "properties": {
+          "source_type": {
+            "type": "string",
+            "enum": [
+              "sec_filing",
+              "market_data",
+              "news",
+              "earnings_transcript",
+              "analyst_consensus",
+              "crm_data"
+            ]
+          },
+          "description": {
+            "type": "string"
+          },
+          "url": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "date": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date"
+          }
+        }
+      },
+      "description": "Sources used in the research"
+    },
+    "pipeline_run_id": {
+      "type": "string",
+      "description": "LangGraph pipeline execution ID"
+    },
+    "hitl_gates_passed": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "HITL gates passed during pipeline"
+    },
+    "anti_fabrication_score": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Anti-fabrication confidence score (0-1)"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Brief creation timestamp"
+    },
+    "trace_id": {
+      "type": "string",
+      "description": "Links to M10 audit trail"
+    }
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "run_date": "2026-04-22T17:54:38.088708",
+  "total_queries": 1,
+  "passed": 0,
+  "failed": 1,
+  "errors": 0,
+  "pass_rate": 0.0,
+  "results": [
+    {
+      "query_id": 49,
+      "level": "L2",
+      "query": "Compare insider buying across my coverage universe this quarter",
+      "response_preview": "I have 30 covered companies across 3 analysts. Now let me resolve the company names/tickers and pull insider transaction data.\n\nNow pulling Form 4 insider filings for all 30 names across the universe ",
+      "scores": {
+        "accuracy": 1,
+        "completeness": 3,
+        "relevance": 4,
+        "safety": 3,
+        "actionability": 3,
+        "attribution": 2,
+        "reasoning": 2
+      },
+      "avg_score": 2.6,
+      "status": "FAIL",
+      "flags": [
+        "FABRICATED_DATA: Specific filing counts, dates, and clustering patterns (e.g., 'CRM 5 filings all on Mar 24', 'CVX cluster Mar 4', 'JPM 5 filings Apr 15') appear fabricated \u2014 no ground truth to verify and agent acknowledges it cannot classify buy vs. sell without XML parsing",
+        "HALLUCINATED_SPECIFICITY: Precise filing counts per ticker (0\u20135) presented with false confidence when agent admits data limitations",
+        "METHODOLOGY_MISMATCH: Agent explicitly states it cannot distinguish buys from sells without XML parsing, yet the query is specifically about 'insider buying' \u2014 the core question goes unanswered",
+        "UNVERIFIABLE_COVERAGE_UNIVERSE: The 30 companies, 3 analysts, and analyst assignments (Chen, Rodriguez, Sharma) are asserted without confirmed SOQL retrieval shown",
+        "POTENTIAL_MNPI_RISK: Presenting unverified insider transaction patterns as 'signals' (e.g., TSLA Underweight + insider buys as 'contrarian signal') without verification could be misleading",
+        "SOURCE_ATTRIBUTION_WEAK: Claims 'salesforce-crm (coverage/ratings), sec-edgar Form 4 filings' but no accession numbers, CIK references, or verifiable provenance provided",
+        "CONFLATION: Filing activity volume \u2260 insider buying \u2014 the agent substitutes a proxy metric for the actual requested metric without adequately flagging this substitution upfront"
+      ],
+      "tools_used": [
+        "sec-edgar",
+        "salesforce-crm"
+      ],
+      "latency_ms": 166069
+    }
+  ]
+}

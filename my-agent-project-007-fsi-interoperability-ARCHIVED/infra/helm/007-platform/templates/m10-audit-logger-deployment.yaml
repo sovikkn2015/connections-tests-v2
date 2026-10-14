@@ -1,0 +1,145 @@
+{{- if .Values.m10AuditLogger.enabled }}
+# M10 Audit Logger — 3-tier WORM audit (Rule 6: Langfuse + S3 + CRM)
+# Depends on PostgreSQL, MinIO (S3-compatible), Langfuse.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "007-platform.fullname" . }}-m10-audit-logger
+  labels:
+    {{- include "007-platform.labels" . | nindent 4 }}
+    {{- include "007-platform.selectorLabels" (dict "module" "m10-audit-logger" "context" .) | nindent 4 }}
+spec:
+  replicas: {{ .Values.m10AuditLogger.replicas }}
+  selector:
+    matchLabels:
+      {{- include "007-platform.selectorLabels" (dict "module" "m10-audit-logger" "context" .) | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "007-platform.labels" . | nindent 8 }}
+        {{- include "007-platform.selectorLabels" (dict "module" "m10-audit-logger" "context" .) | nindent 8 }}
+    spec:
+      containers:
+        - name: m10-audit-logger
+          image: {{ include "007-platform.image" (dict "image" .Values.m10AuditLogger.image "global" .Values.global) }}
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.m10AuditLogger.port }}
+              protocol: TCP
+          env:
+            {{- range $key, $value := .Values.m10AuditLogger.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+            - name: AGENT_RUNTIME
+              value: {{ .Values.global.agentRuntime | quote }}
+            - name: LLM_PROVIDER
+              value: {{ .Values.global.llmProvider | quote }}
+            - name: AWS_DEFAULT_REGION
+              value: {{ .Values.global.awsRegion | quote }}
+            {{- if .Values.tls.enabled }}
+            - name: TLS_CERT_PATH
+              value: "/etc/certs/tls.crt"
+            - name: TLS_KEY_PATH
+              value: "/etc/certs/tls.key"
+            {{- end }}
+          {{- if .Values.tls.enabled }}
+          volumeMounts:
+            - name: tls-certs
+              mountPath: /etc/certs
+              readOnly: true
+          {{- end }}
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            {{- toYaml .Values.m10AuditLogger.resources | nindent 12 }}
+      {{- if .Values.tls.enabled }}
+      volumes:
+        - name: tls-certs
+          secret:
+            secretName: {{ include "007-platform.fullname" . }}-m10-audit-logger-tls
+      {{- end }}
+---
+{{- if .Values.tls.enabled }}
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ include "007-platform.fullname" . }}-m10-audit-logger-tls
+  labels:
+    {{- include "007-platform.labels" . | nindent 4 }}
+spec:
+  secretName: {{ include "007-platform.fullname" . }}-m10-audit-logger-tls
+  duration: {{ .Values.tls.duration }}
+  renewBefore: {{ .Values.tls.renewBefore }}
+  issuerRef:
+    name: {{ .Values.tls.issuerName }}
+    kind: {{ .Values.tls.issuerKind }}
+  dnsNames:
+    - {{ include "007-platform.fullname" . }}-m10-audit-logger
+    - {{ include "007-platform.fullname" . }}-m10-audit-logger.{{ .Release.Namespace }}.svc
+---
+{{- end }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "007-platform.fullname" . }}-m10-audit-logger
+  labels:
+    {{- include "007-platform.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.m10AuditLogger.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "007-platform.selectorLabels" (dict "module" "m10-audit-logger" "context" .) | nindent 4 }}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "007-platform.fullname" . }}-m10-audit-logger
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "007-platform.selectorLabels" (dict "module" "m10-audit-logger" "context" .) | nindent 6 }}
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # M6 gateway and M8 pipeline write audit events to M10
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: m6-mcp-gateway
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: m8-pipeline
+      ports:
+        - port: {{ .Values.m10AuditLogger.port }}
+  egress:
+    - to:
+        # PostgreSQL for structured audit storage
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: postgresql
+        # MinIO (S3-compatible) for WORM object lock tier
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: minio
+        # Langfuse for LLM observability tier
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: langfuse
+{{- end }}

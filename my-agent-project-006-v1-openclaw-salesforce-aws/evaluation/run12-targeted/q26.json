@@ -1,0 +1,38 @@
+{
+  "run_date": "2026-04-22T14:57:14.106256",
+  "total_queries": 1,
+  "passed": 0,
+  "failed": 1,
+  "errors": 0,
+  "pass_rate": 0.0,
+  "results": [
+    {
+      "query_id": 26,
+      "level": "L1",
+      "query": "What's the latest on the Fed rate decision?",
+      "response_preview": "---\n\n### \ud83c\udfe6 Bootstrap Note\n\nBefore I dive in \u2014 **BOOTSTRAP.md** is present and I haven't completed the identity setup yet (no `IDENTITY.md`, `USER.md`, or `SOUL.md` exist). I'll flag this: once you're ",
+      "scores": {
+        "accuracy": 4,
+        "completeness": 2,
+        "relevance": 3,
+        "safety": 5,
+        "actionability": 3,
+        "attribution": 3,
+        "reasoning": 4
+      },
+      "avg_score": 3.4,
+      "status": "FAIL",
+      "flags": [
+        "Tool failure meant no actual Fed rate data was delivered",
+        "BOOTSTRAP.md preamble is irrelevant noise for a PM user \u2014 internal agent housekeeping exposed to end user",
+        "Completeness is low: zero substantive Fed rate information provided",
+        "No fallback to cached/known FOMC schedule or last known rate level even as a clearly-labeled reference point",
+        "Offering to pull 10Y Treasury yield as a 'proxy' is a weak substitute for direct Fed news"
+      ],
+      "tools_used": [
+        "news-search"
+      ],
+      "latency_ms": 66753
+    }
+  ]
+}

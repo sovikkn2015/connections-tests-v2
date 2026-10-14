@@ -1,0 +1,529 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Project 005 V3 — Agent Fabric — Flex Gateway stack.
+  SEPARATE from aws/sam-template.yaml (V2 API Gateway stays in parallel until
+  Phase 3 cutover). Adds ECR, ECS Fargate cluster, ALB, task role, and
+  Secrets Manager wiring so Flex Gateway can register with Anypoint in
+  CONNECTED mode at container start.
+
+# ──────────────────────────────────────────────────────────────────────────
+# Parameters
+# ──────────────────────────────────────────────────────────────────────────
+Parameters:
+  Stage:
+    Type: String
+    Default: prod
+    AllowedValues: [dev, staging, prod]
+    Description: Deployment stage name
+
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+    Description: VPC in which the ALB and ECS tasks run
+
+  PrivateSubnetIds:
+    Type: List<AWS::EC2::Subnet::Id>
+    Description: At least 2 private subnets across AZs for Fargate tasks and internal ALB
+
+  MuleSoftSecretId:
+    Type: String
+    Default: /006-v2/mulesoft/credentials
+    Description: >-
+      AWS Secrets Manager secret id holding Anypoint client_id/client_secret.
+      The task role is granted GetSecretValue on ONLY this secret.
+
+  AnypointOrgId:
+    Type: String
+    Description: Anypoint organization / business-group UUID
+    NoEcho: false
+
+  AnypointEnvId:
+    Type: String
+    Description: Anypoint environment UUID (prod / staging)
+    NoEcho: false
+
+  AnypointPlatformUrl:
+    Type: String
+    Default: https://anypoint.mulesoft.com
+    Description: Anypoint Platform control plane URL (override for EU / gov clouds)
+
+  FlexGatewayImageTag:
+    Type: String
+    Default: latest
+    Description: >-
+      ECR image tag to deploy. Phase 1 uses `latest`; pin to a digest
+      (e.g. `1.8.0`) before production cutover.
+
+  AlbCertificateArn:
+    Type: String
+    Description: >-
+      ACM certificate ARN for the internal ALB's :443 listener (must be in
+      same region). Cert should cover the internal DNS name operators use
+      to reach Flex Gateway.
+
+  SalesforceIngressCidrs:
+    Type: CommaDelimitedList
+    Default: "136.146.0.0/16,136.147.0.0/16"
+    Description: >-
+      Salesforce egress IP ranges permitted to reach the ALB on :443.
+      Defaults reflect published Salesforce Hyperforce ranges — operators
+      should refine per org. Additional callers (API Gateway VPC endpoint,
+      corporate VPN) can be added via the AdditionalIngressCidrs param.
+
+  AdditionalIngressCidrs:
+    Type: CommaDelimitedList
+    Default: "10.0.0.0/8"
+    Description: >-
+      Additional CIDRs permitted inbound to the ALB on :443 (e.g. the VPC
+      range housing the existing V2 API Gateway VPC endpoint).
+
+  InternalHostedZoneId:
+    Type: String
+    Default: ""
+    Description: >-
+      (Optional) Route53 private hosted zone id. If provided, a CNAME
+      `flex-gateway.<zone>` is created pointing at the ALB. Leave blank
+      to rely on the ALB DNS output only.
+
+  InternalDnsName:
+    Type: String
+    Default: ""
+    Description: >-
+      (Optional) Fully-qualified DNS name for the Route53 record, e.g.
+      flex-gateway.ir-internal.example.com. Required if InternalHostedZoneId
+      is set.
+
+  TaskCpu:
+    Type: String
+    Default: "512"
+    AllowedValues: ["256", "512", "1024", "2048"]
+    Description: Fargate task CPU units
+
+  TaskMemory:
+    Type: String
+    Default: "1024"
+    AllowedValues: ["512", "1024", "2048", "4096"]
+    Description: Fargate task memory (MB)
+
+  DesiredTaskCount:
+    Type: Number
+    Default: 2
+    MinValue: 1
+    MaxValue: 10
+    Description: Number of Flex Gateway tasks (cluster mode needs >=2 in prod)
+
+# ──────────────────────────────────────────────────────────────────────────
+# Conditions
+# ──────────────────────────────────────────────────────────────────────────
+Conditions:
+  CreateRoute53Record: !And
+    - !Not [!Equals [!Ref InternalHostedZoneId, ""]]
+    - !Not [!Equals [!Ref InternalDnsName, ""]]
+
+# ──────────────────────────────────────────────────────────────────────────
+# Resources
+# ──────────────────────────────────────────────────────────────────────────
+Resources:
+
+  # ---------- ECR repository ------------------------------------------
+  FlexGatewayRepository:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: !Sub "ir-flex-gateway-${Stage}"
+      ImageScanningConfiguration:
+        ScanOnPush: true
+      ImageTagMutability: MUTABLE
+      EncryptionConfiguration:
+        EncryptionType: AES256
+      LifecyclePolicy:
+        LifecyclePolicyText: |
+          {
+            "rules": [
+              {
+                "rulePriority": 1,
+                "description": "Keep last 10 tagged images",
+                "selection": {
+                  "tagStatus": "tagged",
+                  "tagPatternList": ["*"],
+                  "countType": "imageCountMoreThan",
+                  "countNumber": 10
+                },
+                "action": { "type": "expire" }
+              },
+              {
+                "rulePriority": 2,
+                "description": "Expire untagged after 7 days",
+                "selection": {
+                  "tagStatus": "untagged",
+                  "countType": "sinceImagePushed",
+                  "countUnit": "days",
+                  "countNumber": 7
+                },
+                "action": { "type": "expire" }
+              }
+            ]
+          }
+
+  # ---------- CloudWatch Logs -----------------------------------------
+  FlexGatewayLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/ecs/ir-flex-gateway-${Stage}"
+      RetentionInDays: 30
+
+  # ---------- ECS cluster ---------------------------------------------
+  FlexGatewayCluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: !Sub "ir-flex-gateway-cluster-${Stage}"
+      CapacityProviders: [FARGATE, FARGATE_SPOT]
+      ClusterSettings:
+        - Name: containerInsights
+          Value: enabled
+
+  # ---------- Service Discovery (for cluster mode) --------------------
+  FlexGatewayNamespace:
+    Type: AWS::ServiceDiscovery::PrivateDnsNamespace
+    Properties:
+      Name: !Sub "ir-flex-${Stage}.internal"
+      Vpc: !Ref VpcId
+      Description: Private namespace for Flex Gateway cluster gossip
+
+  FlexGatewayServiceDiscovery:
+    Type: AWS::ServiceDiscovery::Service
+    Properties:
+      Name: fsi-flex-gateway
+      NamespaceId: !Ref FlexGatewayNamespace
+      DnsConfig:
+        RoutingPolicy: MULTIVALUE
+        DnsRecords:
+          - Type: A
+            TTL: 15
+      HealthCheckCustomConfig:
+        FailureThreshold: 1
+
+  # ---------- IAM: task execution role (pulls image, writes logs) -----
+  FlexGatewayTaskExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "ir-flex-gateway-exec-${Stage}"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+      Policies:
+        - PolicyName: pull-mulesoft-secret-for-env-injection
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              # ECS uses the EXECUTION role (not task role) when resolving
+              # `secrets:` entries in the container definition at task start.
+              - Effect: Allow
+                Action: secretsmanager:GetSecretValue
+                Resource:
+                  - !Sub "arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${MuleSoftSecretId}-*"
+
+  # ---------- IAM: task role (runtime — app-level perms) --------------
+  FlexGatewayTaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "ir-flex-gateway-task-${Stage}"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: read-mulesoft-secret
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              # Least privilege: ONLY the one Anypoint credential secret,
+              # ONLY GetSecretValue + DescribeSecret.
+              - Effect: Allow
+                Action:
+                  - secretsmanager:GetSecretValue
+                  - secretsmanager:DescribeSecret
+                Resource:
+                  - !Sub "arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${MuleSoftSecretId}-*"
+
+  # ---------- Task definition -----------------------------------------
+  FlexGatewayTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: !Sub "ir-flex-gateway-${Stage}"
+      Cpu: !Ref TaskCpu
+      Memory: !Ref TaskMemory
+      NetworkMode: awsvpc
+      RequiresCompatibilities: [FARGATE]
+      ExecutionRoleArn: !GetAtt FlexGatewayTaskExecutionRole.Arn
+      TaskRoleArn:      !GetAtt FlexGatewayTaskRole.Arn
+      ContainerDefinitions:
+        - Name: flex-gateway
+          Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${FlexGatewayRepository}:${FlexGatewayImageTag}"
+          Essential: true
+          PortMappings:
+            - ContainerPort: 8080
+              Protocol: tcp
+          Environment:
+            - Name: AWS_REGION
+              Value: !Ref AWS::Region
+            - Name: MULESOFT_SECRET_ID
+              Value: !Ref MuleSoftSecretId
+            - Name: ANYPOINT_ORG_ID
+              Value: !Ref AnypointOrgId
+            - Name: ANYPOINT_ENV_ID
+              Value: !Ref AnypointEnvId
+            - Name: ANYPOINT_PLATFORM_URL
+              Value: !Ref AnypointPlatformUrl
+            - Name: GATEWAY_NAME
+              Value: !Sub "ir-flex-gateway-${Stage}"
+            - Name: FLEX_CLUSTER_SERVICE_NAME
+              Value: !Sub "fsi-flex-gateway.ir-flex-${Stage}.internal"
+            - Name: FLEX_LOG_LEVEL
+              Value: INFO
+          # Inject individual fields from the SAME Secrets Manager secret
+          # as first-class env vars for convenience / diagnostics.
+          # Task execution role already has GetSecretValue on this ARN.
+          Secrets:
+            - Name: ANYPOINT_CLIENT_ID
+              ValueFrom: !Sub "arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${MuleSoftSecretId}:client_id::"
+            - Name: ANYPOINT_CLIENT_SECRET
+              ValueFrom: !Sub "arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${MuleSoftSecretId}:client_secret::"
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref FlexGatewayLogGroup
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: flex-gateway
+          HealthCheck:
+            Command:
+              - CMD-SHELL
+              - "curl -fsS http://127.0.0.1:8080/health || exit 1"
+            Interval: 30
+            Timeout: 5
+            Retries: 3
+            StartPeriod: 60
+
+  # ---------- Security groups -----------------------------------------
+  # ALB SG — accepts 443 from Salesforce + internal CIDRs
+  AlbSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub "ir-flex-gateway-alb-sg-${Stage}"
+      GroupDescription: Inbound 443 for Flex Gateway ALB
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        # Salesforce Hyperforce egress ranges (parameterized)
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: !Select [0, !Ref SalesforceIngressCidrs]
+          Description: Salesforce egress range 1
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: !Select [1, !Ref SalesforceIngressCidrs]
+          Description: Salesforce egress range 2
+        # Existing V2 API Gateway VPC endpoint / corporate CIDRs
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: !Select [0, !Ref AdditionalIngressCidrs]
+          Description: Internal VPC / API GW VPC endpoint range
+      SecurityGroupEgress:
+        # Explicit egress to tasks only (tightened below)
+        - IpProtocol: tcp
+          FromPort: 8080
+          ToPort: 8080
+          CidrIp: 0.0.0.0/0
+          Description: To Flex Gateway tasks (scoped via task SG)
+
+  # Task SG — accepts 8080 from ALB SG only
+  TaskSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub "ir-flex-gateway-task-sg-${Stage}"
+      GroupDescription: Flex Gateway Fargate task network interfaces
+      VpcId: !Ref VpcId
+      SecurityGroupEgress:
+        # Anypoint control plane + Secrets Manager + ECR are HTTPS out.
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+          Description: Anypoint control plane / AWS APIs
+        # Cluster gossip between tasks (self-referential rule added below)
+
+  TaskIngressFromAlb:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref TaskSecurityGroup
+      IpProtocol: tcp
+      FromPort: 8080
+      ToPort: 8080
+      SourceSecurityGroupId: !Ref AlbSecurityGroup
+      Description: From ALB only
+
+  TaskIngressClusterGossip:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref TaskSecurityGroup
+      IpProtocol: tcp
+      FromPort: 9999
+      ToPort: 9999
+      SourceSecurityGroupId: !Ref TaskSecurityGroup
+      Description: Flex Gateway cluster gossip between tasks
+
+  # ---------- Application Load Balancer (internal) --------------------
+  FlexGatewayAlb:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name: !Sub "ir-flex-gw-alb-${Stage}"
+      Scheme: internal
+      Type: application
+      IpAddressType: ipv4
+      Subnets: !Ref PrivateSubnetIds
+      SecurityGroups: [!Ref AlbSecurityGroup]
+      LoadBalancerAttributes:
+        - Key: idle_timeout.timeout_seconds
+          Value: "60"
+        - Key: routing.http.drop_invalid_header_fields.enabled
+          Value: "true"
+
+  FlexGatewayTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name: !Sub "ir-flex-gw-tg-${Stage}"
+      VpcId: !Ref VpcId
+      Port: 8080
+      Protocol: HTTP
+      TargetType: ip
+      HealthCheckEnabled: true
+      HealthCheckPath: /health
+      HealthCheckPort: "8080"
+      HealthCheckProtocol: HTTP
+      HealthCheckIntervalSeconds: 30
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 2
+      UnhealthyThresholdCount: 3
+      Matcher:
+        HttpCode: "200"
+      TargetGroupAttributes:
+        - Key: deregistration_delay.timeout_seconds
+          Value: "30"
+
+  FlexGatewayHttpsListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn: !Ref FlexGatewayAlb
+      Port: 443
+      Protocol: HTTPS
+      SslPolicy: ELBSecurityPolicy-TLS13-1-2-2021-06
+      Certificates:
+        - CertificateArn: !Ref AlbCertificateArn
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref FlexGatewayTargetGroup
+
+  # ---------- ECS Service ---------------------------------------------
+  FlexGatewayService:
+    Type: AWS::ECS::Service
+    DependsOn:
+      - FlexGatewayHttpsListener
+    Properties:
+      ServiceName: !Sub "ir-flex-gateway-service-${Stage}"
+      Cluster: !Ref FlexGatewayCluster
+      TaskDefinition: !Ref FlexGatewayTaskDefinition
+      DesiredCount: !Ref DesiredTaskCount
+      LaunchType: FARGATE
+      PlatformVersion: LATEST
+      DeploymentConfiguration:
+        MinimumHealthyPercent: 50
+        MaximumPercent: 200
+        DeploymentCircuitBreaker:
+          Enable: true
+          Rollback: true
+      HealthCheckGracePeriodSeconds: 90
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: DISABLED
+          Subnets: !Ref PrivateSubnetIds
+          SecurityGroups: [!Ref TaskSecurityGroup]
+      LoadBalancers:
+        - ContainerName: flex-gateway
+          ContainerPort: 8080
+          TargetGroupArn: !Ref FlexGatewayTargetGroup
+      ServiceRegistries:
+        - RegistryArn: !GetAtt FlexGatewayServiceDiscovery.Arn
+      PropagateTags: SERVICE
+      Tags:
+        - Key: project
+          Value: "005-v3"
+        - Key: component
+          Value: flex-gateway
+        - Key: stage
+          Value: !Ref Stage
+
+  # ---------- Route53 (optional) --------------------------------------
+  FlexGatewayInternalDns:
+    Type: AWS::Route53::RecordSet
+    Condition: CreateRoute53Record
+    Properties:
+      HostedZoneId: !Ref InternalHostedZoneId
+      Name: !Ref InternalDnsName
+      Type: A
+      AliasTarget:
+        DNSName: !GetAtt FlexGatewayAlb.DNSName
+        HostedZoneId: !GetAtt FlexGatewayAlb.CanonicalHostedZoneID
+        EvaluateTargetHealth: true
+
+# ──────────────────────────────────────────────────────────────────────────
+# Outputs
+# ──────────────────────────────────────────────────────────────────────────
+Outputs:
+  FlexGatewayUrl:
+    Description: >-
+      Internal URL of the Flex Gateway ALB. Use this as MCP_GATEWAY_URL for
+      upstream clients (Salesforce Agentforce, Strands agents) during Phase 1.
+    Value: !Sub "https://${FlexGatewayAlb.DNSName}"
+    Export:
+      Name: !Sub "ir-flex-gateway-url-${Stage}"
+
+  FlexGatewayInternalFqdn:
+    Condition: CreateRoute53Record
+    Description: Route53 CNAME pointing at the ALB (if configured)
+    Value: !Sub "https://${InternalDnsName}"
+    Export:
+      Name: !Sub "ir-flex-gateway-fqdn-${Stage}"
+
+  FlexGatewayRepositoryUri:
+    Description: ECR repository URI for docker push
+    Value: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${FlexGatewayRepository}"
+    Export:
+      Name: !Sub "ir-flex-gateway-ecr-${Stage}"
+
+  FlexGatewayClusterName:
+    Description: ECS cluster name
+    Value: !Ref FlexGatewayCluster
+    Export:
+      Name: !Sub "ir-flex-gateway-cluster-${Stage}"
+
+  FlexGatewayServiceName:
+    Description: ECS service name
+    Value: !GetAtt FlexGatewayService.Name
+
+  FlexGatewayTaskRoleArn:
+    Description: Task role ARN (least-privilege — one secret only)
+    Value: !GetAtt FlexGatewayTaskRole.Arn
+
+  FlexGatewayLogGroupName:
+    Description: CloudWatch log group for task logs
+    Value: !Ref FlexGatewayLogGroup

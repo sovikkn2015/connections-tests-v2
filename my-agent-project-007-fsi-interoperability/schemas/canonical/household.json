@@ -1,0 +1,256 @@
+{
+  "$defs": {
+    "HouseholdAccount": {
+      "description": "Account linked to a household.",
+      "properties": {
+        "account_ref": {
+          "description": "Canonical Account ID.",
+          "title": "Account Ref",
+          "type": "string"
+        },
+        "source": {
+          "description": "Which vendor linked this account.",
+          "title": "Source",
+          "type": "string"
+        }
+      },
+      "required": [
+        "account_ref",
+        "source"
+      ],
+      "title": "HouseholdAccount",
+      "type": "object"
+    },
+    "HouseholdMember": {
+      "description": "Household member with role and source attribution.",
+      "properties": {
+        "client_ref": {
+          "description": "Canonical Client ID.",
+          "title": "Client Ref",
+          "type": "string"
+        },
+        "role": {
+          "description": "Member role: primary, spouse, dependent, trustee, beneficiary, authorized_signer, power_of_attorney.",
+          "title": "Role",
+          "type": "string"
+        },
+        "source": {
+          "description": "Which vendor defined this membership.",
+          "title": "Source",
+          "type": "string"
+        }
+      },
+      "required": [
+        "client_ref",
+        "role",
+        "source"
+      ],
+      "title": "HouseholdMember",
+      "type": "object"
+    },
+    "HouseholdVendorMappings": {
+      "description": "Preserves vendor-specific household grouping semantics. Contains IDs and grouping types ONLY \u2014 no member lists.",
+      "properties": {
+        "salesforce_fsc": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/HouseholdVendorSFSC"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "SF FSC relationship grouping."
+        },
+        "orion": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/HouseholdVendorOrion"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Orion portfolio management grouping."
+        },
+        "schwab": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/HouseholdVendorSchwab"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Schwab custodial grouping."
+        }
+      },
+      "title": "HouseholdVendorMappings",
+      "type": "object"
+    },
+    "HouseholdVendorOrion": {
+      "description": "Orion household \u2014 portfolio management grouping.",
+      "properties": {
+        "household_id": {
+          "description": "Orion Household ID.",
+          "title": "Household Id",
+          "type": "string"
+        },
+        "grouping_type": {
+          "default": "portfolio_management",
+          "description": "Always 'portfolio_management' for Orion.",
+          "title": "Grouping Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "household_id"
+      ],
+      "title": "HouseholdVendorOrion",
+      "type": "object"
+    },
+    "HouseholdVendorSFSC": {
+      "description": "SF FSC household \u2014 relationship grouping.",
+      "properties": {
+        "household_id": {
+          "description": "SF FSC Household record ID.",
+          "title": "Household Id",
+          "type": "string"
+        },
+        "grouping_type": {
+          "default": "relationship",
+          "description": "Always 'relationship' for SF FSC.",
+          "title": "Grouping Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "household_id"
+      ],
+      "title": "HouseholdVendorSFSC",
+      "type": "object"
+    },
+    "HouseholdVendorSchwab": {
+      "description": "Schwab household \u2014 custodial grouping.",
+      "properties": {
+        "master_account": {
+          "description": "Schwab master account number.",
+          "title": "Master Account",
+          "type": "string"
+        },
+        "grouping_type": {
+          "default": "custodial",
+          "description": "Always 'custodial' for Schwab.",
+          "title": "Grouping Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "master_account"
+      ],
+      "title": "HouseholdVendorSchwab",
+      "type": "object"
+    },
+    "Reconciliation": {
+      "description": "Tracks cross-vendor agreement for types with multiple vendor sources.",
+      "properties": {
+        "sources_agree": {
+          "description": "True if all vendor sources agree on data.",
+          "title": "Sources Agree",
+          "type": "boolean"
+        },
+        "discrepancies": {
+          "description": "List of disagreements between sources \u2014 flagged for SME review.",
+          "items": {
+            "type": "string"
+          },
+          "title": "Discrepancies",
+          "type": "array"
+        },
+        "last_reconciled": {
+          "description": "When reconciliation last ran (ISO 8601).",
+          "format": "date-time",
+          "title": "Last Reconciled",
+          "type": "string"
+        }
+      },
+      "required": [
+        "sources_agree",
+        "last_reconciled"
+      ],
+      "title": "Reconciliation",
+      "type": "object"
+    }
+  },
+  "description": "CONTAINER model \u2014 holds vendor-specific groupings, NOT a unified model.\nSF FSC uses 'relationship' grouping, Orion uses 'portfolio_management', Schwab uses 'custodial'.\nAll three semantics preserved via vendor_mappings. Members at top level, NOT inside vendor_mappings.",
+  "properties": {
+    "canonical_id": {
+      "description": "Primary key for canonical household.",
+      "format": "uuid",
+      "title": "Canonical Id",
+      "type": "string"
+    },
+    "display_name": {
+      "description": "Human-readable household display name.",
+      "title": "Display Name",
+      "type": "string"
+    },
+    "primary_source": {
+      "description": "Primary source system: salesforce_fsc, orion, schwab, fidelity, pershing, manual.",
+      "title": "Primary Source",
+      "type": "string"
+    },
+    "members": {
+      "description": "Household members with roles and source attribution. At Household level, NOT inside vendor_mappings.",
+      "items": {
+        "$ref": "#/$defs/HouseholdMember"
+      },
+      "title": "Members",
+      "type": "array"
+    },
+    "accounts": {
+      "description": "Accounts linked to this household.",
+      "items": {
+        "$ref": "#/$defs/HouseholdAccount"
+      },
+      "title": "Accounts",
+      "type": "array"
+    },
+    "vendor_mappings": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/HouseholdVendorMappings"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Preserves vendor-specific grouping semantics. IDs and grouping types ONLY \u2014 no member lists."
+    },
+    "reconciliation": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Reconciliation"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Cross-vendor agreement tracking: sources_agree, discrepancies list, last_reconciled."
+    }
+  },
+  "required": [
+    "canonical_id",
+    "display_name",
+    "primary_source"
+  ],
+  "title": "Household",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://007.fsi/schemas/canonical/household/v0.1.0"
+}

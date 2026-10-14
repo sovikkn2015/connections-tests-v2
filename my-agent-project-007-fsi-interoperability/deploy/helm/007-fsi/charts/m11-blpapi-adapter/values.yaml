@@ -1,0 +1,72 @@
+# -----------------------------------------------------------------------------
+# M11 BLPAPI Adapter -- Bloomberg refdata (disabled by default).
+#
+# Umbrella overrides land under `m11-blpapi-adapter:` in values-cloud.yaml.
+# The `enabled` key gates the whole sub-chart via a `condition:` in the
+# umbrella Chart.yaml, so disabling it here prevents any resources from
+# rendering.
+# -----------------------------------------------------------------------------
+
+enabled: false
+
+replicaCount: 2
+
+image:
+  repository: 007-fsi/m11-blpapi-adapter
+  tag: latest
+  pullPolicy: Always
+
+service:
+  appPort: 8443
+  probePort: 8080
+
+resources:
+  requests:
+    cpu: 200m
+    memory: 256Mi
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+  seccompProfile:
+    type: RuntimeDefault
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 1000
+  capabilities:
+    drop:
+      - ALL
+
+podDisruptionBudget:
+  minAvailable: 1
+
+tmpVolumes:
+  - name: tmp
+    mountPath: /tmp
+  - name: blpapi-cache
+    mountPath: /home/m11blp
+
+# Bloomberg runtime configuration. Only BLPAPI_ENABLED=true (set via
+# externalSecrets or a values override) activates the live BLPAPI path.
+blpapi:
+  enabled: false
+  host: "bloomberg-terminal.default.svc.cluster.local"
+  port: 8194
+  clientMode: DAPI                    # DAPI (desktop) or SAPI (server)
+  sessionTimeoutMs: 30000
+  circuitThreshold: 5
+  circuitCooldownMs: 30000
+  rateLimit:
+    rpm: 600
+    burst: 60
+
+# Vault paths for UUID + serial. Referenced by the ExternalSecret template.
+externalSecretPath: secret/data/007/m11-blpapi-adapter

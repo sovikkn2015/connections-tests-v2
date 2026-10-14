@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <deploymentStatus>Deployed</deploymentStatus>
+    <description>Dual-auth waiting queue. One row per action plan that tripped the $500K trade or $100K wire threshold. Senior_Compliance_Approver permset required to pick up.</description>
+    <enableActivities>true</enableActivities>
+    <enableHistory>true</enableHistory>
+    <enableReports>true</enableReports>
+    <enableSearch>true</enableSearch>
+    <label>IR Pending Approval</label>
+    <nameField>
+        <displayFormat>PND-{00000000}</displayFormat>
+        <label>Pending Approval Number</label>
+        <type>AutoNumber</type>
+    </nameField>
+    <pluralLabel>IR Pending Approvals</pluralLabel>
+    <sharingModel>ReadWrite</sharingModel>
+</CustomObject>

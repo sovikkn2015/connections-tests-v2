@@ -1,0 +1,26 @@
+{
+  "id": 5,
+  "text": "What is the price of AAPL",
+  "expected_category": "live_quote",
+  "expected_path": "ORCH->GW->MCP:market-data.get_quote",
+  "judge_pass": true,
+  "judge_score": 0.85,
+  "judge_reason": "[dry-run] fake judge pass",
+  "response_excerpt": "Current price is $201.68 as of today.",
+  "latency_ms": 1250,
+  "http_status": 200,
+  "status_verdict": "PASS",
+  "skip_reason": null,
+  "tool_calls": [
+    "dry-run.fake_tool"
+  ],
+  "langfuse_trace_id": "dry-5",
+  "audit_records_found": 1,
+  "audit_has_gateway_stage": true,
+  "mnpi_redactions_observed": 0,
+  "circuit_breaker_tripped": false,
+  "v2_status": "DEGRADED",
+  "error": null,
+  "mcp_direct_route": null,
+  "mcp_direct_correlation_id": null
+}

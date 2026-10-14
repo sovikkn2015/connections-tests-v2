@@ -1,0 +1,7 @@
+[
+  {"id":1,"level":"L1","category":"L1-MKT","persona":"ERA","query":"What's NVIDIA trading at?","tools":["Market Data MCP"],"expectedBehavior":"Returns current NVDA price with source citation"},
+  {"id":3,"level":"L1","category":"L1-MKT","persona":"ERA","query":"Give me TSLA's 52-week high and low","tools":["Market Data MCP"],"expectedBehavior":"Returns TSLA 52-week range"},
+  {"id":10,"level":"L1","category":"L1-MKT","persona":"PM","query":"Where's crude oil trading?","tools":["Market Data MCP"],"expectedBehavior":"Returns current WTI crude oil price"},
+  {"id":21,"level":"L1","category":"L1-EXT","persona":"ERA","query":"Show me NVIDIA's latest 10-Q","tools":["SEC EDGAR MCP"],"expectedBehavior":"Returns NVDA latest 10-Q filing with date and link"},
+  {"id":25,"level":"L1","category":"L1-EXT","persona":"ERA","query":"Any news about Tesla today?","tools":["News MCP"],"expectedBehavior":"Returns today's TSLA news headlines"}
+]

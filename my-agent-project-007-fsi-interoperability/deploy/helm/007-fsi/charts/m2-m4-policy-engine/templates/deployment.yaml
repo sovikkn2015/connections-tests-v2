@@ -1,0 +1,92 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "007.fullname" . }}
+  labels:
+    {{- include "007.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "007.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "007.labels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "007.serviceAccountName" . }}
+      automountServiceAccountToken: true
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          image: {{ include "007.image" . | quote }}
+          imagePullPolicy: {{ include "007.imagePullPolicy" . }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.probePort }}
+              protocol: TCP
+          env:
+            - name: ENABLE_MTLS
+              value: "true"
+            - name: MTLS_CERT_PATH
+              value: /etc/007/mtls/tls.crt
+            - name: MTLS_KEY_PATH
+              value: /etc/007/mtls/tls.key
+            - name: MTLS_CA_PATH
+              value: /etc/007/mtls/ca.crt
+            - name: VAULT_TOKEN_PATH
+              value: /var/run/secrets/vault/token
+          envFrom:
+            # Env vars sourced from the ExternalSecret -> Vault.
+            - secretRef:
+                name: {{ include "007.fullname" . }}-secrets
+                optional: true
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.service.probePort }}
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.service.probePort }}
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            timeoutSeconds: 3
+            failureThreshold: 3
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          securityContext:
+            {{- toYaml .Values.containerSecurityContext | nindent 12 }}
+          volumeMounts:
+            - name: mtls
+              mountPath: /etc/007/mtls
+              readOnly: true
+            - name: vault-token
+              mountPath: /var/run/secrets/vault
+              readOnly: true
+            {{- range .Values.tmpVolumes }}
+            - name: {{ .name }}
+              mountPath: {{ .mountPath }}
+            {{- end }}
+      volumes:
+        - name: mtls
+          secret:
+            secretName: {{ include "007.fullname" . }}-mtls
+            defaultMode: 0400
+            optional: true
+        - name: vault-token
+          secret:
+            secretName: {{ include "007.fullname" . }}-vault-token
+            defaultMode: 0400
+            optional: true
+        {{- range .Values.tmpVolumes }}
+        - name: {{ .name }}
+          emptyDir:
+            medium: Memory
+            sizeLimit: 64Mi
+        {{- end }}

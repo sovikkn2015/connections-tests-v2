@@ -1,0 +1,30 @@
+{
+  "version": "2026-03-10",
+  "description": "V3 sample restricted list. Production feed is a house-policy service; this file is demo-mode seed data.",
+  "entries": [
+    {"ticker": "ACME",  "reason": "active_m_and_a",     "effective_from": "2026-02-14", "effective_until": "2026-05-14"},
+    {"ticker": "BIGCO", "reason": "underwriting_block", "effective_from": "2026-03-01", "effective_until": "2026-04-01"},
+    {"ticker": "CYBRX", "reason": "insider_window",     "effective_from": "2026-03-05", "effective_until": "2026-03-20"},
+    {"ticker": "DELTAQ","reason": "active_m_and_a",     "effective_from": "2026-01-10", "effective_until": "2026-06-10"},
+    {"ticker": "EVERGR","reason": "research_blackout",  "effective_from": "2026-02-20", "effective_until": "2026-04-20"},
+    {"ticker": "FINCO", "reason": "underwriting_block", "effective_from": "2026-03-08", "effective_until": "2026-04-08"},
+    {"ticker": "GRIDX", "reason": "insider_window",     "effective_from": "2026-03-10", "effective_until": "2026-03-25"},
+    {"ticker": "HELOS", "reason": "research_blackout",  "effective_from": "2026-03-01", "effective_until": "2026-05-01"},
+    {"ticker": "IMPRT", "reason": "sanctions_risk",     "effective_from": "2026-01-01", "effective_until": "2027-01-01"},
+    {"ticker": "JEWELQ","reason": "active_m_and_a",     "effective_from": "2026-02-25", "effective_until": "2026-07-25"},
+    {"ticker": "KINESX","reason": "insider_window",     "effective_from": "2026-03-12", "effective_until": "2026-03-27"},
+    {"ticker": "LUMENS","reason": "underwriting_block", "effective_from": "2026-03-15", "effective_until": "2026-04-15"},
+    {"ticker": "MIRVX", "reason": "research_blackout",  "effective_from": "2026-02-28", "effective_until": "2026-04-28"},
+    {"ticker": "NOVAQ", "reason": "active_m_and_a",     "effective_from": "2026-03-03", "effective_until": "2026-08-03"},
+    {"ticker": "ORCAX", "reason": "insider_window",     "effective_from": "2026-03-07", "effective_until": "2026-03-22"},
+    {"ticker": "PRMEX", "reason": "sanctions_risk",     "effective_from": "2026-01-15", "effective_until": "2027-01-15"},
+    {"ticker": "QUBIT", "reason": "research_blackout",  "effective_from": "2026-03-01", "effective_until": "2026-04-30"},
+    {"ticker": "RELOX", "reason": "underwriting_block", "effective_from": "2026-03-10", "effective_until": "2026-04-10"},
+    {"ticker": "STARX", "reason": "active_m_and_a",     "effective_from": "2026-02-01", "effective_until": "2026-06-01"},
+    {"ticker": "TERMX", "reason": "insider_window",     "effective_from": "2026-03-14", "effective_until": "2026-03-29"}
+  ],
+  "mnpi_watchlist": [
+    "ACME", "CYBRX", "GRIDX", "KINESX", "ORCAX", "TERMX"
+  ],
+  "house_concentration_limit_pct": 10.0
+}

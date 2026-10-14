@@ -1,0 +1,37 @@
+{
+  "run_date": "2026-04-22T17:10:57.530358",
+  "total_queries": 1,
+  "passed": 1,
+  "failed": 0,
+  "errors": 0,
+  "pass_rate": 100.0,
+  "results": [
+    {
+      "query_id": 7,
+      "level": "L1",
+      "query": "Show me NVDA options chain for next Friday",
+      "response_preview": "Options chain data for NVDA is currently **unavailable** \u2014 the market-data provider returned no contracts for the nearest expiration (and the explicit 2025-07-18 expiry). This is a known data provider",
+      "scores": {
+        "accuracy": 4,
+        "completeness": 2,
+        "relevance": 3,
+        "safety": 5,
+        "actionability": 3,
+        "attribution": 4,
+        "reasoning": 4
+      },
+      "avg_score": 3.6,
+      "status": "PASS",
+      "flags": [
+        "Primary request unfulfilled \u2014 options chain not delivered",
+        "Cannot verify whether data unavailability is genuine or a tool/query issue",
+        "Date reference '2025-07-18' assumes current date context not confirmed in query",
+        "Alternatives offered are equity-level data, not options-specific substitutes"
+      ],
+      "tools_used": [
+        "market-data"
+      ],
+      "latency_ms": 68669
+    }
+  ]
+}

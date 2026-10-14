@@ -1,0 +1,25 @@
+{{- if .Values.certificate.enabled }}
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: m8-pipeline-engine
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: m8-pipeline-engine
+    app.kubernetes.io/part-of: 007-fsi
+    app.kubernetes.io/component: intelligence
+spec:
+  secretName: {{ .Values.mtls.secretName }}
+  duration: {{ .Values.certificate.duration }}
+  renewBefore: {{ .Values.certificate.renewBefore }}
+  commonName: m8-pipeline-engine.{{ .Release.Namespace }}.svc.cluster.local
+  dnsNames:
+    - m8-pipeline-engine.{{ .Release.Namespace }}.svc.cluster.local
+    - m8-pipeline-engine.{{ .Release.Namespace }}.svc
+  usages:
+    - server auth
+    - client auth
+  issuerRef:
+    name: {{ .Values.certificate.issuerRef.name }}
+    kind: {{ .Values.certificate.issuerRef.kind }}
+{{- end }}

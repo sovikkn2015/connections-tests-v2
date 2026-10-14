@@ -1,0 +1,10 @@
+apiVersion: v2
+name: m9-intent-router
+description: M9 -- LLM function-calling intent router (Haiku), high-throughput routing fast path.
+type: application
+version: 0.1.0
+appVersion: "1.1.0"
+keywords:
+  - 007-fsi
+  - intelligence-layer
+  - intent-routing

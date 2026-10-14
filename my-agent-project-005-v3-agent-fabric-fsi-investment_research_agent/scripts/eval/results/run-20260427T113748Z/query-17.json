@@ -1,0 +1,26 @@
+{
+  "id": 17,
+  "text": "Headlines for Apple",
+  "expected_category": "news",
+  "expected_path": "ORCH->GW->MCP:news-search.get_headlines",
+  "judge_pass": true,
+  "judge_score": 1.0,
+  "judge_reason": "Response honestly states no headlines available for AAPL, which satisfies the news category requirement to either give a headline OR honestl",
+  "response_excerpt": "{\"tool\": \"get_headlines\", \"ticker\": \"AAPL\", \"message\": \"No headlines for AAPL.\", \"headlines\": []}",
+  "latency_ms": 586,
+  "http_status": 200,
+  "status_verdict": "PASS",
+  "skip_reason": null,
+  "tool_calls": [
+    "news-search.get_headlines"
+  ],
+  "langfuse_trace_id": "21058a90-69cb-4823-93e6-02f4ef9e2035",
+  "audit_records_found": 0,
+  "audit_has_gateway_stage": false,
+  "mnpi_redactions_observed": 0,
+  "circuit_breaker_tripped": false,
+  "v2_status": "DEGRADED",
+  "error": null,
+  "mcp_direct_route": "/news-search/tools/call",
+  "mcp_direct_correlation_id": "21058a90-69cb-4823-93e6-02f4ef9e2035"
+}

@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Project 006 v3 - initiate-wire Process API MUnit test suite.
+  Hermetic: no OFAC / Dwolla network calls.
+
+    1. assert-403-when-approval-token-hash-missing
+    2. assert-403-when-plan-hash-missing
+    3. assert-403-dual-auth-required-over-100k
+    4. assert-400-when-beneficiary-missing
+    5. assert-200-happy-path-mock-mode
+    6. assert-200-under-threshold-mock-mode
+-->
+<mule xmlns="http://www.mulesoft.org/schema/mule/core"
+      xmlns:munit="http://www.mulesoft.org/schema/mule/munit"
+      xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+      xmlns:http="http://www.mulesoft.org/schema/mule/http"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="
+        http://www.mulesoft.org/schema/mule/core
+          http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+        http://www.mulesoft.org/schema/mule/munit
+          http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+        http://www.mulesoft.org/schema/mule/munit-tools
+          http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd
+        http://www.mulesoft.org/schema/mule/http
+          http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+
+    <munit:config name="initiate-wire-test-suite.xml">
+        <munit:parameterizations>
+            <munit:parameterization name="mock">
+                <munit:parameters>
+                    <munit:parameter propertyName="mock_mode" value="true"/>
+                </munit:parameters>
+            </munit:parameterization>
+        </munit:parameterizations>
+    </munit:config>
+
+    <munit:dynamic-port propertyName="http.port"/>
+
+    <munit:test name="assert-403-when-approval-token-hash-missing">
+        <munit:execution>
+            <munit:set-event>
+                <munit:payload value="#[output application/json --- { amount_usd: 5000, currency: 'USD', beneficiary_bank: 'Example Bank', beneficiary_account: 'ACCT-1', source_account_id: 'SRC-1', plan_hash: 'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789' }]"/>
+            </munit:set-event>
+            <flow-ref name="initiate-wire-main-flow"/>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[vars.httpStatus]" is="#[MunitTools::equalTo(403)]"/>
+            <munit-tools:assert-that expression="#[payload.error]" is="#[MunitTools::equalTo('approval_required')]"/>
+        </munit:validation>
+    </munit:test>
+
+    <munit:test name="assert-403-when-plan-hash-missing">
+        <munit:execution>
+            <munit:set-event>
+                <munit:payload value="#[output application/json --- { amount_usd: 5000, currency: 'USD', beneficiary_bank: 'Example Bank', beneficiary_account: 'ACCT-1', source_account_id: 'SRC-1', approval_token_hash: 'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789' }]"/>
+            </munit:set-event>
+            <flow-ref name="initiate-wire-main-flow"/>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[vars.httpStatus]" is="#[MunitTools::equalTo(403)]"/>
+        </munit:validation>
+    </munit:test>
+
+    <munit:test name="assert-403-dual-auth-required-over-100k">
+        <munit:execution>
+            <munit:set-event>
+                <munit:payload value="#[output application/json --- { amount_usd: 150000, currency: 'USD', beneficiary_bank: 'Example Bank', beneficiary_account: 'ACCT-1', source_account_id: 'SRC-1', plan_hash: 'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789', approval_token_hash: '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef' }]"/>
+            </munit:set-event>
+            <flow-ref name="initiate-wire-main-flow"/>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[vars.httpStatus]" is="#[MunitTools::equalTo(403)]"/>
+            <munit-tools:assert-that expression="#[payload.error]" is="#[MunitTools::equalTo('dual_approval_required')]"/>
+        </munit:validation>
+    </munit:test>
+
+    <munit:test name="assert-400-when-beneficiary-missing">
+        <munit:execution>
+            <munit:set-event>
+                <munit:payload value="#[output application/json --- { amount_usd: 5000, currency: 'USD', beneficiary_account: 'ACCT-1', source_account_id: 'SRC-1', plan_hash: 'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789', approval_token_hash: '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef' }]"/>
+            </munit:set-event>
+            <flow-ref name="initiate-wire-main-flow"/>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[vars.httpStatus]" is="#[MunitTools::equalTo(400)]"/>
+            <munit-tools:assert-that expression="#[payload.error]" is="#[MunitTools::equalTo('missing_fields')]"/>
+            <munit-tools:assert-that expression="#[payload.missing_fields contains 'beneficiary_bank']" is="#[MunitTools::equalTo(true)]"/>
+        </munit:validation>
+    </munit:test>
+
+    <munit:test name="assert-200-happy-path-mock-mode">
+        <munit:behavior>
+            <munit-tools:mock-when processor="http:request">
+                <munit-tools:with-attributes>
+                    <munit-tools:with-attribute whereValue="dwolla-api-config" attributeName="config-ref"/>
+                </munit-tools:with-attributes>
+                <munit-tools:then-return>
+                    <munit-tools:payload value='#[output application/json --- { error: "MUNIT_UNEXPECTED_CALL" }]'/>
+                </munit-tools:then-return>
+            </munit-tools:mock-when>
+            <munit-tools:mock-when processor="http:request">
+                <munit-tools:with-attributes>
+                    <munit-tools:with-attribute whereValue="ofac-sdn-config" attributeName="config-ref"/>
+                </munit-tools:with-attributes>
+                <munit-tools:then-return>
+                    <munit-tools:payload value='#[output application/json --- { error: "MUNIT_UNEXPECTED_CALL_OFAC" }]'/>
+                </munit-tools:then-return>
+            </munit-tools:mock-when>
+        </munit:behavior>
+        <munit:execution>
+            <munit:set-event>
+                <munit:payload value="#[output application/json --- { amount_usd: 5000, currency: 'USD', beneficiary_bank: 'Example Bank', beneficiary_account: 'ACCT-1', source_account_id: 'SRC-1', plan_hash: 'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789', approval_token_hash: '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef' }]"/>
+            </munit:set-event>
+            <flow-ref name="initiate-wire-main-flow"/>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[payload.status]" is="#[MunitTools::equalTo('initiated')]"/>
+            <munit-tools:assert-that expression="#[payload.wire_id startsWith 'MULE-WIRE-']" is="#[MunitTools::equalTo(true)]"/>
+            <munit-tools:assert-that expression="#[payload.amount_usd]" is="#[MunitTools::equalTo(5000)]"/>
+        </munit:validation>
+    </munit:test>
+
+    <munit:test name="assert-200-under-threshold-mock-mode">
+        <munit:execution>
+            <munit:set-event>
+                <munit:payload value="#[output application/json --- { amount_usd: 99999, currency: 'USD', beneficiary_bank: 'Example Bank', beneficiary_account: 'ACCT-1', source_account_id: 'SRC-1', plan_hash: 'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789', approval_token_hash: '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef' }]"/>
+            </munit:set-event>
+            <flow-ref name="initiate-wire-main-flow"/>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[payload.status]" is="#[MunitTools::equalTo('initiated')]"/>
+        </munit:validation>
+    </munit:test>
+
+</mule>

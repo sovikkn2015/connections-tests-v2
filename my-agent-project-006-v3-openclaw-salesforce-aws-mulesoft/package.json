@@ -1,0 +1,20 @@
+{
+  "name": "my-agent-project-006-v3-openclaw-salesforce-aws-mulesoft",
+  "version": "1.0.0",
+  "description": "> **FSI Wealth Platform** — Analyst · RM · Client — one runtime, one system of record, one audit trail.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "@playwright/test": "^1.59.1"
+  }
+}

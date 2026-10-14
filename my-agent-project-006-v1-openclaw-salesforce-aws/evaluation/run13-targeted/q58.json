@@ -1,0 +1,37 @@
+{
+  "run_date": "2026-04-22T18:13:13.279201",
+  "total_queries": 1,
+  "passed": 1,
+  "failed": 0,
+  "errors": 0,
+  "pass_rate": 100.0,
+  "results": [
+    {
+      "query_id": 58,
+      "level": "L2",
+      "query": "Show me all compliance exceptions from the last 7 days",
+      "response_preview": "**No genuine compliance exceptions found in the last 7 days.**\n\nHere's a precise summary of what the CRM data shows:\n\n**Query scope:** `IR_Audit_Log__c` records from the last 7 days filtered on `Compl",
+      "scores": {
+        "accuracy": 3,
+        "completeness": 4,
+        "relevance": 4,
+        "safety": 5,
+        "actionability": 4,
+        "attribution": 4,
+        "reasoning": 4
+      },
+      "avg_score": 4.0,
+      "status": "PASS",
+      "flags": [
+        "Cannot verify specific record counts (50 records, AUD-000911) against ground truth \u2014 these may be hallucinated or accurate",
+        "Null field interpretation as 'not an active failure state' is an assumption that may not hold in all CRM configurations",
+        "Date 2026-04-19 is a future date relative to typical evaluation context \u2014 may indicate synthetic/test data environment",
+        "SOQL query logic combining OR conditions on Compliance_Status__c and MNPI_Flag__c not shown explicitly, reducing verifiability"
+      ],
+      "tools_used": [
+        "salesforce-crm"
+      ],
+      "latency_ms": 88026
+    }
+  ]
+}

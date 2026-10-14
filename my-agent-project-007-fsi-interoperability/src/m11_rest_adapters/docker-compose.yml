@@ -1,0 +1,66 @@
+version: "3.9"
+# Local-dev docker-compose — spec AC11.6.
+services:
+  vault:
+    image: hashicorp/vault:1.15
+    command: ["vault", "server", "-dev", "-dev-root-token-id=dev-root", "-dev-listen-address=0.0.0.0:8200"]
+    ports: ["8200:8200"]
+    cap_add: [IPC_LOCK]
+    environment:
+      VAULT_DEV_ROOT_TOKEN_ID: dev-root
+
+  m11-salesforce-fsc:
+    build: { context: ./salesforce_fsc }
+    ports: ["8081:8080"]
+    environment:
+      SECRETS_BACKEND: vault
+      VAULT_ADDR: http://vault:8200
+      VAULT_TOKEN: dev-root
+      ADAPTER_PORT: "8080"
+      MTLS_ENABLED: "false"
+    depends_on: [vault]
+
+  m11-orion:
+    build: { context: ./orion }
+    ports: ["8082:8080"]
+    environment:
+      SECRETS_BACKEND: vault
+      VAULT_ADDR: http://vault:8200
+      VAULT_TOKEN: dev-root
+      ADAPTER_PORT: "8080"
+      MTLS_ENABLED: "false"
+      ORION_AUTH_MODE: oauth
+    depends_on: [vault]
+
+  m11-emoney:
+    build: { context: ./emoney }
+    ports: ["8083:8080"]
+    environment:
+      SECRETS_BACKEND: vault
+      VAULT_ADDR: http://vault:8200
+      VAULT_TOKEN: dev-root
+      ADAPTER_PORT: "8080"
+      MTLS_ENABLED: "false"
+    depends_on: [vault]
+
+  m11-schwab:
+    build: { context: ./schwab }
+    ports: ["8084:8080"]
+    environment:
+      SECRETS_BACKEND: vault
+      VAULT_ADDR: http://vault:8200
+      VAULT_TOKEN: dev-root
+      ADAPTER_PORT: "8080"
+      MTLS_ENABLED: "false"
+    depends_on: [vault]
+
+  m11-smarsh-archive:
+    build: { context: ./smarsh_archive }
+    ports: ["8085:8080"]
+    environment:
+      SECRETS_BACKEND: vault
+      VAULT_ADDR: http://vault:8200
+      VAULT_TOKEN: dev-root
+      ADAPTER_PORT: "8080"
+      MTLS_ENABLED: "false"
+    depends_on: [vault]

@@ -1,0 +1,42 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: |
+  Execution Specialist — AWS resources.
+  Owner: intelligence-layer team.
+
+  Resources:
+    - Execution orders DynamoDB table (finite state machine backing store)
+
+  Depends on: platform-common.
+
+Parameters:
+  Prefix:       { Type: String, Default: fsi007 }
+  Environment:  { Type: String, Default: dev }
+
+Resources:
+
+  ExecutionOrders:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub '${Prefix}-${Environment}-execution-orders'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - { AttributeName: order_id, AttributeType: S }
+      KeySchema:
+        - { AttributeName: order_id, KeyType: HASH }
+      PointInTimeRecoverySpecification: { PointInTimeRecoveryEnabled: true }
+      SSESpecification:
+        SSEEnabled: true
+        SSEType: KMS
+        KMSMasterKeyId: !ImportValue '007-platform-KmsKeyId'
+      Tags:
+        - { Key: project, Value: '007' }
+        - { Key: environment, Value: !Ref Environment }
+        - { Key: module, Value: execution-specialist }
+
+Outputs:
+  ExecutionOrdersTableName:
+    Value: !Ref ExecutionOrders
+    Export: { Name: '007-execution-specialist-ExecutionOrdersTableName' }
+  ExecutionOrdersTableArn:
+    Value: !GetAtt ExecutionOrders.Arn
+    Export: { Name: '007-execution-specialist-ExecutionOrdersTableArn' }

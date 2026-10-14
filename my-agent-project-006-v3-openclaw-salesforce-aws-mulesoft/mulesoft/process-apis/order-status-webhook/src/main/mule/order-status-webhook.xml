@@ -1,0 +1,251 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core"
+      xmlns:http="http://www.mulesoft.org/schema/mule/http"
+      xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+      xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="
+        http://www.mulesoft.org/schema/mule/core
+        http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+        http://www.mulesoft.org/schema/mule/http
+        http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+        http://www.mulesoft.org/schema/mule/ee/core
+        http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+
+    <!--
+      Project 006 v3 - order-status-webhook Process API.
+
+      Public HTTPS endpoint that receives Alpaca order-lifecycle callbacks.
+      Flow:
+        POST /api/webhooks/orders
+          -> read X-Alpaca-Signature header
+          -> recompute HMAC-SHA256(body, webhook.hmac_secret)
+          -> 401 on mismatch
+          -> 400 on malformed body
+          -> translate to MCP tools/call payload (order_status_webhook)
+          -> POST ${mcp.endpoint_host}/mcp/tools/call with Bearer token
+          -> 200 ack { received, event_id, mulesoft_reference } on success
+          -> 502 on MCP error
+
+      The MCP tool then does the Salesforce position/order update + audit.
+      This XML keeps zero business logic, zero audit writes of its own.
+    -->
+
+    <configuration-properties file="config.yaml"/>
+<http:listener-config name="webhook-http-listener-config">
+        <http:listener-connection host="0.0.0.0" port="8081"/>
+    </http:listener-config>
+
+    <http:request-config name="mcp-api-config"
+                         responseTimeout="15000">
+        <http:request-connection protocol="HTTPS"
+                                 host="${mcp.endpoint_host}"
+                                 port="443"/>
+    </http:request-config>
+
+    <!-- ================================================================ -->
+    <!-- POST /api/webhooks/orders                                        -->
+    <!-- ================================================================ -->
+    <flow name="order-status-webhook-main-flow">
+        <http:listener config-ref="webhook-http-listener-config"
+                       path="/api/webhooks/orders"
+                       allowedMethods="POST">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[{'Content-Type': 'application/json'}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:headers>#[{'Content-Type': 'application/json'}]</http:headers>
+            </http:error-response>
+        </http:listener>
+
+        <!-- Capture raw body bytes as binary for HMAC recomputation. -->
+        <set-variable variableName="rawBody" value="#[output application/octet-stream --- payload]"/>
+        <set-variable variableName="signatureHeader" value='#[attributes.headers."x-alpaca-signature" default ""]'/>
+        <set-variable variableName="eventId" value="#[(payload.order.id default 'unknown') ++ '-' ++ (payload.timestamp default 'ts')]"/>
+
+        <logger level="INFO"
+                message='#["[webhook] received event=" ++ (payload.event default "?") ++ " order_id=" ++ (payload.order.id default "?") ++ " sig_prefix=" ++ (if (vars.signatureHeader == "") "NONE" else ((vars.signatureHeader as String)[0 to 7]))]'/>
+
+        <choice>
+            <!-- Missing signature -->
+            <when expression="#[isEmpty(vars.signatureHeader default '')]">
+                <set-variable variableName="httpStatus" value="401"/>
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{ error: "signature_missing", message: "X-Alpaca-Signature header required" }]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+            </when>
+
+            <otherwise>
+                <!-- Recompute HMAC-SHA256 of raw body as lowercase hex -->
+                <ee:transform>
+                    <ee:variables>
+                        <ee:set-variable variableName="expectedSig"><![CDATA[%dw 2.0
+output application/java
+---
+lower(
+  dw::Crypto::HMACBinary(
+    (p("webhook.hmac_secret") default "") as Binary,
+    vars.rawBody as Binary,
+    "HmacSHA256"
+  ) as String {base: "16"}
+)]]></ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+
+                <choice>
+                    <when expression='#[lower(vars.signatureHeader default "") != vars.expectedSig]'>
+                        <set-variable variableName="httpStatus" value="401"/>
+                        <logger level="WARN"
+                                message="#['[webhook] signature mismatch for event ' ++ vars.eventId]"/>
+                        <ee:transform>
+                            <ee:message>
+                                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{ error: "signature_invalid", message: "HMAC-SHA256 signature did not match" }]]></ee:set-payload>
+                            </ee:message>
+                        </ee:transform>
+                    </when>
+
+                    <!-- 400: missing required body fields -->
+                    <when expression='#[
+                        isEmpty(payload.event default "")
+                        or payload.order == null
+                        or isEmpty(payload.order.id default "")
+                    ]'>
+                        <set-variable variableName="httpStatus" value="400"/>
+                        <ee:transform>
+                            <ee:message>
+                                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{ error: "missing_fields", message: "event + order.id are required" }]]></ee:set-payload>
+                            </ee:message>
+                        </ee:transform>
+                    </when>
+
+                    <otherwise>
+                        <choice>
+                            <when expression="#[(p('mock_mode') default 'false') == 'true']">
+                                <ee:transform>
+                                    <ee:message>
+                                        <ee:set-payload><![CDATA[%dw 2.0
+import * from dw::Runtime
+output application/json
+var uuid = randomUUID() replace "-" with ""
+---
+{
+  received: true,
+  event_id: vars.eventId,
+  mulesoft_reference: "MS-REF-" ++ (uuid[0 to 11])
+}]]></ee:set-payload>
+                                    </ee:message>
+                                </ee:transform>
+                            </when>
+
+                            <otherwise>
+                                <ee:transform>
+                                    <ee:message>
+                                        <ee:set-payload resource="transforms/mcp-call.dwl"/>
+                                    </ee:message>
+                                </ee:transform>
+
+                                <try>
+                                    <http:request method="POST"
+                                                  config-ref="mcp-api-config"
+                                                  path="#[p('mcp.endpoint_path') default '/mcp/tools/call']">
+                                        <http:headers>#[{
+                                            "X-MCP-API-Key": p("mcp.api_key") default "",
+                                            "Content-Type": "application/json",
+                                            "Accept": "application/json",
+                                            "X-Principal-Id": "mulesoft-webhook"
+                                        }]</http:headers>
+                                    </http:request>
+                                    <error-handler>
+                                        <on-error-continue type="HTTP:TIMEOUT, HTTP:CONNECTIVITY">
+                                            <set-variable variableName="httpStatus" value="504"/>
+                                            <ee:transform>
+                                                <ee:message>
+                                                    <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{ error: "upstream_timeout", message: "MCP server did not respond in time" }]]></ee:set-payload>
+                                                </ee:message>
+                                            </ee:transform>
+                                        </on-error-continue>
+                                        <on-error-continue type="ANY">
+                                            <set-variable variableName="httpStatus" value="502"/>
+                                            <ee:transform>
+                                                <ee:message>
+                                                    <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{ error: "upstream_error", message: "MCP server returned an error" }]]></ee:set-payload>
+                                                </ee:message>
+                                            </ee:transform>
+                                        </on-error-continue>
+                                    </error-handler>
+                                </try>
+
+                                <choice>
+                                    <when expression="#[(vars.httpStatus default 200) == 200]">
+                                        <ee:transform>
+                                            <ee:message>
+                                                <ee:set-payload><![CDATA[%dw 2.0
+import * from dw::Runtime
+import * from dw::Crypto
+output application/json
+var uuid = dw::Crypto::SHA1((now() as String) as Binary) replace "-" with ""
+---
+{
+  received: true,
+  event_id: vars.eventId,
+  mulesoft_reference: "MS-REF-" ++ (uuid[0 to 11])
+}]]></ee:set-payload>
+                                            </ee:message>
+                                        </ee:transform>
+                                    </when>
+                                    <otherwise>
+                                        <logger level="DEBUG" message="#['[webhook] MCP error passthrough']"/>
+                                    </otherwise>
+                                </choice>
+                            </otherwise>
+                        </choice>
+                    </otherwise>
+                </choice>
+            </otherwise>
+        </choice>
+    </flow>
+
+    <!-- ================================================================ -->
+    <!-- GET /api/health                                                  -->
+    <!-- ================================================================ -->
+    <flow name="webhook-health-flow">
+        <http:listener config-ref="webhook-http-listener-config"
+                       path="/api/health"
+                       allowedMethods="GET">
+            <http:response statusCode="200">
+                <http:headers>#[{'Content-Type': 'application/json'}]</http:headers>
+            </http:response>
+        </http:listener>
+        <ee:transform>
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  status: "ok",
+  mode: if ((p('mock_mode') default 'false') == 'true') "mock" else "live",
+  api: "order-status-webhook-process-api",
+  version: "v3"
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+    </flow>
+
+</mule>

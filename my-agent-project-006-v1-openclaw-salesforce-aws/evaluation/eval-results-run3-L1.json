@@ -1,0 +1,796 @@
+{
+  "run_date": "2026-04-11T22:56:47.825089",
+  "total_queries": 30,
+  "passed": 0,
+  "failed": 30,
+  "errors": 0,
+  "pass_rate": 0.0,
+  "results": [
+    {
+      "query_id": 1,
+      "level": "L1",
+      "query": "What's NVIDIA trading at?",
+      "response_preview": "{\"ok\":true,\"runId\":\"98b877e4-2164-45e4-8129-3d9a822209be\"}",
+      "scores": {
+        "accuracy": 0,
+        "completeness": 0,
+        "relevance": 1,
+        "safety": 4,
+        "actionability": 0,
+        "attribution": 0,
+        "reasoning": 0
+      },
+      "avg_score": 0.7,
+      "status": "FAIL",
+      "flags": [
+        "no_price_data_returned",
+        "raw_api_response_exposed",
+        "incomplete_tool_execution",
+        "no_financial_data_presented",
+        "user_query_unanswered"
+      ],
+      "tools_used": [],
+      "latency_ms": 35113
+    },
+    {
+      "query_id": 2,
+      "level": "L1",
+      "query": "AAPL bid-ask spread right now",
+      "response_preview": "{\"ok\":true,\"runId\":\"f569f2b0-2006-460d-b358-c30b05931a09\"}",
+      "scores": {
+        "accuracy": 0,
+        "completeness": 0,
+        "relevance": 1,
+        "safety": 4,
+        "actionability": 0,
+        "attribution": 0,
+        "reasoning": 0
+      },
+      "avg_score": 0.7,
+      "status": "FAIL",
+      "flags": [
+        "no_financial_data_returned",
+        "raw_api_response_exposed",
+        "missing_bid_ask_spread",
+        "tool_call_incomplete",
+        "not_actionable_for_pm"
+      ],
+      "tools_used": [],
+      "latency_ms": 29884
+    },
+    {
+      "query_id": 3,
+      "level": "L1",
+      "query": "Give me TSLA's 52-week high and low",
+      "response_preview": "{\"ok\":true,\"runId\":\"2865cf86-6744-4b3b-ba53-dabe04e0e1ab\"}",
+      "scores": {
+        "accuracy": 0,
+        "completeness": 0,
+        "relevance": 1,
+        "safety": 4,
+        "actionability": 0,
+        "attribution": 0,
+        "reasoning": 0
+      },
+      "avg_score": 0.7,
+      "status": "FAIL",
+      "flags": [
+        "No financial data returned",
+        "Response is a raw JSON job/run ID rather than actual market data",
+        "52-week high and low values completely absent",
+        "User cannot act on this response",
+        "Possible async job initiation without result retrieval"
+      ],
+      "tools_used": [],
+      "latency_ms": 30095
+    },
+    {
+      "query_id": 4,
+      "level": "L1",
+      "query": "What's the S&P 500 at?",
+      "response_preview": "{\"ok\":true,\"runId\":\"1ec4aa3c-9448-4c20-be30-c638a471e35c\"}",
+      "scores": {
+        "accuracy": 0,
+        "completeness": 0,
+        "relevance": 1,
+        "safety": 4,
+        "actionability": 0,
+        "attribution": 0,
+        "reasoning": 0
+      },
+      "avg_score": 0.7,
+      "status": "FAIL",
+      "flags": [
+        "no_market_data_returned",
+        "raw_api_response_exposed_to_user",
+        "query_not_answered",
+        "missing_s&p500_price_level",
+        "tool_invocation_result_not_processed"
+      ],
+      "tools_used": [],
+      "latency_ms": 30081
+    },
+    {
+      "query_id": 5,
+      "level": "L1",
+      "query": "MSFT volume today vs 30-day average",
+      "response_preview": "{\"ok\":true,\"runId\":\"d378fcfd-1612-4241-b00a-9225d1a48f5c\"}",
+      "scores": {
+        "accuracy": 0,
+        "completeness": 0,
+        "relevance": 1,
+        "safety": 4,
+        "actionability": 0,
+        "attribution": 0,
+        "reasoning": 0
+      },
+      "avg_score": 0.7,
+      "status": "FAIL",
+      "flags": [
+        "no_data_returned",
+        "raw_job_id_exposed",
+        "query_not_answered",
+        "no_volume_data",
+        "no_comparison_provided",
+        "async_response_not_resolved"
+      ],
+      "tools_used": [],
+      "latency_ms": 14048
+    },
+    {
+      "query_id": 6,
+      "level": "L1",
+      "query": "What's AMD's market cap?",
+      "response_preview": "{\"ok\":true,\"runId\":\"97ccabc4-ee91-47a4-96e2-3a608425ca64\"}",
+      "scores": {
+        "accuracy": 0,
+        "completeness": 0,
+        "relevance": 1,
+        "safety": 4,
+        "actionability": 0,
+        "attribution": 0,
+        "reasoning": 0
+      },
+      "avg_score": 0.7,
+      "status": "FAIL",
+      "flags": [
+        "NO_ACTUAL_DATA_RETURNED",
+        "RAW_API_RESPONSE_EXPOSED",
+        "TOOL_INVOCATION_NOT_COMPLETED",
+        "MISSING_MARKET_CAP_VALUE",
+        "INCOMPLETE_WORKFLOW"
+      ],
+      "tools_used": [],
+      "latency_ms": 27726
+    },
+    {
+      "query_id": 7,
+      "level": "L1",
+      "query": "Show me NVDA options chain for next Friday",
+      "response_preview": "{\"ok\":true,\"runId\":\"e6350d3d-0d54-4153-968c-b90fe617168f\"}",
+      "scores": {
+        "accuracy": 0,
+        "completeness": 0,
+        "relevance": 1,
+        "safety": 4,
+        "actionability": 0,
+        "attribution": 0,
+        "reasoning": 0
+      },
+      "avg_score": 0.7,
+      "status": "FAIL",
+      "flags": [
+        "no_options_data_returned",
+        "raw_api_response_exposed_to_user",
+        "missing_strike_prices",
+        "missing_bid_ask_spreads",
+        "missing_iv_greeks",
+        "missing_expiration_date_confirmation",
+        "incomplete_tool_execution"
+      ],
+      "tools_used": [],
+      "latency_ms": 30772
+    },
+    {
+      "query_id": 8,
+      "level": "L1",
+      "query": "What's the implied move on GOOGL earnings?",
+      "response_preview": "{\"ok\":true,\"runId\":\"3ee76dab-4989-4a45-a584-99476fd269e9\"}",
+      "scores": {
+        "accuracy": 0,
+        "completeness": 0,
+        "relevance": 1,
+        "safety": 4,
+        "actionability": 0,
+        "attribution": 0,
+        "reasoning": 0
+      },
+      "avg_score": 0.7,
+      "status": "FAIL",
+      "flags": [
+        "response_is_job_id_not_answer",
+        "no_financial_data_returned",
+        "tool_call_result_not_processed",
+        "user_query_unanswered",
+        "possible_async_response_not_resolved"
+      ],
+      "tools_used": [],
+      "latency_ms": 31066
+    },
+    {
+      "query_id": 9,
+      "level": "L1",
+      "query": "10-year Treasury yield right now",
+      "response_preview": "{\"ok\":true,\"runId\":\"fa3714e6-ab79-48cc-b136-7dfd4c1fe1bf\"}",
+      "scores": {
+        "accuracy": 0,
+        "completeness": 0,
+        "relevance": 1,
+        "safety": 4,
+        "actionability": 0,
+        "attribution": 0,
+        "reasoning": 0
+      },
+      "avg_score": 0.7,
+      "status": "FAIL",
+      "flags": [
+        "no_yield_data_returned",
+        "raw_api_response_exposed",
+        "incomplete_tool_execution",
+        "no_financial_data_presented",
+        "possible_async_job_not_resolved"
+      ],
+      "tools_used": [],
+      "latency_ms": 18150
+    },
+    {
+      "query_id": 10,
+      "level": "L1",
+      "query": "Where's crude oil trading?",
+      "response_preview": "{\"ok\":true,\"runId\":\"4da45d12-6287-4337-aebf-49ae0935f0b4\"}",
+      "scores": {
+        "accuracy": 0,
+        "completeness": 0,
+        "relevance": 1,
+        "safety": 4,
+        "actionability": 0,
+        "attribution": 0,
+        "reasoning": 0
+      },
+      "avg_score": 0.7,
+      "status": "FAIL",
+      "flags": [
+        "no price data returned",
+        "response is a raw API acknowledgment not a market data answer",
+        "user received a run ID instead of crude oil price",
+        "tool was likely invoked but result not surfaced to user",
+        "completely non-actionable for a PM needing trading levels"
+      ],
+      "tools_used": [],
+      "latency_ms": 17323
+    },
+    {
+      "query_id": 11,
+      "level": "L1",
+      "query": "Who covers Apple on our team?",
+      "response_preview": "{\"ok\":true,\"runId\":\"0196111f-b715-4934-861c-5f0f86be45f3\"}",
+      "scores": {
+        "accuracy": 0,
+        "completeness": 0,
+        "relevance": 1,
+        "safety": 4,
+        "actionability": 0,
+        "attribution": 0,
+        "reasoning": 0
+      },
+      "avg_score": 0.7,
+      "status": "FAIL",
+      "flags": [
+        "no_answer_returned",
+        "raw_job_id_exposed",
+        "query_not_resolved",
+        "missing_soql_results",
+        "async_response_not_resolved"
+      ],
+      "tools_used": [],
+      "latency_ms": 18551
+    },
+    {
+      "query_id": 12,
+      "level": "L1",
+      "query": "When does JPMorgan report earnings?",
+      "response_preview": "{\"ok\":true,\"runId\":\"96426e00-688c-4595-81ca-766f47bb8f8b\"}",
+      "scores": {
+        "accuracy": 0,
+        "completeness": 0,
+        "relevance": 1,
+        "safety": 4,
+        "actionability": 0,
+        "attribution": 0,
+        "reasoning": 0
+      },
+      "avg_score": 0.7,
+      "status": "FAIL",
+      "flags": [
+        "no_answer_provided",
+        "raw_api_response_returned",
+        "missing_earnings_date",
+        "no_soql_query_executed_or_results_shown",
+        "tool_invocation_not_completed"
+      ],
+      "tools_used": [],
+      "latency_ms": 27983
+    },
+    {
+      "query_id": 13,
+      "level": "L1",
+      "query": "What's on my watchlist?",
+      "response_preview": "{\"ok\":true,\"runId\":\"909ff892-0bff-4197-98e5-291ec7c23f94\"}",
+      "scores": {
+        "accuracy": 0,
+        "completeness": 0,
+        "relevance": 1,
+        "safety": 3,
+        "actionability": 0,
+        "attribution": 0,
+        "reasoning": 0
+      },
+      "avg_score": 0.6,
+      "status": "FAIL",
+      "flags": [
+        "no_data_returned",
+        "raw_job_id_exposed",
+        "query_not_executed_or_results_not_surfaced",
+        "missing_watchlist_content",
+        "async_response_without_results"
+      ],
+      "tools_used": [],
+      "latency_ms": 27852
+    },
+    {
+      "query_id": 14,
+      "level": "L1",
+      "query": "Pull up Client Henderson's profile",
+      "response_preview": "{\"ok\":true,\"runId\":\"c451cbdb-480c-4bd6-ab05-f1038e83fdd5\"}",
+      "scores": {
+        "accuracy": 0,
+        "completeness": 0,
+        "relevance": 1,
+        "safety": 3,
+        "actionability": 0,
+        "attribution": 0,
+        "reasoning": 0
+      },
+      "avg_score": 0.6,
+      "status": "FAIL",
+      "flags": [
+        "no_profile_data_returned",
+        "raw_job_id_exposed_instead_of_results",
+        "sf_soql_query_not_executed_or_results_not_surfaced",
+        "incomplete_response_missing_client_data",
+        "no_salesforce_fields_populated"
+      ],
+      "tools_used": [],
+      "latency_ms": 30072
+    },
+    {
+      "query_id": 15,
+      "level": "L1",
+      "query": "What's Client Nakamura's risk tolerance?",
+      "response_preview": "{\"ok\":true,\"runId\":\"f19b549d-e87c-4b15-81f8-0c0851bdbb19\"}",
+      "scores": {
+        "accuracy": 0,
+        "completeness": 0,
+        "relevance": 1,
+        "safety": 4,
+        "actionability": 0,
+        "attribution": 0,
+        "reasoning": 0
+      },
+      "avg_score": 0.7,
+      "status": "FAIL",
+      "flags": [
+        "no_data_returned",
+        "missing_risk_tolerance_value",
+        "raw_job_id_exposed_instead_of_results",
+        "sf_soql_query_not_executed_or_results_not_surfaced",
+        "incomplete_tool_response"
+      ],
+      "tools_used": [],
+      "latency_ms": 34899
+    },
+    {
+      "query_id": 16,
+      "level": "L1",
+      "query": "When was my last meeting with Client Reeves?",
+      "response_preview": "{\"ok\":true,\"runId\":\"a91e6842-d2df-4aff-9fc7-4c210402512c\"}",
+      "scores": {
+        "accuracy": 0,
+        "completeness": 0,
+        "relevance": 1,
+        "safety": 4,
+        "actionability": 0,
+        "attribution": 0,
+        "reasoning": 0
+      },
+      "avg_score": 0.7,
+      "status": "FAIL",
+      "flags": [
+        "no_data_returned",
+        "raw_job_id_exposed",
+        "query_not_executed_or_result_not_surfaced",
+        "missing_meeting_date",
+        "incomplete_response"
+      ],
+      "tools_used": [],
+      "latency_ms": 45902
+    },
+    {
+      "query_id": 17,
+      "level": "L1",
+      "query": "How many research notes have we published this quarter?",
+      "response_preview": "{\"ok\":true,\"runId\":\"df31055b-863a-4b74-8154-3991396d9665\"}",
+      "scores": {
+        "accuracy": 0,
+        "completeness": 0,
+        "relevance": 1,
+        "safety": 4,
+        "actionability": 0,
+        "attribution": 0,
+        "reasoning": 0
+      },
+      "avg_score": 0.7,
+      "status": "FAIL",
+      "flags": [
+        "no_answer_provided",
+        "raw_job_id_returned",
+        "soql_query_not_executed_or_result_not_shown",
+        "incomplete_response",
+        "no_data_returned_to_user"
+      ],
+      "tools_used": [],
+      "latency_ms": 18036
+    },
+    {
+      "query_id": 18,
+      "level": "L1",
+      "query": "What's our current rating on META?",
+      "response_preview": "{\"ok\":true,\"runId\":\"b113ff0a-e48f-4de1-9e6c-9667e9bfb725\"}",
+      "scores": {
+        "accuracy": 0,
+        "completeness": 0,
+        "relevance": 1,
+        "safety": 4,
+        "actionability": 0,
+        "attribution": 0,
+        "reasoning": 0
+      },
+      "avg_score": 0.7,
+      "status": "FAIL",
+      "flags": [
+        "no_answer_returned",
+        "raw_job_id_exposed",
+        "missing_query_results",
+        "incomplete_response"
+      ],
+      "tools_used": [],
+      "latency_ms": 18109
+    },
+    {
+      "query_id": 19,
+      "level": "L1",
+      "query": "List all clients with AUM over $5M",
+      "response_preview": "{\"ok\":true,\"runId\":\"fd3822e2-e127-4028-a2e9-0f563c2c1fe3\"}",
+      "scores": {
+        "accuracy": 0,
+        "completeness": 0,
+        "relevance": 1,
+        "safety": 4,
+        "actionability": 0,
+        "attribution": 0,
+        "reasoning": 0
+      },
+      "avg_score": 0.7,
+      "status": "FAIL",
+      "flags": [
+        "no_data_returned",
+        "only_job_id_returned",
+        "missing_soql_results",
+        "incomplete_response",
+        "no_client_list_provided",
+        "async_response_not_resolved"
+      ],
+      "tools_used": [],
+      "latency_ms": 27710
+    },
+    {
+      "query_id": 20,
+      "level": "L1",
+      "query": "Show me the audit log for yesterday's trades",
+      "response_preview": "{\"ok\":true,\"runId\":\"49e4e7d6-0e05-4981-adb9-d1f8b6c5d682\"}",
+      "scores": {
+        "accuracy": 0,
+        "completeness": 0,
+        "relevance": 1,
+        "safety": 3,
+        "actionability": 0,
+        "attribution": 0,
+        "reasoning": 0
+      },
+      "avg_score": 0.6,
+      "status": "FAIL",
+      "flags": [
+        "no audit log data returned",
+        "response is a job/run ID only with no results",
+        "SOQL query may have been submitted but no output displayed",
+        "compliance officer cannot act on a run ID alone",
+        "no trade records, timestamps, or audit fields shown",
+        "unclear if query executed successfully or is pending"
+      ],
+      "tools_used": [],
+      "latency_ms": 15702
+    },
+    {
+      "query_id": 21,
+      "level": "L1",
+      "query": "Show me NVIDIA's latest 10-Q",
+      "response_preview": "{\"ok\":true,\"runId\":\"b6219a71-7bf8-4c17-bb85-6c41a40f8435\"}",
+      "scores": {
+        "accuracy": 0,
+        "completeness": 0,
+        "relevance": 1,
+        "safety": 4,
+        "actionability": 0,
+        "attribution": 0,
+        "reasoning": 0
+      },
+      "avg_score": 0.7,
+      "status": "FAIL",
+      "flags": [
+        "no_financial_data_returned",
+        "response_is_job_id_only",
+        "incomplete_tool_execution",
+        "no_10q_content_displayed",
+        "missing_sec_filing_details"
+      ],
+      "tools_used": [],
+      "latency_ms": 17619
+    },
+    {
+      "query_id": 22,
+      "level": "L1",
+      "query": "Any 8-K filings from Tesla this week?",
+      "response_preview": "{\"ok\":true,\"runId\":\"c3df1620-7141-462f-9379-2ecad6613dbf\"}",
+      "scores": {
+        "accuracy": 0,
+        "completeness": 0,
+        "relevance": 1,
+        "safety": 4,
+        "actionability": 0,
+        "attribution": 0,
+        "reasoning": 0
+      },
+      "avg_score": 0.7,
+      "status": "FAIL",
+      "flags": [
+        "response_is_raw_json_job_id",
+        "no_actual_data_returned",
+        "tool_invocation_result_not_processed",
+        "no_8k_filing_information_provided",
+        "agent_returned_run_id_instead_of_answer"
+      ],
+      "tools_used": [],
+      "latency_ms": 18321
+    },
+    {
+      "query_id": 23,
+      "level": "L1",
+      "query": "Pull AAPL's latest proxy statement",
+      "response_preview": "{\"ok\":true,\"runId\":\"db879336-882b-405e-94f6-f1f57bed3800\"}",
+      "scores": {
+        "accuracy": 0,
+        "completeness": 0,
+        "relevance": 1,
+        "safety": 4,
+        "actionability": 0,
+        "attribution": 0,
+        "reasoning": 0
+      },
+      "avg_score": 0.7,
+      "status": "FAIL",
+      "flags": [
+        "no_document_returned",
+        "only_job_id_provided",
+        "no_proxy_statement_data",
+        "incomplete_response",
+        "missing_sec_edgar_results",
+        "no_filing_details"
+      ],
+      "tools_used": [],
+      "latency_ms": 28465
+    },
+    {
+      "query_id": 24,
+      "level": "L1",
+      "query": "Any insider transactions at Microsoft recently?",
+      "response_preview": "{\"ok\":true,\"runId\":\"aed1f42a-3d69-4767-bf01-7fcee64ad139\"}",
+      "scores": {
+        "accuracy": 0,
+        "completeness": 0,
+        "relevance": 1,
+        "safety": 4,
+        "actionability": 0,
+        "attribution": 0,
+        "reasoning": 0
+      },
+      "avg_score": 0.7,
+      "status": "FAIL",
+      "flags": [
+        "response_is_job_id_not_answer",
+        "no_insider_transaction_data_returned",
+        "tool_invocation_result_exposed_raw",
+        "zero_financial_content",
+        "no_sec_edgar_data_presented",
+        "incomplete_tool_execution"
+      ],
+      "tools_used": [],
+      "latency_ms": 44258
+    },
+    {
+      "query_id": 25,
+      "level": "L1",
+      "query": "Any news about Tesla today?",
+      "response_preview": "{\"ok\":true,\"runId\":\"2302ad51-12c4-439a-b5dd-da4d239643c4\"}",
+      "scores": {
+        "accuracy": 0,
+        "completeness": 0,
+        "relevance": 1,
+        "safety": 4,
+        "actionability": 0,
+        "attribution": 0,
+        "reasoning": 0
+      },
+      "avg_score": 0.7,
+      "status": "FAIL",
+      "flags": [
+        "response_is_raw_api_artifact",
+        "no_news_content_returned",
+        "tool_call_result_exposed_to_user",
+        "zero_information_value",
+        "incomplete_pipeline_execution"
+      ],
+      "tools_used": [],
+      "latency_ms": 11143
+    },
+    {
+      "query_id": 26,
+      "level": "L1",
+      "query": "What's the latest on the Fed rate decision?",
+      "response_preview": "{\"ok\":true,\"runId\":\"bcfe1090-0534-4239-8729-e0eca4d4f524\"}",
+      "scores": {
+        "accuracy": 0,
+        "completeness": 0,
+        "relevance": 1,
+        "safety": 4,
+        "actionability": 0,
+        "attribution": 0,
+        "reasoning": 0
+      },
+      "avg_score": 0.7,
+      "status": "FAIL",
+      "flags": [
+        "raw_api_response_returned_to_user",
+        "no_fed_rate_data_provided",
+        "tool_execution_result_not_processed",
+        "completely_uninformative_response",
+        "missing_news_content"
+      ],
+      "tools_used": [],
+      "latency_ms": 28836
+    },
+    {
+      "query_id": 27,
+      "level": "L1",
+      "query": "Any regulatory news affecting pharma stocks?",
+      "response_preview": "{\"ok\":true,\"runId\":\"226a708c-e16a-487b-9d07-6c80f675a101\"}",
+      "scores": {
+        "accuracy": 0,
+        "completeness": 0,
+        "relevance": 1,
+        "safety": 4,
+        "actionability": 0,
+        "attribution": 0,
+        "reasoning": 0
+      },
+      "avg_score": 0.7,
+      "status": "FAIL",
+      "flags": [
+        "raw_api_response_returned",
+        "no_content_delivered",
+        "tool_invocation_not_completed",
+        "zero_regulatory_news_provided",
+        "unusable_for_decision_making"
+      ],
+      "tools_used": [],
+      "latency_ms": 18350
+    },
+    {
+      "query_id": 28,
+      "level": "L1",
+      "query": "Headlines on the NVDA-ARM deal",
+      "response_preview": "{\"ok\":true,\"runId\":\"70e7b4b2-aa0a-4d33-9ef3-8c7933c3fa0f\"}",
+      "scores": {
+        "accuracy": 0,
+        "completeness": 0,
+        "relevance": 1,
+        "safety": 4,
+        "actionability": 0,
+        "attribution": 0,
+        "reasoning": 0
+      },
+      "avg_score": 0.7,
+      "status": "FAIL",
+      "flags": [
+        "response is a raw JSON job ID, not actual content",
+        "no headlines or news delivered",
+        "tool was invoked but output not retrieved or displayed",
+        "agent returned only a run ID without fetching results",
+        "completely uninformative to the ERA persona"
+      ],
+      "tools_used": [],
+      "latency_ms": 31458
+    },
+    {
+      "query_id": 29,
+      "level": "L1",
+      "query": "What did Jensen Huang say at GTC last week?",
+      "response_preview": "{\"ok\":true,\"runId\":\"985c132b-2dab-4ff0-8719-656c1166a0ca\"}",
+      "scores": {
+        "accuracy": 0,
+        "completeness": 0,
+        "relevance": 0,
+        "safety": 4,
+        "actionability": 0,
+        "attribution": 0,
+        "reasoning": 0
+      },
+      "avg_score": 0.6,
+      "status": "FAIL",
+      "flags": [
+        "response_is_raw_json_not_answer",
+        "no_content_returned",
+        "tool_call_result_exposed_to_user",
+        "query_completely_unanswered",
+        "appears_to_be_async_job_id_not_results"
+      ],
+      "tools_used": [],
+      "latency_ms": 31076
+    },
+    {
+      "query_id": 30,
+      "level": "L1",
+      "query": "Any news about layoffs in the tech sector?",
+      "response_preview": "{\"ok\":true,\"runId\":\"8fee70eb-b94c-4ca8-ba14-8fe4d7126595\"}",
+      "scores": {
+        "accuracy": 0,
+        "completeness": 0,
+        "relevance": 1,
+        "safety": 4,
+        "actionability": 0,
+        "attribution": 0,
+        "reasoning": 0
+      },
+      "avg_score": 0.7,
+      "status": "FAIL",
+      "flags": [
+        "no_actual_content_returned",
+        "raw_api_response_exposed",
+        "tool_invocation_not_completed",
+        "zero_information_value",
+        "user_query_unanswered"
+      ],
+      "tools_used": [],
+      "latency_ms": 29733
+    }
+  ]
+}

@@ -1,0 +1,143 @@
+# 007 Wedge Product — "Compliance Proxy for MCP"
+#
+# Ships M1+M2/M4+M6+M10 as a single Helm release. Sits between any MCP client
+# and any MCP server. Every call is identity-verified (M1), authority-checked
+# (M2/M4 via OPA/Rego), MNPI-filtered (M4), and WORM-audited (M10) — with
+# SHA-256 provenance chain across every stage.
+#
+# Rule 18: Phase 2 lighthouse is RIA-only (no Smarsh integration here —
+# that ships in Phase 3). Wedge can deploy to RIA broker-dealers in read-only
+# config (no execute, no order-submit in authority_scope).
+
+global:
+  imageRegistry: "875460787302.dkr.ecr.us-east-1.amazonaws.com"
+  imagePullPolicy: IfNotPresent
+  firmId: "acme-wm"
+  jurisdiction: "US"
+  archetype: "tier4_independent_ria"   # change to tier3_broker_dealer for BD
+  awsRegion: "us-east-1"
+
+# ── M1 Agent Identity ────────────────────────────────────────────
+m1:
+  enabled: true
+  image:
+    repository: 007-m1-identity
+    tag: 0.1.0
+  replicas: 2
+  resources:
+    requests: {cpu: 100m, memory: 128Mi}
+    limits:   {cpu: 500m, memory: 512Mi}
+  service:
+    port: 8001
+  env:
+    # Production: mount via Vault / AWS Secrets Manager. DO NOT hardcode.
+    # M1_PRIVATE_KEY_PEM and M1_PUBLIC_KEY_PEM must be supplied via a
+    # Kubernetes Secret. Values below are references, not the keys themselves.
+    M1_KEYS_SECRET_NAME: "m1-rsa-keys"
+
+# ── M2/M4 Policy Engine (OPA + FastAPI) ──────────────────────────
+m2m4:
+  enabled: true
+  image:
+    repository: 007-m2-m4-policy
+    tag: 0.1.0
+  replicas: 2
+  resources:
+    requests: {cpu: 200m, memory: 256Mi}
+    limits:   {cpu: 1000m, memory: 1Gi}
+  service:
+    port: 8002
+  # OPA sidecar config
+  opa:
+    image: openpolicyagent/opa:0.64.0-rootless
+    bundleUrl: "s3://007-opa-bundles/{{ .Values.global.archetype }}/bundle.tar.gz"
+    logLevel: info
+  env:
+    USE_LOCAL_EVALUATOR: "false"   # use real OPA, not local fallback
+
+# ── M6 Trust-Aware MCP Gateway ───────────────────────────────────
+m6:
+  enabled: true
+  image:
+    repository: 007-m6-gateway
+    tag: 0.1.0
+  replicas: 3
+  resources:
+    requests: {cpu: 200m, memory: 256Mi}
+    limits:   {cpu: 1000m, memory: 1Gi}
+  service:
+    port: 8006
+  # Public-facing ALB ingress (the only thing exposed to the outside world).
+  # All downstream modules stay in private subnets.
+  ingress:
+    enabled: true
+    className: alb
+    annotations:
+      alb.ingress.kubernetes.io/scheme: internet-facing
+      alb.ingress.kubernetes.io/target-type: ip
+      alb.ingress.kubernetes.io/ssl-redirect: "443"
+    hosts:
+      - host: mcp-proxy.acme-wm.example.com
+        paths:
+          - path: /
+            pathType: Prefix
+  env:
+    M1_URL: "http://007-wedge-m1-identity:8001"
+    M2_URL: "http://007-wedge-m2-m4-policy:8002"
+    M4_URL: "http://007-wedge-m2-m4-policy:8002"
+    M7_URL: ""                                         # no translation in wedge
+    M10_URL: "http://007-wedge-m10-audit-logger:8010"
+    REDIS_URL: "redis://007-wedge-redis:6379/0"
+
+# ── M10 Audit Logger (3-tier WORM) ───────────────────────────────
+m10:
+  enabled: true
+  image:
+    repository: 007-m10-audit
+    tag: 0.1.0
+  replicas: 2
+  resources:
+    requests: {cpu: 100m, memory: 256Mi}
+    limits:   {cpu: 500m, memory: 1Gi}
+  service:
+    port: 8010
+  env:
+    # S3 WORM: bucket with Object Lock Compliance mode, 6-year retention
+    M10_S3_BUCKET: "fsi007-audit-worm-us-east-1"
+    M10_S3_REGION: "us-east-1"
+    # DLQ: SQS for failed audit writes (fail-closed upstream, retry via DLQ)
+    M10_DLQ_BACKEND: "sqs"
+    M10_DLQ_QUEUE_URL: "https://sqs.us-east-1.amazonaws.com/875460787302/fsi007-audit-dlq"
+    # Langfuse (operational tier) — optional; omit to skip
+    # LANGFUSE_URL, LANGFUSE_PUBLIC_KEY, LANGFUSE_SECRET_KEY via Secret
+
+# ── Redis (M6 rate limits + circuit breakers) ────────────────────
+redis:
+  enabled: true
+  image:
+    repository: public.ecr.aws/docker/library/redis
+    tag: 7.2-alpine
+  resources:
+    requests: {cpu: 50m, memory: 64Mi}
+    limits:   {cpu: 200m, memory: 256Mi}
+
+# ── Security (Rule 21-23) ────────────────────────────────────────
+security:
+  mtls:
+    enabled: true
+    certManagerIssuer: "internal-ca"
+    rotationHours: 24
+  networkPolicy:
+    enabled: true
+  serviceAccount:
+    # IAM role bound via IRSA (AWS) — no static AWS credentials
+    irsaRoleArn: "arn:aws:iam::875460787302:role/007-wedge-irsa"
+
+# ── Observability ────────────────────────────────────────────────
+observability:
+  prometheus:
+    enabled: true
+    scrapeInterval: 30s
+  otel:
+    enabled: true
+    endpoint: "http://otel-collector:4317"

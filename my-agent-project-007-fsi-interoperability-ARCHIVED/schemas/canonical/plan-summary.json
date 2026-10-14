@@ -1,0 +1,313 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://007.fsi/schemas/canonical/plan-summary/v0.1.0",
+  "title": "PlanSummary",
+  "description": "Canonical financial plan summary. Maps from eMoney (Fidelity-owned), MoneyGuidePro, RightCapital. Summary-level only \u2014 raw plan data NEVER sent to LLM (M4 filters).",
+  "type": "object",
+  "required": [
+    "canonical_id",
+    "client_ref",
+    "plan_name",
+    "probability_of_success",
+    "as_of_date",
+    "source_system"
+  ],
+  "properties": {
+    "canonical_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Primary key for this plan summary"
+    },
+    "client_ref": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Canonical Client ID"
+    },
+    "household_ref": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid",
+      "description": "Canonical Household ID"
+    },
+    "plan_name": {
+      "type": "string",
+      "description": "Plan display name"
+    },
+    "plan_type": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "comprehensive",
+        "retirement_only",
+        "education_only",
+        "estate",
+        "tax",
+        "insurance",
+        null
+      ],
+      "description": "Plan classification"
+    },
+    "probability_of_success": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Overall plan success probability (0-100)"
+    },
+    "as_of_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date this plan summary is valid for"
+    },
+    "total_assets": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0,
+      "description": "Total assets in plan"
+    },
+    "total_liabilities": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0,
+      "description": "Total liabilities in plan"
+    },
+    "net_worth": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Net worth (assets - liabilities)"
+    },
+    "retirement_goal_amount": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0,
+      "description": "Retirement goal target amount"
+    },
+    "retirement_target_date": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date",
+      "description": "Retirement target date"
+    },
+    "retirement_income_gap": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Annual income shortfall in retirement (negative = surplus)"
+    },
+    "monte_carlo_success_pct": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Monte Carlo success percentage"
+    },
+    "monte_carlo_iterations": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "description": "Number of Monte Carlo iterations (typically 1000-10000)"
+    },
+    "annual_savings_rate": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0,
+      "description": "As decimal (0.15 = 15%)"
+    },
+    "annual_spending": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0,
+      "description": "Annual spending amount"
+    },
+    "social_security_estimate": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0,
+      "description": "Estimated annual SS benefit"
+    },
+    "pension_income": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0,
+      "description": "Annual pension income"
+    },
+    "goals": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "description": "Canonical Goal IDs linked to this plan"
+    },
+    "assumptions": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "inflation_rate": {
+          "type": "number",
+          "description": "As decimal (0.03 = 3%)"
+        },
+        "return_assumption": {
+          "type": "number",
+          "description": "As decimal (0.07 = 7%)"
+        },
+        "life_expectancy": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Assumed life expectancy in years"
+        },
+        "retirement_age": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "description": "Assumed retirement age"
+        },
+        "tax_rate_assumption": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "Assumed tax rate as decimal"
+        }
+      },
+      "description": "Plan assumptions"
+    },
+    "recommendations": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "items": {
+        "type": "object",
+        "properties": {
+          "category": {
+            "type": "string",
+            "enum": [
+              "savings",
+              "investment",
+              "insurance",
+              "estate",
+              "tax",
+              "debt",
+              "other"
+            ]
+          },
+          "description": {
+            "type": "string"
+          },
+          "priority": {
+            "type": "string",
+            "enum": [
+              "high",
+              "medium",
+              "low"
+            ]
+          }
+        }
+      },
+      "description": "Plan recommendations (summary level for agent consumption)"
+    },
+    "vendor_mappings": {
+      "type": "object",
+      "description": "Preserves vendor-specific plan identifiers",
+      "properties": {
+        "emoney": {
+          "type": "object",
+          "properties": {
+            "plan_id": {
+              "type": "string",
+              "description": "eMoney plan ID"
+            },
+            "scenario_id": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "eMoney scenario ID"
+            }
+          },
+          "description": "eMoney plan mapping"
+        },
+        "moneyguidepro": {
+          "type": "object",
+          "properties": {
+            "plan_id": {
+              "type": "string",
+              "description": "MoneyGuidePro plan ID"
+            },
+            "scenario_name": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "MoneyGuidePro scenario name"
+            }
+          },
+          "description": "MoneyGuidePro plan mapping"
+        },
+        "rightcapital": {
+          "type": "object",
+          "properties": {
+            "plan_id": {
+              "type": "string",
+              "description": "RightCapital plan ID"
+            }
+          },
+          "description": "RightCapital plan mapping"
+        }
+      }
+    },
+    "source_system": {
+      "type": "string",
+      "enum": [
+        "emoney",
+        "moneyguidepro",
+        "rightcapital",
+        "manual"
+      ],
+      "description": "Source system: emoney, moneyguidepro, rightcapital, manual"
+    },
+    "source_id": {
+      "type": "string",
+      "description": "Vendor-specific plan ID"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Plan creation timestamp"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Plan last update timestamp"
+    }
+  }
+}

@@ -1,0 +1,76 @@
+{
+  "runs": [
+    {
+      "ticker": "NVDA",
+      "status": "completed",
+      "elapsed": 98,
+      "run_id": "1ff0becd-736a-5eff-8518-8070d918e277",
+      "errors": 0
+    },
+    {
+      "ticker": "AAPL",
+      "status": "completed",
+      "elapsed": 170,
+      "run_id": "bbea51d2-cbad-55b0-917a-b19fc95a24b5",
+      "errors": 0
+    },
+    {
+      "ticker": "TSLA",
+      "status": "completed",
+      "elapsed": 113,
+      "run_id": "765f1266-d1a4-523f-8f4c-5d52eab92d81",
+      "errors": 0
+    },
+    {
+      "ticker": "MSFT",
+      "status": "completed",
+      "elapsed": 100,
+      "run_id": "9852a29d-9ade-5b97-b409-7080ca894a97",
+      "errors": 0
+    },
+    {
+      "ticker": "AMD",
+      "status": "completed",
+      "elapsed": 92,
+      "run_id": "2cb8dd6f-bdb7-51ef-a2fa-bf532f9fb33c",
+      "errors": 0
+    },
+    {
+      "ticker": "AMZN",
+      "status": "completed",
+      "elapsed": 96,
+      "run_id": "4f4d168d-baa8-5245-8960-dd2b5f103aa7",
+      "errors": 0
+    },
+    {
+      "ticker": "JPM",
+      "status": "completed",
+      "elapsed": 131,
+      "run_id": "c35cf736-a290-5cea-81ed-89905223eb45",
+      "errors": 0
+    },
+    {
+      "ticker": "TSMC",
+      "status": "completed",
+      "elapsed": 147,
+      "run_id": "b42c5d0b-1c08-5b48-b9d6-6083eebf5684",
+      "errors": 0
+    },
+    {
+      "ticker": "NVDA",
+      "status": "completed",
+      "elapsed": 223,
+      "run_id": "8db35cec-4d70-5eec-af23-456f914e5bdb",
+      "errors": 0
+    },
+    {
+      "ticker": "AAPL",
+      "status": "completed",
+      "elapsed": 117,
+      "run_id": "57693908-d6be-5030-9970-845ed73fedb3",
+      "errors": 0
+    }
+  ],
+  "completed": 10,
+  "failed": 0
+}

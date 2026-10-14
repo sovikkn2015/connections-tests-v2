@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Auto_Send_Eligible__c</fullName>
+    <label>Auto-Send Eligible</label>
+    <description>Populated by compliance_sweep skill when writing an alert inquiry. When true AND Type__c = alert, Client_Inquiry_Alert_Trigger publishes a Client_Alert_Auto_Send__e platform event for the client-liaison subscriber.</description>
+    <type>Checkbox</type>
+    <defaultValue>false</defaultValue>
+</CustomField>

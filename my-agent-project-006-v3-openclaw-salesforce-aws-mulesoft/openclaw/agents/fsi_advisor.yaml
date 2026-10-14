@@ -1,0 +1,109 @@
+# fsi-advisor persona — 5 agents (1 orchestrator + 4 specialists)
+# action_specialist is SERIAL BY DESIGN (steering rule 1: single choke
+# point; never parallelize the write path).
+
+persona: fsi_advisor
+display_name: "FSI Advisor (RM)"
+channels: [web, slack, sf_mobile_pwa]
+default_orchestrator: advisor_orchestrator
+
+agents:
+
+  - id: advisor_orchestrator
+    role: orchestrator
+    model: sonnet
+    description: >
+      Intent classification + routing. Parallel fanout for reads; serial
+      dispatch to action_specialist for writes.
+    system_prompt_summary: |
+      Classifies into research_aware/portfolio/suitability/action_write.
+      Reads use asyncio.gather. Writes use action_specialist only, which
+      sequences compliance -> HITL -> dual-auth -> mulesoft-api -> audit.
+      Always cites originating research brief when portfolio context matches.
+    tool_allowlist:
+      - dispatch_specialist
+      - synthesize_response
+      - research_awareness
+    mcp_allowlist:
+      - salesforce-crm
+    memory_scope: [session, user, artifact]
+    timeout_s: 300
+    parallel_fanout: true
+
+  - id: portfolio_specialist
+    role: specialist
+    model: sonnet
+    description: >
+      Portfolio-level analytics for the RM's book or a single household.
+      Works in percentages, not dollars (MNPI).
+    system_prompt_summary: |
+      Calls portfolio-analytics + scenario-modeling skills. Positions arrive
+      MNPI-filtered from CRM MCP (shares/market-values redacted). Output
+      is bands and percentages.
+    tool_allowlist:
+      - portfolio_analytics
+      - scenario_modeling
+    mcp_allowlist:
+      - salesforce-crm
+    memory_scope: [session, user]
+    timeout_s: 25
+
+  - id: suitability_specialist
+    role: specialist
+    model: sonnet
+    description: >
+      Deterministic suitability gate. Rules, not LLM math. PASS/FAIL/REVIEW.
+    system_prompt_summary: |
+      Calls suitability-check skill. Takes client risk profile + proposed
+      trade + current portfolio + time horizon. Deterministic output.
+      Never softens a FAIL. Regulated surface.
+    tool_allowlist:
+      - suitability_check
+    mcp_allowlist:
+      - salesforce-crm
+    memory_scope: [session]
+    timeout_s: 20
+
+  - id: client_context_specialist
+    role: specialist
+    model: sonnet
+    description: >
+      30-second RM meeting prep — holdings (pct only), 30d changes, family
+      events, last conversation, open items. MNPI-filtered throughout.
+    system_prompt_summary: |
+      Calls client-summary + research-awareness skills. Works in
+      concentration bands, not dollar amounts. Never unredacts MNPI.
+    tool_allowlist:
+      - client_summary
+      - research_awareness
+    mcp_allowlist:
+      - salesforce-crm
+    memory_scope: [session, user]
+    timeout_s: 25
+
+  - id: action_specialist
+    role: specialist
+    model: sonnet
+    description: >
+      Regulated write actions. SERIAL BY DESIGN. Seven-gate spine:
+      guardrails -> MNPI filter -> compliance -> HITL -> dual-auth ->
+      mulesoft-api -> audit.
+    system_prompt_summary: |
+      Sequences the seven gates IN ORDER for every write. Never
+      parallelizes. Approval tokens hashed before logging (rule 22).
+      Compliance DENY writes audit row with COMPLIANCE_BLOCKED even
+      though no MuleSoft call happened (rule 9). Dual-auth second
+      approver must be distinct AND hold Senior_Compliance_Approver.
+      MULESOFT_MODE=mock default (rule 14).
+    tool_allowlist:
+      - compliance_screening
+      - hitl
+      - dual_auth
+      - mulesoft_api
+      - audit_logging
+    mcp_allowlist:
+      - salesforce-crm
+      - mulesoft-actions
+    memory_scope: [session, artifact]
+    timeout_s: 300
+    serial_by_design: true

@@ -1,0 +1,64 @@
+# -----------------------------------------------------------------------------
+# M1 Identity sub-chart values.
+#
+# Umbrella overrides land under `m1-identity:` in values-cloud.yaml.
+# -----------------------------------------------------------------------------
+
+replicaCount: 2
+
+image:
+  repository: 007-fsi/m1-identity
+  tag: latest
+  pullPolicy: Always
+
+service:
+  # External port (mTLS-terminated by the service mesh).
+  appPort: 8443
+  # Probe port (in-pod kubelet traffic).
+  probePort: 8080
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+  seccompProfile:
+    type: RuntimeDefault
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 1000
+  capabilities:
+    drop:
+      - ALL
+
+podDisruptionBudget:
+  minAvailable: 1
+
+# Writable tmpfs mounts -- required when readOnlyRootFilesystem is true.
+tmpVolumes:
+  - name: tmp
+    mountPath: /tmp
+  - name: uvicorn-cache
+    mountPath: /home/m1
+
+# ExternalSecret path convention: secret/data/007/<module>/<leaf>.
+externalSecretPath: secret/data/007/m1-identity/signing
+
+# Wave 4 egress narrowing (ops-hardening-wave4-egress-narrowing.md).
+# Empty default. values-cloud.yaml populates with production defaults.
+egressAllowlist: []
+
+# Sub-chart override for the global egress mode. Empty = inherit global.
+networkPolicy:
+  # egressMode: allowlist|allow-all  -- leave unset to inherit global

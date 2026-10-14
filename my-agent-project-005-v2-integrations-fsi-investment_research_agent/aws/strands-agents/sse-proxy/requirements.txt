@@ -1,0 +1,3 @@
+# SSE Proxy — Dependencies
+# Minimal dependencies — uses urllib from stdlib for agent calls
+boto3>=1.28.0

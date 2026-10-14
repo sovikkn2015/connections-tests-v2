@@ -1,0 +1,122 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://007.fsi/schemas/canonical/compliance-check/v0.1.0",
+  "title": "ComplianceCheck",
+  "description": "Result of a deterministic OPA compliance check. NOT LLM-generated.",
+  "type": "object",
+  "required": [
+    "check_id",
+    "check_type",
+    "decision",
+    "rule_applied"
+  ],
+  "properties": {
+    "check_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Primary key for this compliance check result"
+    },
+    "check_type": {
+      "type": "string",
+      "enum": [
+        "restricted_list",
+        "concentration_limit",
+        "trading_window",
+        "suitability",
+        "chinese_wall",
+        "pod_isolation",
+        "mnpi_filter",
+        "erisa_prohibited_transaction",
+        "rmd_check",
+        "bsa_aml_ctr",
+        "bsa_aml_sar",
+        "sanctions_screen"
+      ],
+      "description": "Type of compliance check performed"
+    },
+    "decision": {
+      "type": "string",
+      "enum": [
+        "ALLOW",
+        "DENY",
+        "WARN",
+        "REQUIRE_APPROVAL",
+        "ESCALATE"
+      ],
+      "description": "Compliance decision: ALLOW, DENY, WARN, REQUIRE_APPROVAL, ESCALATE"
+    },
+    "reason": {
+      "type": "string",
+      "description": "Human-readable reason for the decision"
+    },
+    "rule_applied": {
+      "type": "string",
+      "description": "OPA rule path: e.g., authority/restricted_list.rego:check_restricted_list"
+    },
+    "policy_bundle_version": {
+      "type": "string",
+      "description": "OPA bundle version for audit trail"
+    },
+    "wsp_section": {
+      "type": "string",
+      "description": "WSP section this rule maps to (ARCH-06 Gap 3)"
+    },
+    "input_context": {
+      "type": "object",
+      "description": "What was checked (security, client, action)",
+      "properties": {
+        "security_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Security identifier checked"
+        },
+        "client_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Client identifier checked"
+        },
+        "action": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Action being checked"
+        },
+        "archetype": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Firm archetype context"
+        },
+        "account_type": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Account type context"
+        }
+      }
+    },
+    "details": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "description": "Additional context (e.g., concentration percentage, restricted since date)"
+    },
+    "evaluated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the check was evaluated"
+    },
+    "trace_id": {
+      "type": "string",
+      "description": "Links to M10 audit trail"
+    }
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "run_date": "2026-04-22T17:51:29.438713",
+  "total_queries": 1,
+  "passed": 0,
+  "failed": 1,
+  "errors": 0,
+  "pass_rate": 0.0,
+  "results": [
+    {
+      "query_id": 48,
+      "level": "L2",
+      "query": "Which semiconductor stock has the best risk-reward right now?",
+      "response_preview": "Here's a data-driven risk/reward comparison across the five major semis, based on live price and range data. Note: analyst consensus tool is currently returning errors \u2014 analysis below is based on pri",
+      "scores": {
+        "accuracy": 2,
+        "completeness": 3,
+        "relevance": 5,
+        "safety": 3,
+        "actionability": 4,
+        "attribution": 3,
+        "reasoning": 4
+      },
+      "avg_score": 3.4,
+      "status": "FAIL",
+      "flags": [
+        "NVDA 52-week low of $102.02 and high of $212.19 appear inconsistent with known trading ranges \u2014 likely stale or incorrect data",
+        "AMD 52-week low of $90.12 and high of $301.00 are implausible given known AMD price history in recent periods",
+        "TSM price of $381.99 and 52-week low of $156.00 are questionable \u2014 TSM trades in USD ADR form typically sub-$200 range",
+        "AVGO price of $419.73 appears pre-split adjusted or otherwise inconsistent with known AVGO pricing post-split",
+        "Analyst consensus tool error acknowledged but price targets cited anyway as 'general Street positioning' \u2014 this is speculative and potentially misleading",
+        "No SOQL/Salesforce CRM data used despite being an expected tool per persona",
+        "Investment recommendation given without clear disclaimer that this is not personalized financial advice",
+        "% Above Low calculations appear mathematically correct given stated inputs, but inputs themselves are suspect",
+        "INTC data incomplete \u2014 no 52-week range provided, reducing comparability"
+      ],
+      "tools_used": [
+        "market-data"
+      ],
+      "latency_ms": 119490
+    }
+  ]
+}

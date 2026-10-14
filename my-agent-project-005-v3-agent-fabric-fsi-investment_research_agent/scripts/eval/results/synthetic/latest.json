@@ -1,0 +1,90 @@
+{
+  "timestamp_utc": "20260427T073945Z",
+  "mode": "LIVE_MCP_DIRECT_MERGED",
+  "tests_run": [
+    "mnpi_redaction",
+    "rate_limit",
+    "circuit_breaker",
+    "finra_audit"
+  ],
+  "pass_count": 2,
+  "fail_count": 2,
+  "total": 4,
+  "results": [
+    {
+      "name": "mnpi_redaction",
+      "passed": true,
+      "details": {
+        "mode": "live",
+        "route": "/sec-edgar/tools/call",
+        "request_body": {
+          "name": "get_10k",
+          "arguments": {
+            "ticker": "NVDA"
+          }
+        },
+        "http_status": 200,
+        "response_excerpt": "{\"content\": [{\"type\": \"text\", \"text\": \"{\\\"tool\\\": \\\"get_10k\\\", \\\"ticker\\\": \\\"NVDA\\\", \\\"filings\\\": [{\\\"accession_number\\\": \\\"0001045810-26-000021\\\", \\\"filing_date\\\": \\\"2026-02-25\\\", \\\"form_type\\\": \\\"10-K\\\", \\\"company_name\\\": \\\"NVIDIA CORP\\\",",
+        "correlation_id": "syn-mnpi-a30a0e60-72e7-49af-8a87-b7dc1d870224",
+        "leaked_fields": [],
+        "gateway_redaction_header": null,
+        "audit_redactions_observed": 0,
+        "audit_has_gateway_stage": false
+      },
+      "error": null
+    },
+    {
+      "name": "rate_limit",
+      "passed": false,
+      "details": {
+        "mode": "live",
+        "route": "/sec-edgar/tools/call",
+        "total_sent": 60,
+        "elapsed_s": 2.213,
+        "status_2xx": 60,
+        "status_429": 0,
+        "status_other": 0,
+        "status_distribution": {
+          "200": 60
+        }
+      },
+      "error": null
+    },
+    {
+      "name": "circuit_breaker",
+      "passed": false,
+      "details": {
+        "lambda_name": "ir-market-data-mcp-prod",
+        "env_var": "ALPHA_VANTAGE_API_KEY",
+        "recovery_s": 30,
+        "original_value_snapshot": "(redacted)",
+        "failure_statuses": [
+          200,
+          200,
+          200
+        ],
+        "post_break_status": 200,
+        "cb_tripped_header_seen": false,
+        "waiting_recovery_s": 30,
+        "recovery_status": 200,
+        "cleanup_step": "env var restored"
+      },
+      "error": null
+    },
+    {
+      "name": "finra_audit",
+      "passed": true,
+      "details": {
+        "correlation_id": "syn-audit-50c73ebd-98e0-47ca-bc68-e3bc8bea3056",
+        "route": "/sec-edgar/tools/list",
+        "http_status": 200,
+        "audit_records_found": 0,
+        "audit_has_gateway_stage": false,
+        "cloudwatch_log_group": "/ecs/ir-flex-gateway",
+        "cloudwatch_audit_events": 1
+      },
+      "error": null
+    }
+  ],
+  "merge_note": "Assembled from the most recent per-test JSON files because --only invocations overwrote latest.json."
+}

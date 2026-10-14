@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>FSI Wealth Platform — 006 v3 Personas</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    body { margin: 0; background: #f5f6f7; font-family: 'Inter', sans-serif; }
+  </style>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel" src="design-canvas.jsx"></script>
+  <script type="text/babel" src="research.jsx"></script>
+  <script type="text/babel" src="trace-shared.jsx"></script>
+  <script type="text/babel" src="advisor.jsx"></script>
+  <script type="text/babel" src="client.jsx"></script>
+
+  <script type="text/babel" data-presets="react">
+    function App() {
+      return (
+        <window.DesignCanvas title="FSI Wealth Platform — 006 v3" subtitle="Three personas, one trust spine. Workflow 360 design system.">
+          <window.DCSection id="research" title="01 · Research Terminal — Sarah Chen" subtitle="Dark forensic surface. Brief streaming, parallel architecture map, mini-timeline waterfall.">
+            <window.DCArtboard id="research-1" label="Research Terminal · live turn (asyncio.gather across 5 specialists)" width={1440} height={1024}>
+              <window.ResearchTerminal />
+            </window.DCArtboard>
+          </window.DCSection>
+
+          <window.DCSection id="advisor" title="02 · RM Advisor Workbench — Marcus Kerrigan" subtitle="SLDS light surface. Seven-gate write path live, HITL approval card, Client 360.">
+            <window.DCArtboard id="advisor-1" label="Advisor Workbench · plan held at gate ④ (HITL) · trust-spine map below" width={1440} height={1280}>
+              <window.AdvisorWorkbench />
+            </window.DCArtboard>
+          </window.DCSection>
+
+          <window.DCSection id="client" title="03 · Client Liaison — Eleanor Vance" subtitle="Channel-native chat. Same trust spine, server-side MNPI redaction, RM hand-off preserved.">
+            <window.DCArtboard id="client-1" label="Liaison · WhatsApp surface with hand-off to RM" width={1440} height={1024}>
+              <window.ClientLiaison />
+            </window.DCArtboard>
+          </window.DCSection>
+        </window.DesignCanvas>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>

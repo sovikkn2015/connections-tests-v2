@@ -1,0 +1,56 @@
+# Enterprise Config — Tier 4 Independent RIA
+# Loaded by M5 (Enterprise Config Loader). Validated by Pydantic v2.
+# Zero credentials. All secrets via Vault/Secrets Manager at runtime.
+
+config_version: "0.4.0"
+
+firm:
+  name: "Acme Wealth Management"
+  lei: null
+  crd_number: "123456"
+  registration_type: "ria_only"
+
+archetype: "tier4_independent_ria"
+
+jurisdiction:
+  primary: "us"
+  data_residency: "us"
+
+deployment:
+  topology: "cloud"
+  region: "us-east-1"
+  runtime: "managed_agents"
+
+vendors:
+  crm: "salesforce_fsc"
+  portfolio: "orion"
+  planning: "emoney"
+  custodians: ["schwab"]
+  market_data: "alpha_vantage"
+  compliance_archive: null
+
+channels:
+  enabled: ["slack", "web"]
+  primary: "slack"
+
+compliance:
+  suitability_standard: "fiduciary"
+  reg_bi_enabled: false
+  smarsh_enabled: false
+  principal_review_enabled: false
+  worm_retention_years: 6
+  mnpi_filtering: "tier4_advisor_level"
+  hitl_timeout_hours: 24
+
+specialists:
+  enabled: ["client_service", "research"]
+  supervisor_model: "haiku"
+  research_model: "sonnet"
+  client_service_model: "haiku"
+
+memory:
+  l1_ttl_hours: 8
+  l2_retention_days: 7
+  l3_retention_years: 2
+  l4_enabled: true
+  l5_enabled: true

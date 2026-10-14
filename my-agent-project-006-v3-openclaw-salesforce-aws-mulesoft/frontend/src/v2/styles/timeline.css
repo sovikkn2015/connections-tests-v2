@@ -1,0 +1,95 @@
+/* v2 Timeline — end-to-end waterfall with kind-colored bars. */
+
+.v2-root .v2-timeline {
+  background: var(--forensic-bg-1);
+  border: 1px solid var(--forensic-line);
+  border-radius: var(--radius-sm);
+  color: var(--forensic-text-2);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.v2-root .v2-timeline__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.75rem;
+  background: var(--forensic-elevated);
+  border-bottom: 1px solid var(--forensic-line);
+}
+.v2-root .v2-timeline__header-title {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+.v2-root .v2-timeline__header-title > span:first-child {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--forensic-text-4);
+  font-weight: 600;
+}
+
+.v2-root .v2-timeline__rows {
+  padding: 0.25rem 0.5rem;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.v2-root .v2-timeline__row {
+  display: grid;
+  grid-template-columns: minmax(12rem, 1.4fr) 3rem 1fr 4.5rem;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 2px 0;
+  font-size: 0.75rem;
+  font-family: var(--font-mono);
+}
+.v2-root .v2-timeline__name {
+  color: var(--forensic-text-1);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.v2-root .v2-timeline__name--child { color: var(--forensic-text-3); }
+
+.v2-root .v2-timeline__type {
+  font-size: 9px;
+  color: var(--forensic-text-5);
+  text-transform: uppercase;
+}
+
+.v2-root .v2-timeline__bar-track {
+  position: relative;
+  height: 14px;
+  background: var(--forensic-bg-3);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.v2-root .v2-timeline__bar {
+  position: absolute;
+  top: 2px;
+  height: 10px;
+  border-radius: 2px;
+  min-width: 4px;
+}
+.v2-root .v2-timeline__bar--orch { background: var(--w360-brand-500); }
+.v2-root .v2-timeline__bar--skill { background: var(--role-skill); }
+.v2-root .v2-timeline__bar--mcp { background: var(--role-mcp); }
+.v2-root .v2-timeline__bar--human { background: var(--warning-500); }
+.v2-root .v2-timeline__bar--gate { background: var(--role-gate); }
+
+.v2-root .v2-timeline__latency {
+  text-align: right;
+  color: var(--forensic-text-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.v2-root .v2-timeline__caption {
+  padding: 0.5rem 0.75rem;
+  background: var(--forensic-elevated);
+  border-top: 1px solid var(--forensic-line);
+  color: var(--forensic-text-4);
+  font-size: 0.75rem;
+  font-style: italic;
+}

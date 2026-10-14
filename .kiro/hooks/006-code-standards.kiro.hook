@@ -1,0 +1,28 @@
+{
+  "name": "006 Code Standards",
+  "version": "1.0.0",
+  "description": "After file edits in the 006 project, verify code follows the tech stack and standards from the design doc and tech stack assessment.",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "my-agent-project-006-v1-openclaw-salesforce-aws/force-app/**/*.cls",
+      "my-agent-project-006-v1-openclaw-salesforce-aws/aws/**/*.py",
+      "my-agent-project-006-v1-openclaw-salesforce-aws/aws/**/*.yaml",
+      "my-agent-project-006-v1-openclaw-salesforce-aws/frontend/src/**/*.ts",
+      "my-agent-project-006-v1-openclaw-salesforce-aws/frontend/src/**/*.tsx",
+      "my-agent-project-006-v1-openclaw-salesforce-aws/openclaw/**/*.yaml",
+      "my-agent-project-006-v1-openclaw-salesforce-aws/openclaw/**/*.md",
+      "my-agent-project-006-v2-openclaw-salesforce-aws-mulesoft/force-app/**/*.cls",
+      "my-agent-project-006-v2-openclaw-salesforce-aws-mulesoft/aws/**/*.py",
+      "my-agent-project-006-v2-openclaw-salesforce-aws-mulesoft/aws/**/*.yaml",
+      "my-agent-project-006-v2-openclaw-salesforce-aws-mulesoft/frontend/src/**/*.ts",
+      "my-agent-project-006-v2-openclaw-salesforce-aws-mulesoft/frontend/src/**/*.tsx",
+      "my-agent-project-006-v2-openclaw-salesforce-aws-mulesoft/openclaw/**/*.yaml",
+      "my-agent-project-006-v2-openclaw-salesforce-aws-mulesoft/openclaw/**/*.md"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Check this file against 006 standards:\n\nApex (.cls): Must have 'with sharing'. Must have apiVersion 66.0 in meta.xml. @RestResource classes must be global.\n\nPython (.py): MCP servers must use shared mcp_protocol module. Lambda handlers must use environment variables for all config (no hardcoded values). Financial analysis skills must use numpy/pandas/scipy only (no external API calls — data comes from MCP/SF skill).\n\nSAM/CloudFormation (.yaml): No hardcoded AWS account IDs or regions — use ${AWS::AccountId} and ${AWS::Region}. Secrets must use NoEcho parameters. Lambda runtime must be python3.12+.\n\nTypeScript/React (.ts/.tsx): Must use Zustand for state (no Redux, no Context for global state). Must use SLDS classes for styling. WebSocket connection to OpenClaw only — no direct Salesforce API calls for agent queries.\n\nOpenClaw config (.yaml/.md): Skills must have YAML frontmatter with trigger keywords. Agent config must reference Bedrock models only.\n\nIf violations found, fix them. If clean, confirm."
+  }
+}

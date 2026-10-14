@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Type__c</fullName>
+    <label>Account Type</label>
+    <type>Picklist</type>
+    <required>false</required>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value><fullName>IRA</fullName><default>false</default><label>IRA</label></value>
+            <value><fullName>401k</fullName><default>false</default><label>401k</label></value>
+            <value><fullName>Brokerage</fullName><default>false</default><label>Brokerage</label></value>
+            <value><fullName>Trust</fullName><default>false</default><label>Trust</label></value>
+            <value><fullName>529 Plan</fullName><default>false</default><label>529 Plan</label></value>
+            <value><fullName>Roth IRA</fullName><default>false</default><label>Roth IRA</label></value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

@@ -1,0 +1,13 @@
+{
+  "orgName": "006 OpenClaw FSI",
+  "edition": "Developer",
+  "features": [],
+  "settings": {
+    "securitySettings": {
+      "passwordPolicies": {
+        "lockoutInterval": 15,
+        "maxLoginAttempts": 10
+      }
+    }
+  }
+}

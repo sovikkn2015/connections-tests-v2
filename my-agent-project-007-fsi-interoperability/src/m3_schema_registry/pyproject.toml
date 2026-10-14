@@ -1,0 +1,13 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "m3-schema-registry"
+version = "0.1.0"
+description = "M3 Canonical Schema Registry — 18 FSI data types for Project 007"
+requires-python = ">=3.10"
+dependencies = ["pydantic>=2.0,<3.0"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]

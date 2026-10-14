@@ -1,0 +1,27 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ include "007.fullname" . }}-mtls
+  labels:
+    {{- include "007.labels" . | nindent 4 }}
+spec:
+  secretName: {{ include "007.fullname" . }}-mtls
+  duration: {{ ((.Values.global).certManager).duration | default "24h" }}
+  renewBefore: {{ ((.Values.global).certManager).renewBefore | default "2h" }}
+  commonName: {{ include "007.fullname" . }}.{{ (.Values.global).namespace | default "trust-layer" }}.svc.cluster.local
+  dnsNames:
+    - {{ include "007.fullname" . }}
+    - {{ include "007.fullname" . }}.{{ (.Values.global).namespace | default "trust-layer" }}
+    - {{ include "007.fullname" . }}.{{ (.Values.global).namespace | default "trust-layer" }}.svc
+    - {{ include "007.fullname" . }}.{{ (.Values.global).namespace | default "trust-layer" }}.svc.cluster.local
+    - {{ include "007.headlessServiceName" . }}.{{ (.Values.global).namespace | default "trust-layer" }}.svc.cluster.local
+  usages:
+    - server auth
+    - client auth
+  privateKey:
+    algorithm: RSA
+    size: 2048
+    rotationPolicy: Always
+  issuerRef:
+    kind: {{ ((.Values.global).certManager).issuerKind | default "ClusterIssuer" }}
+    name: {{ ((.Values.global).certManager).issuerName | default "letsencrypt-prod" }}

@@ -1,0 +1,153 @@
+system:
+    instructions: "You are a Compliance Screening Agent for investment research. You check restricted lists, trading windows, and MNPI flags. You MUST use the available actions to perform every check. Always return structured PASS/FAIL results."
+    messages:
+        welcome: "Compliance Screening Agent ready. I can check restricted lists, trading windows, and MNPI status for any ticker."
+        error: "Compliance check failed. Please try again or contact the compliance team."
+
+config:
+    developer_name: "IR_Compliance_Agent"
+    default_agent_user: "Compliance Officer"
+    agent_label: "IR Compliance Agent"
+    description: "Dedicated compliance screening agent that checks restricted lists, trading windows (quiet periods), and MNPI flags."
+
+variables:
+    result: mutable string = ""
+        description: "Result from the last compliance check"
+
+language:
+    default_locale: "en_US"
+    additional_locales: ""
+    all_additional_locales: False
+
+start_agent topic_selector:
+    label: "Compliance Topic Selector"
+    description: "Route to the appropriate compliance check"
+
+    reasoning:
+        instructions:|
+            Select the compliance check that best matches the user's request.
+        actions:
+            go_to_restricted_list: @utils.transition to @topic.restricted_list_check
+                description: "Check if a stock is on the restricted list"
+            go_to_trading_window: @utils.transition to @topic.trading_window_check
+                description: "Check trading window or quiet period"
+            go_to_mnpi: @utils.transition to @topic.mnpi_check
+                description: "Check MNPI flags or data access"
+            go_to_full_screening: @utils.transition to @topic.full_screening
+                description: "Run all compliance checks"
+
+topic restricted_list_check:
+    label: "Restricted List Check"
+    description: "Check if a stock is on the restricted trading list"
+
+    actions:
+        check_compliance:
+            description: "Check restricted list for a ticker"
+            inputs:
+                ticker: string
+                    description: "Stock ticker symbol"
+            outputs:
+                complianceResult: string
+                    description: "Restricted list result"
+            target: "apex://IR_ComplianceScreeningAction"
+
+    reasoning:
+        instructions:->
+            if @variables.result:
+                | {!@variables.result}
+            else:
+                | Use check_compliance to check the restricted list.
+        actions:
+            check_compliance: @actions.check_compliance
+                with ticker=...
+                set @variables.result = @outputs.complianceResult
+
+topic trading_window_check:
+    label: "Trading Window Check"
+    description: "Check quiet period (earnings within 14 days)"
+
+    actions:
+        check_compliance:
+            description: "Check trading window for a ticker"
+            inputs:
+                ticker: string
+                    description: "Stock ticker symbol"
+            outputs:
+                complianceResult: string
+                    description: "Trading window result"
+            target: "apex://IR_ComplianceScreeningAction"
+
+    reasoning:
+        instructions:->
+            if @variables.result:
+                | {!@variables.result}
+            else:
+                | Use check_compliance to check the trading window.
+        actions:
+            check_compliance: @actions.check_compliance
+                with ticker=...
+                set @variables.result = @outputs.complianceResult
+
+topic mnpi_check:
+    label: "MNPI Check"
+    description: "Check MNPI flags and data access permissions"
+
+    actions:
+        check_mnpi:
+            description: "Check MNPI status for a ticker"
+            inputs:
+                ticker: string
+                    description: "Stock ticker symbol"
+                dataType: string
+                    description: "Type of data being accessed"
+                requestingAgent: string
+                    description: "Agent requesting the data"
+            outputs:
+                mnpiResult: string
+                    description: "MNPI check result"
+                isAllowed: boolean
+                    description: "Whether access is permitted"
+                classification: string
+                    description: "Data classification level"
+            target: "apex://IR_MnpiCheckAction"
+
+    reasoning:
+        instructions:->
+            if @variables.result:
+                | {!@variables.result}
+            else:
+                | Use check_mnpi. Default dataType to "company_info" and requestingAgent to "IR_Research_Agent".
+        actions:
+            check_mnpi: @actions.check_mnpi
+                with ticker=..., dataType="company_info", requestingAgent="IR_Research_Agent"
+                set @variables.result = @outputs.mnpiResult
+
+topic full_screening:
+    label: "Full Compliance Screening"
+    description: "Run all compliance checks: restricted list, trading window, and MNPI"
+
+    actions:
+        run_compliance_agent:
+            description: "Run full compliance screening"
+            inputs:
+                ticker: string
+                    description: "Stock ticker symbol"
+                checkType: string
+                    description: "Check type (default: all)"
+            outputs:
+                complianceResult: string
+                    description: "Full screening result"
+                overallStatus: string
+                    description: "PASS, FAIL, or FLAGGED"
+            target: "apex://IR_ComplianceAgentAction"
+
+    reasoning:
+        instructions:->
+            if @variables.result:
+                | {!@variables.result}
+            else:
+                | Use run_compliance_agent with checkType="all".
+        actions:
+            run_compliance_agent: @actions.run_compliance_agent
+                with ticker=..., checkType="all"
+                set @variables.result = @outputs.complianceResult

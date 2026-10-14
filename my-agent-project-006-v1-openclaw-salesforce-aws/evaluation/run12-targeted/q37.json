@@ -1,0 +1,41 @@
+{
+  "run_date": "2026-04-22T15:21:39.109908",
+  "total_queries": 1,
+  "passed": 0,
+  "failed": 1,
+  "errors": 0,
+  "pass_rate": 0.0,
+  "results": [
+    {
+      "query_id": 37,
+      "level": "L2",
+      "query": "What's on my watchlist that reports this week and has moved more than 5%?",
+      "response_preview": "**Bootstrap status:** `BOOTSTRAP.md` calls for an identity-setup conversation (name, vibe, emoji, etc.) \u2014 that workflow is **not yet complete** (no `IDENTITY.md`, `USER.md`, or `SOUL.md` exist). I'll ",
+      "scores": {
+        "accuracy": 2,
+        "completeness": 2,
+        "relevance": 3,
+        "safety": 4,
+        "actionability": 3,
+        "attribution": 2,
+        "reasoning": 3
+      },
+      "avg_score": 2.7,
+      "status": "FAIL",
+      "flags": [
+        "Fabricated/unverified earnings data \u2014 EPS estimates and reporting dates for VZ, ORLY, OTIS, PKG, KNX, BPOP presented without verified sourcing",
+        "Core query not answered \u2014 watchlist unavailable, no price movement data retrieved",
+        "No actual Market Data MCP call demonstrated for the >5% price move requirement",
+        "SOQL query failure handled but no retry or fallback SOQL attempted",
+        "Bootstrap/identity setup discussion is noise and irrelevant to the query evaluation",
+        "EPS estimates presented as fact without ground truth validation \u2014 potential hallucination",
+        "Missing the >5% price movement check entirely \u2014 only earnings calendar partially shown"
+      ],
+      "tools_used": [
+        "market-data",
+        "salesforce-crm"
+      ],
+      "latency_ms": 74615
+    }
+  ]
+}

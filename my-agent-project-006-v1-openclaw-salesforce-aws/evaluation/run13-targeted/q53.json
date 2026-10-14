@@ -1,0 +1,38 @@
+{
+  "run_date": "2026-04-22T18:02:50.525019",
+  "total_queries": 1,
+  "passed": 0,
+  "failed": 1,
+  "errors": 0,
+  "pass_rate": 0.0,
+  "results": [
+    {
+      "query_id": 53,
+      "level": "L2",
+      "query": "What did Apple's CFO say about services revenue on the last call, and what's the Street expecting?",
+      "response_preview": "I need to be transparent: **multiple tools are failing this query**, and I will not fabricate CFO quotes or Street estimates. Here's the full picture:\n\n---\n\n**Tool Status:**\n- **news-search MCP** \u2014 al",
+      "scores": {
+        "accuracy": 4,
+        "completeness": 2,
+        "relevance": 3,
+        "safety": 5,
+        "actionability": 3,
+        "attribution": 3,
+        "reasoning": 4
+      },
+      "avg_score": 3.4,
+      "status": "FAIL",
+      "flags": [
+        "tool_failures_prevented_full_answer",
+        "query_not_substantively_answered",
+        "partial_completeness_due_to_infrastructure"
+      ],
+      "tools_used": [
+        "market-data",
+        "sec-edgar",
+        "news-search"
+      ],
+      "latency_ms": 109582
+    }
+  ]
+}

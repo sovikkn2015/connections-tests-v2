@@ -1,0 +1,40 @@
+{
+  "run_date": "2026-04-22T13:31:47.596350",
+  "total_queries": 1,
+  "passed": 0,
+  "failed": 1,
+  "errors": 0,
+  "pass_rate": 0.0,
+  "results": [
+    {
+      "query_id": 10,
+      "level": "L1",
+      "query": "Where's crude oil trading?",
+      "response_preview": "Hey \u2014 I just came online. I notice this is a fresh workspace with no identity set yet (BOOTSTRAP.md is asking us to figure out who I am together). I'll flag that, but since you've already jumped strai",
+      "scores": {
+        "accuracy": 1,
+        "completeness": 3,
+        "relevance": 3,
+        "safety": 4,
+        "actionability": 2,
+        "attribution": 2,
+        "reasoning": 2
+      },
+      "avg_score": 2.4,
+      "status": "FAIL",
+      "flags": [
+        "Unverifiable price data \u2014 $91.44/bbl cannot be cross-checked against ground truth; WTI has traded well below this level in recent periods, raising fabrication concerns",
+        "No timestamp on the quote \u2014 critical for trading decisions; 'latest available' is insufficient",
+        "Only WTI quoted \u2014 Brent crude omitted, which is often equally or more relevant for a PM",
+        "Yahoo Finance is a low-quality source for live trading decisions; professional grade sources (Bloomberg, Reuters, CME) not used",
+        "Bootstrap/identity discussion is noise and unprofessional in a trading context \u2014 reduces signal quality",
+        "No change/delta from prior close provided \u2014 key for a PM assessing momentum",
+        "Volume figure unverified and presented without context (e.g., vs. average daily volume)"
+      ],
+      "tools_used": [
+        "market-data"
+      ],
+      "latency_ms": 67519
+    }
+  ]
+}

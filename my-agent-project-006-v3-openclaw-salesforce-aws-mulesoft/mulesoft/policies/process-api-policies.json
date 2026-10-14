@@ -1,0 +1,48 @@
+{
+  "_doc": "Project 006 v3 — API Manager policy bundle for the three v3 Process APIs (submit-order, initiate-wire, order-status-webhook). Apply the same 4 policies to each deployed CloudHub app via Anypoint API Manager UI or the platform-api REST. These policies layer on top of the MuleSoft-internal logic; they do not replace HITL (enforced upstream in the mulesoft-api skill) or audit (the Lambda writes IR_Audit_Log__c per v3 steering rule 10).",
+  "_finra_context": "FINRA 3110 supervision + FINRA 4511 books-and-records. All three APIs are order-entry or order-lifecycle surfaces, so the same perimeter applies. Deeper controls live in Salesforce + the Lambda.",
+  "_v3_scope": "V3 collapses v2's 6 APIs (submit-order, rebalance-portfolio, initiate-wire, run-kyc-screening, open-account, close-account) down to 3 (submit-order + cancel/modify subpaths, initiate-wire, order-status-webhook). KYC + account lifecycle + rebalance are handled in Salesforce directly — MuleSoft is writes-only.",
+  "policies": [
+    {
+      "name": "client-id-enforcement",
+      "_purpose": "Every order-entry/wire/webhook request must be attributable to a named Connected App. Unattributed calls are rejected at the edge.",
+      "config": {
+        "credentialsOriginHasHttpBasicAuthenticationHeader": "customExpression",
+        "clientIdExpression": "#[attributes.headers['x-mulesoft-client-id']]",
+        "clientSecretExpression": "#[attributes.headers['x-mulesoft-client-secret']]"
+      }
+    },
+    {
+      "name": "rate-limiting",
+      "_purpose": "FINRA 3110 supervision: cap write throughput so a runaway loop in the Lambda cannot DoS the downstream OMS. 60 req/min sits well above HITL-paced volume (~1 trade per 5-10 min per advisor) but catches automation bugs fast. Order-status webhooks get a higher cap (600/min) because bursty fills are normal.",
+      "config": {
+        "rateLimits": [
+          {"maximumRequests": 60, "timePeriodInMilliseconds": 60000}
+        ],
+        "exposeHeaders": true,
+        "clusterizable": true,
+        "_override_for_webhook": "For order-status-webhook app, override maximumRequests to 600 in API Manager UI."
+      }
+    },
+    {
+      "name": "json-threat-protection",
+      "_purpose": "Defense against malformed or oversized payloads crafted to exploit the DataWeave parser. Caps match the RAML contracts: requests are flat (max 5 levels of nesting) and carry no free-text fields beyond short memo strings.",
+      "config": {
+        "maxContainerDepth": 5,
+        "maxStringValueLength": 1000,
+        "maxObjectEntryCount": 50,
+        "maxArrayElementCount": 100,
+        "maxStringValueNameLength": 100
+      }
+    },
+    {
+      "name": "ip-allowlist",
+      "_purpose": "Only the mulesoft-actions Lambda's NAT EIP should reach submit-order and initiate-wire. The webhook app is the exception: it receives public callbacks from Alpaca, so its IP allowlist should be configured with Alpaca's documented webhook source ranges (or removed in favor of signature verification).",
+      "_note": "ipExpression is a placeholder. Replace via API Manager. Zero credentials in git.",
+      "config": {
+        "ips": ["REPLACE_WITH_LAMBDA_NAT_EIP/32"],
+        "_override_for_webhook": "For order-status-webhook app, replace with Alpaca webhook source CIDRs OR disable this policy entirely and rely on the shared-secret HMAC signature check inside the Mule flow."
+      }
+    }
+  ]
+}

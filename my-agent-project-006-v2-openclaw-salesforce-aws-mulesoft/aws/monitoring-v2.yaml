@@ -1,0 +1,260 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  006 v2 observability - CloudWatch alarms + SNS topic + optional synthetic
+  canary for CloudHub /api/health. Deploys alongside the main SAM stack.
+
+  Deploy:
+    aws cloudformation deploy \
+      --stack-name openclaw-mcp-006-v2-monitoring \
+      --template-file aws/monitoring-v2.yaml \
+      --region us-east-1 \
+      --capabilities CAPABILITY_IAM \
+      --parameter-overrides \
+        NotificationEmail=you@example.com \
+        CloudHubHealthUrl=https://openclaw-v2-trade-process-api-q73tdv.5sc6y6-2.usa-e2.cloudhub.io/api/health
+
+  After deploy, confirm the SNS subscription email (AWS sends a confirm link).
+
+Parameters:
+  NotificationEmail:
+    Type: String
+    Description: Email that receives CloudWatch alarms for 006 v2
+    Default: ''
+  MuleSoftActionsLambdaName:
+    Type: String
+    Default: openclaw-mcp-006-v2-mulesoft-actions
+    Description: Name of the mulesoft-actions Lambda in the main SAM stack
+  CloudHubHealthUrl:
+    Type: String
+    Default: https://openclaw-v2-trade-process-api-q73tdv.5sc6y6-2.usa-e2.cloudhub.io/api/health
+    Description: CloudHub 2.0 health endpoint for the synthetic canary
+  EnableCloudHubCanary:
+    Type: String
+    Default: 'true'
+    AllowedValues: ['true', 'false']
+
+Conditions:
+  HasEmail: !Not [!Equals [!Ref NotificationEmail, '']]
+  CanaryEnabled: !Equals [!Ref EnableCloudHubCanary, 'true']
+
+Resources:
+
+  # ==========================================================================
+  # SNS topic + email subscription
+  # ==========================================================================
+  AlarmTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: openclaw-mcp-006-v2-alarms
+      DisplayName: 006 v2 alarms
+      Tags:
+        - { Key: project, Value: 006-v2 }
+
+  AlarmEmailSub:
+    Type: AWS::SNS::Subscription
+    Condition: HasEmail
+    Properties:
+      TopicArn: !Ref AlarmTopic
+      Protocol: email
+      Endpoint: !Ref NotificationEmail
+
+  # ==========================================================================
+  # Alarm 1: mulesoft-actions Lambda errors
+  # Fires when the Lambda reports any errors (5xx) in a 5-minute window.
+  # ==========================================================================
+  MuleSoftActionsLambdaErrorsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: 006-v2-mulesoft-actions-lambda-errors
+      AlarmDescription: >-
+        mulesoft-actions Lambda reported Errors > 0 in a 5-minute window.
+        Common causes: MuleSoft OAuth token expiry, CloudHub app down,
+        Secrets Manager permission issue, unhandled Python exception.
+      Namespace: AWS/Lambda
+      MetricName: Errors
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref MuleSoftActionsLambdaName
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      AlarmActions:
+        - !Ref AlarmTopic
+      OKActions:
+        - !Ref AlarmTopic
+
+  # ==========================================================================
+  # Alarm 2: Lambda throttles (quota / concurrency)
+  # ==========================================================================
+  MuleSoftActionsLambdaThrottlesAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: 006-v2-mulesoft-actions-lambda-throttles
+      AlarmDescription: >-
+        mulesoft-actions Lambda was throttled. Either burst traffic exceeded
+        reserved concurrency, or account-level Lambda quota was hit.
+      Namespace: AWS/Lambda
+      MetricName: Throttles
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref MuleSoftActionsLambdaName
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      AlarmActions:
+        - !Ref AlarmTopic
+
+  # ==========================================================================
+  # Alarm 3: Lambda p95 duration (CloudHub + Alpaca roundtrip)
+  # Fires if 95th percentile latency > 20s for 5 consecutive minutes.
+  # Normal roundtrip is 400-1500 ms. 20s means CloudHub or Alpaca is hanging.
+  # ==========================================================================
+  MuleSoftActionsLambdaLatencyAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: 006-v2-mulesoft-actions-lambda-p95-latency-high
+      AlarmDescription: >-
+        mulesoft-actions Lambda p95 duration > 20s. CloudHub or Alpaca is
+        likely hanging on upstream call. Check CloudHub app health and
+        Alpaca status page.
+      Namespace: AWS/Lambda
+      MetricName: Duration
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref MuleSoftActionsLambdaName
+      ExtendedStatistic: p95
+      Period: 300
+      EvaluationPeriods: 5
+      Threshold: 20000
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+      AlarmActions:
+        - !Ref AlarmTopic
+
+  # ==========================================================================
+  # CloudHub /api/health synthetic canary
+  # Hits the CloudHub app every 5 minutes. If it returns non-2xx for 2
+  # consecutive runs, fire an alarm. Canary lives in a fresh S3 artifact
+  # bucket (CloudFormation auto-creates it on first deploy).
+  # ==========================================================================
+  CanaryArtifactBucket:
+    Type: AWS::S3::Bucket
+    Condition: CanaryEnabled
+    Properties:
+      BucketName: !Sub openclaw-006-v2-canary-artifacts-${AWS::AccountId}
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      LifecycleConfiguration:
+        Rules:
+          - Id: expire-old-artifacts
+            Status: Enabled
+            ExpirationInDays: 31
+
+  CanaryRole:
+    Type: AWS::IAM::Role
+    Condition: CanaryEnabled
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: { Service: lambda.amazonaws.com }
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: canary-artifacts-rw
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:PutObject
+                  - s3:PutObjectAcl
+                Resource: !Sub ${CanaryArtifactBucket.Arn}/*
+              - Effect: Allow
+                Action:
+                  - cloudwatch:PutMetricData
+                Resource: '*'
+
+  CloudHubHealthCanary:
+    Type: AWS::Synthetics::Canary
+    Condition: CanaryEnabled
+    Properties:
+      Name: openclaw-006-v2-cloudhub-canary
+      RuntimeVersion: syn-nodejs-puppeteer-9.0
+      ExecutionRoleArn: !GetAtt CanaryRole.Arn
+      ArtifactS3Location: !Sub s3://${CanaryArtifactBucket}/canary/
+      Schedule:
+        Expression: rate(5 minutes)
+        DurationInSeconds: 0
+      RunConfig:
+        TimeoutInSeconds: 60
+      StartCanaryAfterCreation: true
+      Code:
+        Handler: index.handler
+        Script: !Sub |
+          const synthetics = require('Synthetics');
+          const log = require('SyntheticsLogger');
+
+          exports.handler = async () => {
+            const url = '${CloudHubHealthUrl}';
+            log.info('probing ' + url);
+            const res = await synthetics.executeHttpStep(
+              'cloudhub_health',
+              { url, method: 'GET' },
+              async function(responseData) {
+                if (!(responseData.statusCode >= 200 && responseData.statusCode < 300)) {
+                  throw new Error('non-2xx: ' + responseData.statusCode);
+                }
+                const body = JSON.parse(responseData.body || '{}');
+                if (body.status !== 'ok') {
+                  throw new Error('unexpected health status: ' + JSON.stringify(body));
+                }
+              }
+            );
+            return res;
+          };
+
+  CanaryFailedAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: CanaryEnabled
+    Properties:
+      AlarmName: 006-v2-cloudhub-health-canary-failed
+      AlarmDescription: >-
+        CloudHub /api/health synthetic canary failed 2 consecutive runs.
+        Indicates CloudHub 2.0 app is down, ingress is misconfigured, or
+        Mule flow is returning non-2xx. Check Runtime Manager first.
+      Namespace: CloudWatchSynthetics
+      MetricName: Failed
+      Dimensions:
+        - Name: CanaryName
+          Value: !Ref CloudHubHealthCanary
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 2
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      AlarmActions:
+        - !Ref AlarmTopic
+      OKActions:
+        - !Ref AlarmTopic
+
+Outputs:
+  AlarmTopicArn:
+    Value: !Ref AlarmTopic
+    Description: SNS topic that fans out all 006 v2 alarms
+  MuleSoftActionsLambdaErrorsAlarmName:
+    Value: !Ref MuleSoftActionsLambdaErrorsAlarm
+  CloudHubHealthCanaryName:
+    Value: !If [CanaryEnabled, !Ref CloudHubHealthCanary, 'disabled']

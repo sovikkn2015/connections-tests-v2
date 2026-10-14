@@ -1,0 +1,29 @@
+# OS
+.DS_Store
+
+# Salesforce
+.sf/
+.sfdx/
+
+# AWS SAM
+aws/.aws-sam/
+aws/samconfig.toml
+
+# Node
+node_modules/
+frontend/dist/
+frontend/node_modules/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Environment (NEVER commit real credentials)
+.env
+aws/.env
+frontend/.env
+
+# OpenClaw runtime
+openclaw/memory/
+openclaw/sessions/

@@ -1,0 +1,68 @@
+# ============================================================================
+# FSI Research Prompts — AutoResearchClaw Stage Overrides
+# Project 006: OpenClaw + Salesforce + AWS
+#
+# These prompts replace AutoResearchClaw's default academic paper stages
+# with FSI equity research brief stages.
+# ============================================================================
+
+# ---------------------------------------------------------------------------
+# Override Stage 16: BRIEF_OUTLINE (was PAPER_OUTLINE)
+# Replaces academic paper outline with investment research brief structure
+# ---------------------------------------------------------------------------
+stage_16_outline: |
+  Create an investment research brief outline with these sections:
+  1. Executive Summary (rating, target price, key thesis in 3 sentences)
+  2. Investment Thesis (bull case, bear case, base case)
+  3. Catalysts (near-term and long-term)
+  4. Risks (ranked by probability and impact)
+  5. Valuation (DCF fair value, comps relative value, Monte Carlo range)
+  6. Financial Summary (revenue, EPS, margins — 3yr history + 2yr forecast)
+  7. Recommendation (rating, target price, upside/downside)
+
+# ---------------------------------------------------------------------------
+# Override Stage 17: BRIEF_DRAFT (was PAPER_DRAFT)
+# Replaces academic writing with professional equity research language
+# ---------------------------------------------------------------------------
+stage_17_draft: |
+  Write each section of the research brief. Rules:
+  - Every number must come from a verified data source (MCP tool result or financial model output)
+  - No fabricated statistics or made-up analyst quotes
+  - Use professional equity research language (not academic)
+  - Target length: 2000-4000 words
+  - Include specific price targets with methodology
+  - Cite data sources inline: (Source: SEC 10-Q Q3 2026), (Source: Alpha Vantage), etc.
+
+# ---------------------------------------------------------------------------
+# Override Stage 22: PUBLISH (was EXPORT_PUBLISH)
+# Publishes to Salesforce instead of LaTeX/PDF export
+# ---------------------------------------------------------------------------
+stage_22_publish: |
+  Publish the completed research brief:
+  1. Write to Salesforce IR_Research_Note__c via salesforce-api skill:
+     - Company__c: lookup by ticker
+     - Ticker__c, Analyst__c, Rating__c, Target_Price__c
+     - Summary__c: executive summary section
+     - Full_Brief__c: complete brief text
+     - Thesis__c, Catalysts__c, Risks__c: respective sections
+     - Generated_Date__c: now
+     - Pipeline_Run_Id__c: current run ID
+  2. Write to IR_Audit_Log__c:
+     - Action__c: RESEARCH_BRIEF
+     - All data sources used
+     - Pipeline stages completed
+     - Trace_Id__c: Langfuse trace ID
+     - Compliance_Status__c: PASS (if compliance gate passed)
+  3. Notify analyst via OpenClaw channel with summary + link
+
+# ---------------------------------------------------------------------------
+# Override Stage 23: AUDIT_VERIFY (was CITATION_VERIFY)
+# Replaces academic citation check with FINRA compliance verification
+# ---------------------------------------------------------------------------
+stage_23_audit: |
+  Verify the research brief for compliance and data integrity:
+  1. Anti-fabrication check: every number in the brief must trace to a tool result
+  2. MNPI check: no material non-public information in the brief
+  3. Restricted list check: company not on restricted list
+  4. Source verification: all cited sources are real and accessible
+  5. Write final audit record to IR_Audit_Log__c with verification results

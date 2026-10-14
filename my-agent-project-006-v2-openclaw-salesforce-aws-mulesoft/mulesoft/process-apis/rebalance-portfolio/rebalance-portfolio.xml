@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core"
+      xmlns:http="http://www.mulesoft.org/schema/mule/http"
+      xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+      xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="
+        http://www.mulesoft.org/schema/mule/core
+        http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+        http://www.mulesoft.org/schema/mule/http
+        http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+        http://www.mulesoft.org/schema/mule/ee/core
+        http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+
+    <!--
+      Project 006 v2 - rebalance-portfolio Process API (mock backend).
+      Listener on /api/*. Real OMS batch integration lands in a later phase.
+      Dual-auth triggered in Mule only as a secondary check when trades > 10 or sum(quantity) > 5000.
+      Primary dual-auth enforcement is in the mulesoft-api skill (est_notional_usd > $500K).
+    -->
+
+    <http:listener-config name="rebalance-portfolio-http-listener-config" doc:name="HTTP Listener Config">
+        <http:listener-connection host="0.0.0.0" port="8081"/>
+    </http:listener-config>
+
+    <!-- ================================================================ -->
+    <!-- POST /api/rebalances                                             -->
+    <!-- ================================================================ -->
+    <flow name="rebalance-portfolio-main-flow" doc:name="rebalance-portfolio-main-flow">
+        <http:listener config-ref="rebalance-portfolio-http-listener-config"
+                       path="/api/rebalances"
+                       allowedMethods="POST"
+                       doc:name="POST /api/rebalances">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[{'Content-Type': 'application/json'}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:headers>#[{'Content-Type': 'application/json'}]</http:headers>
+            </http:error-response>
+        </http:listener>
+
+        <logger level="INFO"
+                doc:name="Log inbound (redacted)"
+                message='#["[rebalance-portfolio] inbound client=" ++ (payload.client_id default "?") ++ " trade_count=" ++ (sizeOf(payload.trades default []) as String) ++ " token_hash_prefix=" ++ ((payload.approval_token_hash default "") [0 to 7]) ++ " dual_hash_prefix=" ++ ((payload.dual_approval_token_hash default "") [0 to 7])]'/>
+
+        <!-- ============== Validation ============== -->
+        <choice doc:name="Validate required fields">
+            <!-- Missing approval_token_hash: 403 -->
+            <when expression="#[isEmpty(payload.approval_token_hash default '')]">
+                <set-variable variableName="httpStatus" value="403" doc:name="status=403"/>
+                <ee:transform doc:name="Build 403 error payload">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  error: "approval_required",
+  message: "approval_token_hash is required - this endpoint mimics the HITL gate"
+}]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+            </when>
+
+            <!-- Dual-auth threshold: trades > 10 or sum(quantity) > 5000 -->
+            <when expression='#[
+                (sizeOf(payload.trades default []) > 10
+                 or (sum((payload.trades default []) map ($.quantity default 0)) > 5000))
+                and isEmpty(payload.dual_approval_token_hash default "")
+            ]'>
+                <set-variable variableName="httpStatus" value="403" doc:name="status=403"/>
+                <ee:transform doc:name="Build 403 dual-auth payload">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  error: "dual_approval_required",
+  message: "Baskets with > 10 trades or total quantity > 5000 require dual_approval_token_hash"
+}]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+            </when>
+
+            <!-- Missing required fields or empty trades array: 400 -->
+            <when expression='#[
+                isEmpty(payload.client_id default "")
+                or isEmpty(payload.trades default [])
+            ]'>
+                <set-variable variableName="httpStatus" value="400" doc:name="status=400"/>
+                <ee:transform doc:name="Build 400 error payload">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  error: "missing_fields",
+  message: "One or more required fields are missing or invalid",
+  missing_fields: [
+    if (isEmpty(payload.client_id default "")) "client_id" else null,
+    if (isEmpty(payload.trades default [])) "trades" else null
+  ] filter ($ != null)
+}]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+            </when>
+
+            <!-- Happy path -->
+            <otherwise>
+                <ee:transform doc:name="Normalize request (vars.normalized)">
+                    <ee:variables>
+                        <ee:set-variable variableName="normalized"><![CDATA[%dw 2.0
+output application/json
+---
+{
+  client_id: payload.client_id,
+  trades: payload.trades,
+  trade_count: sizeOf(payload.trades),
+  approval_token_hash: payload.approval_token_hash,
+  dual_approval_token_hash: payload.dual_approval_token_hash default null
+}]]></ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+
+                <ee:transform doc:name="Build response payload">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+import * from dw::Runtime
+output application/json
+var uuid = randomUUID() replace "-" with ""
+---
+{
+  basket_id: "MULE-BASKET-" ++ (uuid[0 to 7]),
+  status: "SUBMITTED",
+  client_id: vars.normalized.client_id,
+  trade_count: vars.normalized.trade_count,
+  submitted_at: (now() as Number {unit: "seconds"}) as Number {format: "#"},
+  mulesoft_reference: "MS-REF-" ++ (uuid[0 to 11])
+}]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+
+                <logger level="INFO"
+                        doc:name="Log submitted"
+                        message='#["[rebalance-portfolio] SUBMITTED basket_id=" ++ (payload.basket_id default "?") ++ " ref=" ++ (payload.mulesoft_reference default "?")]'/>
+            </otherwise>
+        </choice>
+    </flow>
+
+    <!-- ================================================================ -->
+    <!-- GET /api/health                                                  -->
+    <!-- ================================================================ -->
+    <flow name="rebalance-portfolio-health-flow" doc:name="rebalance-portfolio-health-flow">
+        <http:listener config-ref="rebalance-portfolio-http-listener-config"
+                       path="/api/health"
+                       allowedMethods="GET"
+                       doc:name="GET /api/health">
+            <http:response statusCode="200">
+                <http:headers>#[{'Content-Type': 'application/json'}]</http:headers>
+            </http:response>
+        </http:listener>
+
+        <ee:transform doc:name="Health payload">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  status: "ok",
+  mode: "mock",
+  api: "rebalance-portfolio-process-api"
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+    </flow>
+
+</mule>

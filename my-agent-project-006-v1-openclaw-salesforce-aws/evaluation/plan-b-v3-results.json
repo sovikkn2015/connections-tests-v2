@@ -1,0 +1,146 @@
+{
+  "run_date": "2026-04-27T11:02:42.069927",
+  "total_queries": 5,
+  "passed": 4,
+  "failed": 1,
+  "errors": 0,
+  "pass_rate": 80.0,
+  "results": [
+    {
+      "query_id": 1,
+      "level": "L1",
+      "query": "What's NVIDIA trading at?",
+      "response_preview": "NVIDIA (NVDA) is currently trading at **$208.27**, up **$8.63 (+4.32%)** on the day.\n\n| Metric | Value |\n|---|---|\n| Current Price | $208.27 |\n| Open | $199.96 |\n| Intraday High | $210.95 |\n| Intraday",
+      "scores": {
+        "accuracy": 2,
+        "completeness": 4,
+        "relevance": 5,
+        "safety": 4,
+        "actionability": 4,
+        "attribution": 4,
+        "reasoning": 3
+      },
+      "avg_score": 3.7,
+      "status": "PASS",
+      "flags": [
+        "UNVERIFIABLE_PRICE_DATA: No ground truth available to confirm $208.27 or any other figures",
+        "POTENTIAL_HALLUCINATION: Specific price data cannot be verified against real-time source",
+        "CALCULATED_CONSISTENCY: $199.64 prev close + $8.63 gain = $208.27 \u2014 math checks out internally, but base figures unverifiable",
+        "STALE_OR_FABRICATED_DATA_RISK: Agent may be generating plausible-looking but incorrect market data"
+      ],
+      "tools_used": [
+        "market-data"
+      ],
+      "latency_ms": 136455
+    },
+    {
+      "query_id": 3,
+      "level": "L1",
+      "query": "Give me TSLA's 52-week high and low",
+      "response_preview": "TSLA 52-week range (as of latest data):\n\n| Metric | Price |\n|---|---|\n| **52-Week High** | **$498.83** |\n| **52-Week Low** | **$270.78** |\n| **Current Price** | $376.30 |\n| % Off 52-Wk High | -24.56% ",
+      "scores": {
+        "accuracy": 3,
+        "completeness": 5,
+        "relevance": 5,
+        "safety": 5,
+        "actionability": 4,
+        "attribution": 4,
+        "reasoning": 4
+      },
+      "avg_score": 4.3,
+      "status": "PASS",
+      "flags": [
+        "Ground truth not available \u2014 cannot fully verify $498.83 high and $270.78 low against authoritative source",
+        "Current price of $376.30 cannot be cross-validated without ground truth",
+        "Percentage calculations appear internally consistent but depend on unverified base numbers",
+        "Data freshness/timestamp not explicitly stated beyond 'latest data'"
+      ],
+      "tools_used": [
+        "market-data"
+      ],
+      "latency_ms": 139683
+    },
+    {
+      "query_id": 10,
+      "level": "L1",
+      "query": "Where's crude oil trading?",
+      "response_preview": "WTI crude oil (CL=F) is trading at **$95.32/bbl**, with an intraday range of $94.99 \u2013 $97.10.\n\nSource: market-data (Yahoo Finance). Volume: 47,386 contracts. Change data not available in this quote sn",
+      "scores": {
+        "accuracy": 1,
+        "completeness": 3,
+        "relevance": 4,
+        "safety": 4,
+        "actionability": 3,
+        "attribution": 3,
+        "reasoning": 2
+      },
+      "avg_score": 2.9,
+      "status": "FAIL",
+      "flags": [
+        "UNVERIFIABLE_PRICE: $95.32/bbl cannot be cross-checked against ground truth \u2014 likely stale or fabricated figure",
+        "MISSING_CHANGE_DATA: No price change or % move provided, which is standard for a price quote",
+        "NO_BRENT_SPREAD: PM would typically want WTI/Brent spread context",
+        "STALE_DATA_RISK: Volume of 47,386 contracts seems unusually low for CL futures; raises data quality concern",
+        "HALLUCINATION_RISK: Specific price point presented with high confidence despite no verifiable ground truth"
+      ],
+      "tools_used": [
+        "market-data"
+      ],
+      "latency_ms": 197226
+    },
+    {
+      "query_id": 21,
+      "level": "L1",
+      "query": "Show me NVIDIA's latest 10-Q",
+      "response_preview": "Here are NVIDIA's three most recent 10-Q filings from SEC EDGAR:\n\n| # | Period Covered | Filing Date | Accession Number |\n|---|---------------|-------------|-----------------|\n| 1 | **Q3 FY2026** (Oct",
+      "scores": {
+        "accuracy": 4,
+        "completeness": 4,
+        "relevance": 5,
+        "safety": 5,
+        "actionability": 5,
+        "attribution": 4,
+        "reasoning": 4
+      },
+      "avg_score": 4.4,
+      "status": "PASS",
+      "flags": [
+        "Ground truth not available \u2014 dates and accession numbers cannot be fully verified against authoritative source",
+        "Future dates (Nov 2025) relative to typical knowledge cutoffs raise plausibility concern but are consistent with NVIDIA's fiscal calendar",
+        "Direct document URL provided but not verified as live/accessible"
+      ],
+      "tools_used": [
+        "sec-edgar"
+      ],
+      "latency_ms": 142629
+    },
+    {
+      "query_id": 25,
+      "level": "L1",
+      "query": "Any news about Tesla today?",
+      "response_preview": "The news-search tools are currently hitting a plan usage limit (error 432 from Tavily) \u2014 I'm unable to pull headlines or article coverage for Tesla right now. I'll give you what I do have:\n\n**TSLA \u2014 C",
+      "scores": {
+        "accuracy": 3,
+        "completeness": 3,
+        "relevance": 4,
+        "safety": 5,
+        "actionability": 4,
+        "attribution": 4,
+        "reasoning": 4
+      },
+      "avg_score": 3.9,
+      "status": "PASS",
+      "flags": [
+        "Market data cannot be verified against ground truth \u2014 TSLA price figures ($376.30, +$2.58, etc.) are unverifiable and may be stale or incorrect",
+        "News MCP was the expected tool but failed \u2014 core query partially unanswered",
+        "HTTP 432 is not a standard HTTP status code; Tavily uses it as a custom quota error, which should be clarified to the user",
+        "No timestamp provided for market snapshot, reducing reliability"
+      ],
+      "tools_used": [
+        "market-data",
+        "news-search"
+      ],
+      "latency_ms": 153159
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "_doc": "Project 006 v2 - API Manager policy bundle for ALL Process APIs (submit-order, initiate-wire, rebalance-portfolio, run-kyc-screening, open-account, close-account). Apply the same 4 policies to each deployed CloudHub app via Anypoint API Manager UI or the platform-api REST. These policies layer on top of the MuleSoft-internal logic; they do not replace HITL (enforced upstream in the mulesoft-api skill) or audit (the Lambda writes IR_Audit_Log__c per 006 v2 steering rule 10).",
+  "_finra_context": "FINRA Rule 3110 (supervision) requires access controls + rate limits on all order-entry, wire, KYC, and account-lifecycle surfaces. FINRA Rule 4511 (books and records) requires request attribution via client_id headers. These policies are the perimeter layer for every Process API; deeper controls live in Salesforce + the Lambda.",
+  "policies": [
+    {
+      "name": "client-id-enforcement",
+      "_finra_purpose": "FINRA 4511 / SEC 17a-4: every order-entry request must be attributable to a named Connected App. Unattributed calls are rejected at the edge.",
+      "config": {
+        "credentialsOriginHasHttpBasicAuthenticationHeader": "customExpression",
+        "clientIdExpression": "#[attributes.headers['x-mulesoft-client-id']]",
+        "clientSecretExpression": "#[attributes.headers['x-mulesoft-client-secret']]"
+      }
+    },
+    {
+      "name": "rate-limiting",
+      "_finra_purpose": "FINRA 3110 supervision: cap order-entry throughput so a runaway loop in the Lambda cannot DoS the downstream OMS. 60 req/min sits well above HITL-paced volume (1 trade per 5-10 min per advisor) but catches automation bugs fast.",
+      "config": {
+        "rateLimits": [
+          {"maximumRequests": 60, "timePeriodInMilliseconds": 60000}
+        ],
+        "exposeHeaders": true,
+        "clusterizable": true
+      }
+    },
+    {
+      "name": "json-threat-protection",
+      "_finra_purpose": "Defense against malformed or oversized payloads crafted to exploit the DataWeave parser. Caps match the RAML contracts across all 6 Process APIs: requests are flat (max 2 levels of nesting) and carry no free-text fields beyond the short close_account reason.",
+      "config": {
+        "maxContainerDepth": 5,
+        "maxStringValueLength": 1000,
+        "maxObjectEntryCount": 50,
+        "maxArrayElementCount": 100,
+        "maxStringValueNameLength": 100
+      }
+    },
+    {
+      "name": "ip-allowlist",
+      "_finra_purpose": "Only the mulesoft-actions Lambda's NAT EIP should reach this API in sandbox. Set the real EIP via API Manager UI once the VPC stack is provisioned. Steering rule 19.",
+      "_note": "ipExpression is a placeholder. Replace via API Manager. Zero credentials in git.",
+      "config": {
+        "ips": ["REPLACE_WITH_LAMBDA_NAT_EIP/32"]
+      }
+    }
+  ]
+}

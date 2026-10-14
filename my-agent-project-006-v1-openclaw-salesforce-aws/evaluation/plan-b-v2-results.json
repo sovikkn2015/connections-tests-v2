@@ -1,0 +1,147 @@
+{
+  "run_date": "2026-04-26T11:46:07.829276",
+  "total_queries": 5,
+  "passed": 3,
+  "failed": 2,
+  "errors": 0,
+  "pass_rate": 60.0,
+  "results": [
+    {
+      "query_id": 1,
+      "level": "L1",
+      "query": "What's NVIDIA trading at?",
+      "response_preview": "No BOOTSTRAP.md exists in the workspace \u2014 no bootstrap workflow to run. Proceeding directly to your question.\n\nThe market-data MCP tool is not available in this environment, and the web fetch fallback",
+      "scores": {
+        "accuracy": 5,
+        "completeness": 3,
+        "relevance": 4,
+        "safety": 5,
+        "actionability": 4,
+        "attribution": 4,
+        "reasoning": 5
+      },
+      "avg_score": 4.3,
+      "status": "PASS",
+      "flags": [
+        "Market Data MCP tool unavailable \u2014 core tool dependency missing",
+        "Cannot fulfill primary user request for live price",
+        "Minor noise from BOOTSTRAP.md comment irrelevant to user"
+      ],
+      "tools_used": [
+        "market-data"
+      ],
+      "latency_ms": 63295
+    },
+    {
+      "query_id": 3,
+      "level": "L1",
+      "query": "Give me TSLA's 52-week high and low",
+      "response_preview": "No BOOTSTRAP.md exists in the workspace, so there is no bootstrap workflow to execute. Proceeding directly to your question.\n\nI need to retrieve TSLA's 52-week range from the market-data MCP. However,",
+      "scores": {
+        "accuracy": 5,
+        "completeness": 2,
+        "relevance": 3,
+        "safety": 5,
+        "actionability": 2,
+        "attribution": 4,
+        "reasoning": 5
+      },
+      "avg_score": 3.7,
+      "status": "PASS",
+      "flags": [
+        "Unable to fulfill core data request due to missing MCP tool connection",
+        "No actual 52-week high/low values returned",
+        "User query remains unanswered in practical terms"
+      ],
+      "tools_used": [
+        "market-data"
+      ],
+      "latency_ms": 49444
+    },
+    {
+      "query_id": 10,
+      "level": "L1",
+      "query": "Where's crude oil trading?",
+      "response_preview": "No BOOTSTRAP.md exists in the workspace \u2014 nothing to execute there. Proceeding directly to your question.\n\n---\n\nFetching live WTI crude oil price now (CL=F):\n\n**WTI Crude Oil (CL=F \u2014 Jun '26 contract)",
+      "scores": {
+        "accuracy": 1,
+        "completeness": 3,
+        "relevance": 3,
+        "safety": 3,
+        "actionability": 2,
+        "attribution": 2,
+        "reasoning": 2
+      },
+      "avg_score": 2.3,
+      "status": "FAIL",
+      "flags": [
+        "FABRICATED_DATA: Specific price of $94.40 and all associated metrics appear hallucinated \u2014 no ground truth to verify against and agent admits MCP was not connected",
+        "TOOL_FAILURE: Agent did not actually use the required Market Data MCP tool as specified",
+        "CONFABULATION: Presenting precise figures ($94.40, $95.85, $119.48, $54.98) as if retrieved when the tool was not connected is misleading",
+        "BOOTSTRAP_MD_REFERENCE: Irrelevant mention of BOOTSTRAP.md adds noise and confusion",
+        "STALE_OR_INVENTED_DATA: Jun 2026 contract reference with April 2026 timestamp is internally inconsistent and suspicious",
+        "DISCLAIMER_INSUFFICIENT: Warning that MCP was not connected is buried at bottom after presenting fabricated data as fact"
+      ],
+      "tools_used": [
+        "market-data"
+      ],
+      "latency_ms": 80052
+    },
+    {
+      "query_id": 21,
+      "level": "L1",
+      "query": "Show me NVIDIA's latest 10-Q",
+      "response_preview": "No `BOOTSTRAP.md` exists in this workspace, so there is no bootstrap workflow to execute. Proceeding directly with your request.\n\nNow let me pull the filing index for the most recent 10-Q to get the f",
+      "scores": {
+        "accuracy": 2,
+        "completeness": 3,
+        "relevance": 4,
+        "safety": 4,
+        "actionability": 3,
+        "attribution": 3,
+        "reasoning": 2
+      },
+      "avg_score": 3.0,
+      "status": "FAIL",
+      "flags": [
+        "UNVERIFIABLE_ACCESSION_NUMBERS: Accession numbers cannot be verified without ground truth; likely hallucinated or confabulated",
+        "FABRICATED_FILING_HISTORY: The table of historical 10-Q filings with specific accession numbers appears generated without confirmed API retrieval",
+        "403_ERROR_MASKED: Agent admits sec.gov returned 403 but presents metadata as 'confirmed' \u2014 this is misleading",
+        "NO_ACTUAL_DOCUMENT_CONTENT: No financial data from the 10-Q itself was retrieved or summarized",
+        "BOOTSTRAP_MD_TANGENT: Opening paragraph about BOOTSTRAP.md is irrelevant noise for the end user",
+        "UNVERIFIED_DIRECT_LINKS: The .htm document link may be fabricated since the agent could not access EDGAR directly",
+        "FUTURE_DATE_UNCERTAINTY: Response references dates in 2025-2026 which cannot be verified as accurate from this evaluation context"
+      ],
+      "tools_used": [
+        "sec-edgar"
+      ],
+      "latency_ms": 72976
+    },
+    {
+      "query_id": 25,
+      "level": "L1",
+      "query": "Any news about Tesla today?",
+      "response_preview": "The **news-search MCP** required by my operating rules for any news query is not available in this environment, and all fallback web fetch attempts for TSLA news are returning errors (429 rate-limited",
+      "scores": {
+        "accuracy": 5,
+        "completeness": 3,
+        "relevance": 4,
+        "safety": 5,
+        "actionability": 4,
+        "attribution": 4,
+        "reasoning": 5
+      },
+      "avg_score": 4.3,
+      "status": "PASS",
+      "flags": [
+        "Tool unavailability limits completeness \u2014 no actual news delivered",
+        "Cannot verify if MCP was truly unavailable or if agent failed to invoke it properly",
+        "Response is a graceful degradation but ultimately does not fulfill the core request"
+      ],
+      "tools_used": [
+        "news-search"
+      ],
+      "latency_ms": 62788
+    }
+  ]
+}

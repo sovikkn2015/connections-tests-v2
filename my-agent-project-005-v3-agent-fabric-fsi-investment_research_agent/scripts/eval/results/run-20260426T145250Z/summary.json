@@ -1,0 +1,30 @@
+{
+  "total": 30,
+  "pass_count": 0,
+  "fail_count": 30,
+  "pass_rate_pct": 0.0,
+  "p50_latency_ms": 516,
+  "p95_latency_ms": 633,
+  "max_latency_ms": 786,
+  "audit_coverage_pct": 0.0,
+  "audit_gateway_stage_count": 0,
+  "gateway_expected_count": 13,
+  "mnpi_redactions_total": 0,
+  "circuit_breaker_trips": 0,
+  "error_count": 30,
+  "v2_baseline": {
+    "date": "2026-04-18",
+    "agent_id": "0XxgK000001JItVSAW",
+    "pass_count": 23,
+    "degraded_count": 7,
+    "fail_count": 0,
+    "total": 30,
+    "pass_rate_pct": 76.67,
+    "median_latency_ms": 4500,
+    "max_latency_ms": 7069
+  },
+  "mode": "LIVE",
+  "timestamp_utc": "20260426T145250Z",
+  "queries_file": "/Users/sovikn/Documents/connections-test/my-agent-project-005-v3-agent-fabric-fsi-investment_research_agent/scripts/eval/queries.json",
+  "run_dir": "/Users/sovikn/Documents/connections-test/my-agent-project-005-v3-agent-fabric-fsi-investment_research_agent/scripts/eval/results/run-20260426T145250Z"
+}

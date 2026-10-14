@@ -1,0 +1,76 @@
+# ──────────────────────────────────────────────────────────────────────────
+# Flex Gateway runtime config — Project 005 V3 Agent Fabric
+# Mounted at: /usr/local/share/mulesoft/flex-gateway/conf.d/flex-gateway-config.yaml
+# ──────────────────────────────────────────────────────────────────────────
+# Connectivity mode: CONNECTED
+#   Policies + API instances are pushed from Anypoint Platform,
+#   NOT defined in local YAML. That's why this file only wires
+#   listeners, cluster discovery, and health — business policies
+#   live in agent-fabric/policies/*.yaml and are deployed via
+#   Anypoint API Manager bound to the `fsi-mcp-servers` ApiInstance.
+# ──────────────────────────────────────────────────────────────────────────
+
+apiVersion: gateway.mulesoft.com/v1alpha1
+kind: Configuration
+metadata:
+  name: fsi-flex-gateway-runtime
+spec:
+  # ── Listeners ─────────────────────────────────────────────────────
+  # ALB terminates TLS on :443 and forwards to :8080 (plaintext inside VPC).
+  listeners:
+    - name: http-ingress
+      address: 0.0.0.0:8080
+      protocol: HTTP
+
+  # ── Cluster mode ──────────────────────────────────────────────────
+  # Required for rate-limit.yaml (`clusterizable: true`) and for
+  # circuit-breaker state to be shared across the 2 Fargate tasks.
+  cluster:
+    enabled: true
+    discovery:
+      # DNS-based discovery — ECS Service Discovery publishes task IPs
+      # into the private namespace resolved via SRV records.
+      mode: dns
+      # Overridable per-env via entrypoint.sh env expansion.
+      serviceName: ${FLEX_CLUSTER_SERVICE_NAME:-fsi-flex-gateway.ir-flex.internal}
+    gossipPort: 9999
+
+  # ── Health check ─────────────────────────────────────────────────
+  # Exposed on the same HTTP listener so ALB, ECS, and Docker
+  # HEALTHCHECK all probe the same endpoint.
+  health:
+    enabled: true
+    path: /health
+    livenessProbe:
+      path: /health
+      port: 8080
+    readinessProbe:
+      path: /health
+      port: 8080
+
+  # ── Anypoint Platform connect-back (CONNECTED mode) ──────────────
+  # All values come from env at runtime (set by entrypoint.sh after
+  # pulling the Secrets Manager blob). No secrets in this file.
+  anypoint:
+    connectivityMode: connected
+    controlPlaneUrl: ${ANYPOINT_PLATFORM_URL:-https://anypoint.mulesoft.com}
+    organizationId: ${ANYPOINT_ORG_ID}
+    environmentId: ${ANYPOINT_ENV_ID}
+    # Registration token is written to /opt/flex-gateway/registration.yaml
+    # by registration.sh at container start — not embedded here.
+    registrationFile: /opt/flex-gateway/registration.yaml
+    # Interval at which Flex polls for policy + API updates.
+    pollingIntervalSeconds: 30
+
+  # ── Logging ───────────────────────────────────────────────────────
+  logging:
+    level: ${FLEX_LOG_LEVEL:-INFO}
+    format: json
+    destination: stdout  # picked up by CloudWatch via awslogs driver
+
+  # ── Observability ─────────────────────────────────────────────────
+  # Emit Prometheus metrics on 9091 (internal only — no ALB target).
+  metrics:
+    enabled: true
+    port: 9091
+    path: /metrics

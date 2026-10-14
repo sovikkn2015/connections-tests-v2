@@ -1,0 +1,13 @@
+{
+  "name": "rate_limit",
+  "passed": true,
+  "details": {
+    "mode": "dry-run",
+    "route": "/sec-edgar/tools/call",
+    "total_sent": 60,
+    "status_2xx": 25,
+    "status_429": 35,
+    "status_other": 0
+  },
+  "error": null
+}

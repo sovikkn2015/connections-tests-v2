@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomLabels xmlns="http://soap.sforce.com/2006/04/metadata">
+    <labels>
+        <fullName>IR_AWS_API_URL</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>IR AWS API Gateway URL</shortDescription>
+        <value>https://og256a1neb.execute-api.us-east-1.amazonaws.com/prod</value>
+    </labels>
+    <labels>
+        <fullName>IR_AWS_API_KEY</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>IR AWS API Key</shortDescription>
+        <value>2UogDm4zDIusAXHACjbxRBst44fA-kZ8ASo71gtM2JM</value>
+    </labels>
+</CustomLabels>

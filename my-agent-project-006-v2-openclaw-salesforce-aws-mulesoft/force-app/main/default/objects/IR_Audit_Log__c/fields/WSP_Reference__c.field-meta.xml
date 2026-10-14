@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>WSP_Reference__c</fullName>
+    <description>Written Supervisory Procedure reference authorizing this action. Example: WSP-3.1-EQUITY-EXECUTION, WSP-4.1-WIRE-TRANSFER. Required for FINRA supervisory trail.</description>
+    <externalId>false</externalId>
+    <label>WSP Reference</label>
+    <length>100</length>
+    <required>false</required>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>

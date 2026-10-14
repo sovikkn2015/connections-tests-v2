@@ -1,0 +1,16 @@
+# M10 Audit Logger -- Python dependencies
+#
+# Core deps live in the repo-root `pyproject.toml` (pydantic, pyyaml).
+# This file pins the backend-specific extras that the M10 FastAPI
+# service image needs on top of the core Python suite.
+#
+# Ops Hardening Wave 3 adds the MinIO SDK for the real WORM backend.
+
+# FastAPI surface (shared with M6)
+fastapi>=0.110,<1.0
+uvicorn[standard]>=0.27,<1.0
+
+# MinIO S3-compatible SDK for the WORM backend.
+# Pinned to 7.2.x to match the MinIO server 2024 line. Future bumps
+# must re-verify Object Lock Compliance-mode retention semantics.
+minio>=7.2,<8.0

@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://007.fsi/schemas/canonical/tax-lot/v0.1.0",
+  "title": "TaxLot",
+  "description": "Individual tax lot within a holding. cost_basis_method is REQUIRED \u2014 regulatory risk if missing.",
+  "type": "object",
+  "required": [
+    "lot_id",
+    "holding_ref",
+    "acquisition_date",
+    "quantity",
+    "cost_basis_method",
+    "cost_basis_amount",
+    "source_custodian"
+  ],
+  "properties": {
+    "lot_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Primary key for this tax lot"
+    },
+    "holding_ref": {
+      "type": "string",
+      "description": "Canonical Holding ID"
+    },
+    "security_ref": {
+      "type": "string",
+      "description": "Canonical security identifier"
+    },
+    "acquisition_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date the lot was acquired"
+    },
+    "acquisition_price": {
+      "type": "number",
+      "description": "Price per unit at acquisition"
+    },
+    "quantity": {
+      "type": "number",
+      "description": "Number of shares/units in this lot"
+    },
+    "cost_basis_method": {
+      "type": "string",
+      "enum": [
+        "specific_lot",
+        "average_cost",
+        "fifo",
+        "lifo",
+        "hifo"
+      ],
+      "description": "REQUIRED. Custodian default varies: Schwab=specific_lot, Fidelity=average_cost (mutual funds)/specific_lot (equities)"
+    },
+    "cost_basis_amount": {
+      "type": "number",
+      "description": "Total cost basis for this lot"
+    },
+    "holding_period": {
+      "type": "string",
+      "enum": [
+        "short_term",
+        "long_term",
+        "unknown"
+      ],
+      "description": "short_term, long_term, or unknown"
+    },
+    "unrealized_gain_loss": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Unrealized gain/loss for this lot"
+    },
+    "wash_sale_disallowed": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Disallowed loss amount if wash sale applies"
+    },
+    "source_custodian": {
+      "type": "string",
+      "description": "Which custodian provided this data"
+    },
+    "source_cost_basis_method": {
+      "type": "string",
+      "description": "Custodian's native method name (for reconciliation)"
+    }
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "timestamp_utc": "20260427T055814Z",
+  "mode": "LIVE",
+  "tests_run": [
+    "mnpi_redaction",
+    "rate_limit",
+    "finra_audit"
+  ],
+  "pass_count": 0,
+  "fail_count": 3,
+  "total": 3,
+  "results": [
+    {
+      "name": "mnpi_redaction",
+      "passed": false,
+      "details": {
+        "mode": "live",
+        "query": "Show me the market value and holdings for account ACC-12345",
+        "http_status": 404,
+        "response_excerpt": "",
+        "trace_id": "syn-mnpi-de8ba943-e2d2-453f-9293-f84bb889f8e6",
+        "leaked_fields": [],
+        "gateway_redaction_header": null,
+        "audit_redactions_observed": 0,
+        "audit_has_gateway_stage": false
+      },
+      "error": null
+    },
+    {
+      "name": "rate_limit",
+      "passed": false,
+      "details": {
+        "mode": "live",
+        "total_sent": 60,
+        "elapsed_s": 1.386,
+        "status_2xx": 0,
+        "status_429": 0,
+        "status_other": 60
+      },
+      "error": null
+    },
+    {
+      "name": "finra_audit",
+      "passed": false,
+      "details": {
+        "trace_id": "syn-audit-edb01c61-5d62-42a3-90cd-d7458860c8c0",
+        "http_status": 404,
+        "audit_records_found": 0,
+        "audit_has_gateway_stage": false
+      },
+      "error": null
+    }
+  ]
+}

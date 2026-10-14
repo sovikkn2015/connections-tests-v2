@@ -1,0 +1,355 @@
+{
+  "timestamp": "2026-04-26T09:22:19.479374Z",
+  "organization_id": "2dc8acc5-23cb-424f-95a5-13686d8b9b16",
+  "environment_id": "3d6484f8-928b-4d3c-b970-2e9ac442ff83",
+  "overall": "degraded",
+  "entitlement_status": "flex_only",
+  "agent_fabric": false,
+  "flex_gateway": true,
+  "analysis": {
+    "agent_fabric_entitled": false,
+    "flex_gateway_entitled": true,
+    "agent_fabric_hits": [],
+    "flex_gateway_hits": [
+      {
+        "path": ".entitlements.flexGateway",
+        "truthy": true,
+        "value": "{'enabled': True}"
+      }
+    ],
+    "agent_other_hits": [
+      {
+        "path": ".entitlements.agentScanners",
+        "truthy": false,
+        "value": "False"
+      }
+    ],
+    "top_level_keys": [
+      "clientId",
+      "createdAt",
+      "deletedAt",
+      "domain",
+      "entitlements",
+      "environments",
+      "gdotId",
+      "id",
+      "idprovider_id",
+      "ipAllowlistEnabled",
+      "isAutomaticAdminPromotionExempt",
+      "isFederated",
+      "isMaster",
+      "isRoot",
+      "mfaRequired",
+      "name",
+      "orgType",
+      "ownerId",
+      "parentOrganizationIds",
+      "properties",
+      "sessionTimeout",
+      "subOrganizationIds",
+      "subscription",
+      "tenantOrganizationIds",
+      "updatedAt"
+    ]
+  },
+  "raw_response": {
+    "name": "XYZ",
+    "id": "2dc8acc5-23cb-424f-95a5-13686d8b9b16",
+    "createdAt": "2026-04-25T10:07:07.774Z",
+    "updatedAt": "2026-04-25T10:07:07.774Z",
+    "ownerId": "aa7988db-3675-44e2-b7ca-55bf3054f2f2",
+    "clientId": "e45ba8c682fc4daea9a0ad4653434586",
+    "idprovider_id": "mulesoft",
+    "isFederated": false,
+    "parentOrganizationIds": [],
+    "subOrganizationIds": [],
+    "tenantOrganizationIds": [],
+    "mfaRequired": "mandatory",
+    "isAutomaticAdminPromotionExempt": false,
+    "orgType": "anypoint",
+    "gdotId": null,
+    "deletedAt": null,
+    "ipAllowlistEnabled": false,
+    "domain": "xyz-6320",
+    "isRoot": true,
+    "isMaster": true,
+    "subscription": {
+      "category": "Developer",
+      "type": "Trial",
+      "expiration": "2026-05-25T10:07:08.069Z",
+      "justification": null
+    },
+    "properties": {
+      "internal": {},
+      "defaultAccessManagementUi": "authentication-server-ui"
+    },
+    "environments": [
+      {
+        "id": "3d6484f8-928b-4d3c-b970-2e9ac442ff83",
+        "name": "Sandbox",
+        "organizationId": "2dc8acc5-23cb-424f-95a5-13686d8b9b16",
+        "isProduction": false,
+        "type": "sandbox",
+        "clientId": "5c63b4f676e54f0ea7f21ad025c5cfb7",
+        "arcNamespace": null
+      }
+    ],
+    "entitlements": {
+      "createEnvironments": true,
+      "globalDeployment": false,
+      "createSubOrgs": true,
+      "hybrid": {
+        "enabled": true
+      },
+      "hybridInsight": true,
+      "hybridAutoDiscoverProperties": true,
+      "vCoresProduction": {
+        "assigned": 0,
+        "reassigned": 0
+      },
+      "vCoresSandbox": {
+        "assigned": 1,
+        "reassigned": 0
+      },
+      "vCoresDesign": {
+        "assigned": 1,
+        "reassigned": 0
+      },
+      "staticIps": {
+        "assigned": 0,
+        "reassigned": 0
+      },
+      "vpcs": {
+        "assigned": 0,
+        "reassigned": 0
+      },
+      "vpns": {
+        "assigned": 0,
+        "reassigned": 0
+      },
+      "networkConnections": {
+        "assigned": 0,
+        "reassigned": 0
+      },
+      "workerLoggingOverride": {
+        "enabled": false
+      },
+      "mqMessages": {
+        "base": 0,
+        "addOn": 0
+      },
+      "mqRequests": {
+        "base": 0,
+        "addOn": 0
+      },
+      "objectStoreRequestUnits": {
+        "base": 0,
+        "addOn": 0
+      },
+      "objectStoreKeys": {
+        "base": 0,
+        "addOn": 0
+      },
+      "mqAdvancedFeatures": {
+        "enabled": false
+      },
+      "gateways": {
+        "assigned": 0
+      },
+      "designCenter": {
+        "mozart": false,
+        "api": true,
+        "apiVisual": false,
+        "apiExample": false
+      },
+      "partnersProduction": {
+        "assigned": 0
+      },
+      "partnersSandbox": {
+        "assigned": 0
+      },
+      "tradingPartnersProduction": {
+        "assigned": 0
+      },
+      "tradingPartnersSandbox": {
+        "assigned": 0
+      },
+      "loadBalancer": {
+        "assigned": 0,
+        "reassigned": 0
+      },
+      "externalIdentity": true,
+      "autoscaling": false,
+      "armAlerts": true,
+      "apis": {
+        "enabled": true
+      },
+      "apiMonitoring": {
+        "schedules": 0
+      },
+      "apiCommunityManager": {
+        "enabled": false
+      },
+      "apiExperienceHub": {
+        "enabled": false
+      },
+      "monitoringCenter": {
+        "productSKU": 3,
+        "rawStorageOverrideGB": 0,
+        "dataRegion": "us-east-1",
+        "productionUnits": 0,
+        "preProductionUnits": 0,
+        "storageBase": 0,
+        "storageAddOn": 0
+      },
+      "apiQuery": {
+        "enabled": false,
+        "productSKU": 1,
+        "production": 0,
+        "sandbox": 0
+      },
+      "apiQueryC360": {
+        "enabled": false
+      },
+      "rpa": {
+        "enabled": false,
+        "active": false,
+        "composerVersion": ""
+      },
+      "idp": {
+        "enabled": false
+      },
+      "AutomationCreditsDW": {
+        "assigned": 0
+      },
+      "apiGovernance": {
+        "enabled": true,
+        "apisPerMonth": 5
+      },
+      "apiGovernanceDomain": {
+        "domain": "API"
+      },
+      "crowd": {
+        "hideApiManagerDesigner": true,
+        "hideFormerApiPlatform": true,
+        "environments": true
+      },
+      "cam": {
+        "enabled": false
+      },
+      "exchange2": {
+        "enabled": false,
+        "assetUsageAndEngagement": {
+          "enabled": false
+        }
+      },
+      "crowdSelfServiceMigration": {
+        "enabled": false
+      },
+      "kpiDashboard": {
+        "enabled": false
+      },
+      "pcf": false,
+      "appViz": false,
+      "runtimeFabric": false,
+      "agentScanners": false,
+      "llmProxy": false,
+      "anypointSecurityTokenization": {
+        "enabled": false
+      },
+      "anypointSecurityEdgePolicies": {
+        "enabled": false
+      },
+      "runtimeFabricCloud": {
+        "enabled": true
+      },
+      "serviceMesh": {
+        "enabled": true
+      },
+      "flexGateway": {
+        "enabled": true
+      },
+      "managedGatewaySmall": {
+        "assigned": 1,
+        "reassigned": 0
+      },
+      "managedGatewayLarge": {
+        "assigned": 0,
+        "reassigned": 0
+      },
+      "rtfManagedGateway": {
+        "enabled": false
+      },
+      "apiCatalog": {
+        "enabled": false
+      },
+      "apiManager": {
+        "governance": {
+          "enabled": false
+        },
+        "usageBasedPricing": {
+          "api": {
+            "production": {
+              "amount": 0
+            },
+            "sandbox": {
+              "amount": 0
+            }
+          }
+        },
+        "nonSplitPolicyModelDeprecated": false
+      },
+      "composer": {
+        "enabled": false,
+        "tasksPerMonth": 0,
+        "maxConnectors": 0,
+        "unlimitedConnectors": false,
+        "isHyperAutomation": false
+      },
+      "muleDxWebIde": {
+        "enabled": true
+      },
+      "muleDxGenAI": {
+        "enabled": true
+      },
+      "muleDxEDA": {
+        "enabled": true
+      },
+      "usageBasedPricing": {
+        "muleRuntimeIntegration": {
+          "enabled": false,
+          "flows": 0,
+          "messages": 0,
+          "throughput": 0
+        }
+      },
+      "usageBasedPricingLimits": {
+        "cpu": {
+          "base": 0,
+          "extra": 0
+        },
+        "memory": {
+          "base": 0,
+          "extra": 0
+        }
+      },
+      "highAvailability": {
+        "clustering": false
+      },
+      "cloudhub1": {
+        "enabled": false
+      },
+      "messaging": {
+        "assigned": 0
+      },
+      "workerClouds": {
+        "assigned": 0,
+        "reassigned": 0
+      },
+      "telemetryExporter": {
+        "enabled": false
+      }
+    },
+    "sessionTimeout": 60
+  }
+}

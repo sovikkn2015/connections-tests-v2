@@ -1,0 +1,660 @@
+{
+  "version": "1",
+  "generated_at": "2026-04-28T12:32:15.545867+00:00",
+  "nodes": [
+    {
+      "id": "coordinator",
+      "kind": "coordinator",
+      "label": "Coordinator",
+      "persona": "shared",
+      "model": null,
+      "detail": "Persona router + audit anchor",
+      "layer": 0
+    },
+    {
+      "id": "advisor_orchestrator",
+      "kind": "orchestrator",
+      "label": "advisor_orchestrator",
+      "persona": "fsi_advisor",
+      "model": "sonnet",
+      "detail": "Intent classification, parallel reads, serial writes via action-specialist.",
+      "layer": 1
+    },
+    {
+      "id": "liaison_orchestrator",
+      "kind": "orchestrator",
+      "label": "liaison_orchestrator",
+      "persona": "fsi_client_liaison",
+      "model": "haiku",
+      "detail": "FAQ vs escalation router. Client-safe. Haiku for cost.",
+      "layer": 1
+    },
+    {
+      "id": "research_orchestrator",
+      "kind": "orchestrator",
+      "label": "research_orchestrator",
+      "persona": "fsi_research",
+      "model": "sonnet",
+      "detail": "Plans, fans out 5 specialists in parallel, synthesizes cited brief.",
+      "layer": 1
+    },
+    {
+      "id": "gate_enforcer",
+      "kind": "trust",
+      "label": "Seven-Gate Enforcer",
+      "persona": "shared",
+      "model": null,
+      "detail": "Action-path gate sequencer",
+      "layer": 1
+    },
+    {
+      "id": "idp_session",
+      "kind": "trust",
+      "label": "IdP Session",
+      "persona": "shared",
+      "model": null,
+      "detail": "Auth / session token verify",
+      "layer": 1
+    },
+    {
+      "id": "mnpi_filter",
+      "kind": "trust",
+      "label": "MNPI Filter",
+      "persona": "shared",
+      "model": null,
+      "detail": "Server-side redaction",
+      "layer": 1
+    },
+    {
+      "id": "action_specialist",
+      "kind": "specialist",
+      "label": "action_specialist",
+      "persona": "fsi_advisor",
+      "model": "sonnet",
+      "detail": "Serial seven-gate write path. Never parallelizes. Steering rule 1.",
+      "layer": 2
+    },
+    {
+      "id": "client_context_specialist",
+      "kind": "specialist",
+      "label": "client_context_specialist",
+      "persona": "fsi_advisor",
+      "model": "sonnet",
+      "detail": "MNPI-filtered 30-second RM prep.",
+      "layer": 2
+    },
+    {
+      "id": "compliance_specialist",
+      "kind": "specialist",
+      "label": "compliance_specialist",
+      "persona": "fsi_research",
+      "model": "sonnet",
+      "detail": "Restricted list + MNPI + trading-window screening. DENY is hard stop.",
+      "layer": 2
+    },
+    {
+      "id": "context_specialist",
+      "kind": "specialist",
+      "label": "context_specialist",
+      "persona": "fsi_client_liaison",
+      "model": "sonnet",
+      "detail": "MNPI-filtered client-facing context read. Read-only.",
+      "layer": 2
+    },
+    {
+      "id": "faq_specialist",
+      "kind": "specialist",
+      "label": "faq_specialist",
+      "persona": "fsi_client_liaison",
+      "model": "haiku",
+      "detail": "Bounded client-safe FAQs. Haiku. No MNPI ever touches this.",
+      "layer": 2
+    },
+    {
+      "id": "filings_specialist",
+      "kind": "specialist",
+      "label": "filings_specialist",
+      "persona": "fsi_research",
+      "model": "sonnet",
+      "detail": "10-K/10-Q/8-K retrieval + section-aware RAG with citations.",
+      "layer": 2
+    },
+    {
+      "id": "market_specialist",
+      "kind": "specialist",
+      "label": "market_specialist",
+      "persona": "fsi_research",
+      "model": "sonnet",
+      "detail": "Quote, volume, technicals via market-data MCP (Finnhub primary).",
+      "layer": 2
+    },
+    {
+      "id": "portfolio_specialist",
+      "kind": "specialist",
+      "label": "portfolio_specialist",
+      "persona": "fsi_advisor",
+      "model": "sonnet",
+      "detail": "Book-level attribution, concentration, drawdown. Works in percentages.",
+      "layer": 2
+    },
+    {
+      "id": "sentiment_specialist",
+      "kind": "specialist",
+      "label": "sentiment_specialist",
+      "persona": "fsi_research",
+      "model": "sonnet",
+      "detail": "30-day news sentiment via Tavily + Sonnet scoring (no Comprehend).",
+      "layer": 2
+    },
+    {
+      "id": "statement_specialist",
+      "kind": "specialist",
+      "label": "statement_specialist",
+      "persona": "fsi_research",
+      "model": "sonnet",
+      "detail": "Deterministic growth, margins, ROE/ROIC, peer comparisons.",
+      "layer": 2
+    },
+    {
+      "id": "suitability_specialist",
+      "kind": "specialist",
+      "label": "suitability_specialist",
+      "persona": "fsi_advisor",
+      "model": "sonnet",
+      "detail": "Deterministic PASS/FAIL/REVIEW. Not LLM math.",
+      "layer": 2
+    },
+    {
+      "id": "skill:audit_logging",
+      "kind": "skill",
+      "label": "audit_logging",
+      "persona": "fsi_advisor",
+      "model": null,
+      "detail": "Skill",
+      "layer": 3
+    },
+    {
+      "id": "skill:client_summary",
+      "kind": "skill",
+      "label": "client_summary",
+      "persona": "shared",
+      "model": null,
+      "detail": "Skill",
+      "layer": 3
+    },
+    {
+      "id": "skill:compliance_screening",
+      "kind": "skill",
+      "label": "compliance_screening",
+      "persona": "shared",
+      "model": null,
+      "detail": "Skill",
+      "layer": 3
+    },
+    {
+      "id": "skill:dual_auth",
+      "kind": "skill",
+      "label": "dual_auth",
+      "persona": "fsi_advisor",
+      "model": null,
+      "detail": "Skill",
+      "layer": 3
+    },
+    {
+      "id": "skill:financial_statement_analysis",
+      "kind": "skill",
+      "label": "financial_statement_analysis",
+      "persona": "fsi_research",
+      "model": null,
+      "detail": "Skill",
+      "layer": 3
+    },
+    {
+      "id": "skill:hitl",
+      "kind": "skill",
+      "label": "hitl",
+      "persona": "fsi_advisor",
+      "model": null,
+      "detail": "Skill",
+      "layer": 3
+    },
+    {
+      "id": "skill:mulesoft_api",
+      "kind": "skill",
+      "label": "mulesoft_api",
+      "persona": "fsi_advisor",
+      "model": null,
+      "detail": "Skill",
+      "layer": 3
+    },
+    {
+      "id": "skill:portfolio_analytics",
+      "kind": "skill",
+      "label": "portfolio_analytics",
+      "persona": "fsi_advisor",
+      "model": null,
+      "detail": "Skill",
+      "layer": 3
+    },
+    {
+      "id": "skill:publish_brief",
+      "kind": "skill",
+      "label": "publish_brief",
+      "persona": "fsi_research",
+      "model": null,
+      "detail": "Skill",
+      "layer": 3
+    },
+    {
+      "id": "skill:rag_retrieve",
+      "kind": "skill",
+      "label": "rag_retrieve",
+      "persona": "fsi_research",
+      "model": null,
+      "detail": "Skill",
+      "layer": 3
+    },
+    {
+      "id": "skill:research_awareness",
+      "kind": "skill",
+      "label": "research_awareness",
+      "persona": "fsi_advisor",
+      "model": null,
+      "detail": "Skill",
+      "layer": 3
+    },
+    {
+      "id": "skill:scenario_modeling",
+      "kind": "skill",
+      "label": "scenario_modeling",
+      "persona": "fsi_advisor",
+      "model": null,
+      "detail": "Skill",
+      "layer": 3
+    },
+    {
+      "id": "skill:suitability_check",
+      "kind": "skill",
+      "label": "suitability_check",
+      "persona": "fsi_advisor",
+      "model": null,
+      "detail": "Skill",
+      "layer": 3
+    },
+    {
+      "id": "market-data",
+      "kind": "mcp",
+      "label": "Market Data MCP",
+      "persona": "shared",
+      "model": null,
+      "detail": "Finnhub quotes & technicals",
+      "layer": 4
+    },
+    {
+      "id": "mulesoft-actions",
+      "kind": "mcp",
+      "label": "MuleSoft Actions MCP",
+      "persona": "shared",
+      "model": null,
+      "detail": "Write-path API gateway",
+      "layer": 4
+    },
+    {
+      "id": "news-search",
+      "kind": "mcp",
+      "label": "News Search MCP",
+      "persona": "shared",
+      "model": null,
+      "detail": "Tavily 30-day headlines",
+      "layer": 4
+    },
+    {
+      "id": "salesforce-crm",
+      "kind": "mcp",
+      "label": "Salesforce CRM MCP",
+      "persona": "shared",
+      "model": null,
+      "detail": "CRM household + audit",
+      "layer": 4
+    },
+    {
+      "id": "sec-edgar",
+      "kind": "mcp",
+      "label": "SEC EDGAR MCP",
+      "persona": "shared",
+      "model": null,
+      "detail": "10-K / 10-Q / 8-K retrieval",
+      "layer": 4
+    },
+    {
+      "id": "gate:audit",
+      "kind": "gate",
+      "label": "\u2466 Audit",
+      "persona": "fsi_advisor",
+      "model": null,
+      "detail": "Fires on every outcome \u2014 even BLOCKED",
+      "layer": 5
+    },
+    {
+      "id": "gate:compliance",
+      "kind": "gate",
+      "label": "\u2462 Compliance",
+      "persona": "fsi_advisor",
+      "model": null,
+      "detail": "ALLOW/DENY/REVIEW \u2014 DENY is hard stop",
+      "layer": 5
+    },
+    {
+      "id": "gate:dual_auth",
+      "kind": "gate",
+      "label": "\u2464 Dual Auth",
+      "persona": "fsi_advisor",
+      "model": null,
+      "detail": "> $100K wire / > $500K trade",
+      "layer": 5
+    },
+    {
+      "id": "gate:guardrails",
+      "kind": "gate",
+      "label": "\u2460 Guardrails",
+      "persona": "fsi_advisor",
+      "model": null,
+      "detail": "Input-side Bedrock Guardrails",
+      "layer": 5
+    },
+    {
+      "id": "gate:hitl",
+      "kind": "gate",
+      "label": "\u2463 HITL",
+      "persona": "fsi_advisor",
+      "model": null,
+      "detail": "HMAC-SHA256, 5m TTL, plan_hash bound, single-use",
+      "layer": 5
+    },
+    {
+      "id": "gate:mnpi_filter",
+      "kind": "gate",
+      "label": "\u2461 MNPI Filter",
+      "persona": "fsi_advisor",
+      "model": null,
+      "detail": "Block MNPI leak before compliance",
+      "layer": 5
+    },
+    {
+      "id": "gate:mulesoft",
+      "kind": "gate",
+      "label": "\u2465 MuleSoft",
+      "persona": "fsi_advisor",
+      "model": null,
+      "detail": "ONLY write path \u2014 Anypoint Exchange",
+      "layer": 5
+    }
+  ],
+  "edges": [
+    {
+      "from": "action_specialist",
+      "to": "skill:audit_logging",
+      "kind": "calls"
+    },
+    {
+      "from": "action_specialist",
+      "to": "skill:compliance_screening",
+      "kind": "calls"
+    },
+    {
+      "from": "action_specialist",
+      "to": "skill:dual_auth",
+      "kind": "calls"
+    },
+    {
+      "from": "action_specialist",
+      "to": "skill:hitl",
+      "kind": "calls"
+    },
+    {
+      "from": "action_specialist",
+      "to": "skill:mulesoft_api",
+      "kind": "calls"
+    },
+    {
+      "from": "advisor_orchestrator",
+      "to": "skill:research_awareness",
+      "kind": "calls"
+    },
+    {
+      "from": "client_context_specialist",
+      "to": "skill:client_summary",
+      "kind": "calls"
+    },
+    {
+      "from": "client_context_specialist",
+      "to": "skill:research_awareness",
+      "kind": "calls"
+    },
+    {
+      "from": "compliance_specialist",
+      "to": "skill:compliance_screening",
+      "kind": "calls"
+    },
+    {
+      "from": "context_specialist",
+      "to": "skill:client_summary",
+      "kind": "calls"
+    },
+    {
+      "from": "filings_specialist",
+      "to": "skill:financial_statement_analysis",
+      "kind": "calls"
+    },
+    {
+      "from": "filings_specialist",
+      "to": "skill:rag_retrieve",
+      "kind": "calls"
+    },
+    {
+      "from": "market_specialist",
+      "to": "skill:rag_retrieve",
+      "kind": "calls"
+    },
+    {
+      "from": "portfolio_specialist",
+      "to": "skill:portfolio_analytics",
+      "kind": "calls"
+    },
+    {
+      "from": "portfolio_specialist",
+      "to": "skill:scenario_modeling",
+      "kind": "calls"
+    },
+    {
+      "from": "research_orchestrator",
+      "to": "skill:publish_brief",
+      "kind": "calls"
+    },
+    {
+      "from": "statement_specialist",
+      "to": "skill:financial_statement_analysis",
+      "kind": "calls"
+    },
+    {
+      "from": "suitability_specialist",
+      "to": "skill:suitability_check",
+      "kind": "calls"
+    },
+    {
+      "from": "advisor_orchestrator",
+      "to": "action_specialist",
+      "kind": "dispatches"
+    },
+    {
+      "from": "advisor_orchestrator",
+      "to": "client_context_specialist",
+      "kind": "dispatches"
+    },
+    {
+      "from": "advisor_orchestrator",
+      "to": "portfolio_specialist",
+      "kind": "dispatches"
+    },
+    {
+      "from": "advisor_orchestrator",
+      "to": "suitability_specialist",
+      "kind": "dispatches"
+    },
+    {
+      "from": "liaison_orchestrator",
+      "to": "context_specialist",
+      "kind": "dispatches"
+    },
+    {
+      "from": "liaison_orchestrator",
+      "to": "faq_specialist",
+      "kind": "dispatches"
+    },
+    {
+      "from": "research_orchestrator",
+      "to": "compliance_specialist",
+      "kind": "dispatches"
+    },
+    {
+      "from": "research_orchestrator",
+      "to": "filings_specialist",
+      "kind": "dispatches"
+    },
+    {
+      "from": "research_orchestrator",
+      "to": "market_specialist",
+      "kind": "dispatches"
+    },
+    {
+      "from": "research_orchestrator",
+      "to": "sentiment_specialist",
+      "kind": "dispatches"
+    },
+    {
+      "from": "research_orchestrator",
+      "to": "statement_specialist",
+      "kind": "dispatches"
+    },
+    {
+      "from": "coordinator",
+      "to": "advisor_orchestrator",
+      "kind": "routes"
+    },
+    {
+      "from": "coordinator",
+      "to": "liaison_orchestrator",
+      "kind": "routes"
+    },
+    {
+      "from": "coordinator",
+      "to": "research_orchestrator",
+      "kind": "routes"
+    },
+    {
+      "from": "action_specialist",
+      "to": "gate:guardrails",
+      "kind": "sequences"
+    },
+    {
+      "from": "gate:compliance",
+      "to": "gate:hitl",
+      "kind": "sequences"
+    },
+    {
+      "from": "gate:dual_auth",
+      "to": "gate:mulesoft",
+      "kind": "sequences"
+    },
+    {
+      "from": "gate:guardrails",
+      "to": "gate:mnpi_filter",
+      "kind": "sequences"
+    },
+    {
+      "from": "gate:hitl",
+      "to": "gate:dual_auth",
+      "kind": "sequences"
+    },
+    {
+      "from": "gate:mnpi_filter",
+      "to": "gate:compliance",
+      "kind": "sequences"
+    },
+    {
+      "from": "gate:mulesoft",
+      "to": "gate:audit",
+      "kind": "sequences"
+    },
+    {
+      "from": "action_specialist",
+      "to": "mulesoft-actions",
+      "kind": "tools"
+    },
+    {
+      "from": "action_specialist",
+      "to": "salesforce-crm",
+      "kind": "tools"
+    },
+    {
+      "from": "advisor_orchestrator",
+      "to": "salesforce-crm",
+      "kind": "tools"
+    },
+    {
+      "from": "client_context_specialist",
+      "to": "salesforce-crm",
+      "kind": "tools"
+    },
+    {
+      "from": "compliance_specialist",
+      "to": "salesforce-crm",
+      "kind": "tools"
+    },
+    {
+      "from": "context_specialist",
+      "to": "salesforce-crm",
+      "kind": "tools"
+    },
+    {
+      "from": "filings_specialist",
+      "to": "sec-edgar",
+      "kind": "tools"
+    },
+    {
+      "from": "liaison_orchestrator",
+      "to": "salesforce-crm",
+      "kind": "tools"
+    },
+    {
+      "from": "market_specialist",
+      "to": "market-data",
+      "kind": "tools"
+    },
+    {
+      "from": "portfolio_specialist",
+      "to": "salesforce-crm",
+      "kind": "tools"
+    },
+    {
+      "from": "research_orchestrator",
+      "to": "salesforce-crm",
+      "kind": "tools"
+    },
+    {
+      "from": "sentiment_specialist",
+      "to": "news-search",
+      "kind": "tools"
+    },
+    {
+      "from": "statement_specialist",
+      "to": "sec-edgar",
+      "kind": "tools"
+    },
+    {
+      "from": "suitability_specialist",
+      "to": "salesforce-crm",
+      "kind": "tools"
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+# FINRA Audit Logging — every agent-to-tool interaction
+apiVersion: gateway.mulesoft.com/v1alpha1
+kind: PolicyBinding
+metadata:
+  name: finra-audit-logging
+spec:
+  targetRef:
+    kind: ApiInstance
+    name: fsi-mcp-servers
+  policyRef:
+    name: message-logging
+  config:
+    loggingConfiguration:
+      - logLevel: INFO
+        message: >-
+          FINRA_AUDIT | agent={{agent.id}} | tool={{request.path}} |
+          method={{request.method}} | status={{response.status}} |
+          latency={{response.latency}}ms | timestamp={{now}} |
+          correlationId={{request.headers.x-correlation-id}}
+    destination:
+      type: salesforce
+      object: IR_Audit_Log__c
+      fieldMapping:
+        Agent__c: "{{agent.id}}"
+        Action__c: "MCP_CALL"
+        Query__c: "{{request.body.name}}"
+        Timestamp__c: "{{now}}"
+        Pipeline_Stage__c: "gateway"
+        Compliance_Status__c: "PASS"

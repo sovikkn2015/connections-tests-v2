@@ -1,0 +1,351 @@
+{
+  "$defs": {
+    "PerformanceMethodology": {
+      "description": "3 TWR calculation methodologies. PENDING SME validation on default.",
+      "enum": [
+        "modified_dietz",
+        "daily_valuation",
+        "irr_only"
+      ],
+      "title": "PerformanceMethodology",
+      "type": "string"
+    },
+    "PerformancePeriod": {
+      "description": "9 performance measurement periods.",
+      "enum": [
+        "mtd",
+        "qtd",
+        "ytd",
+        "1y",
+        "3y",
+        "5y",
+        "10y",
+        "itd",
+        "custom"
+      ],
+      "title": "PerformancePeriod",
+      "type": "string"
+    }
+  },
+  "description": "Canonical portfolio performance metrics. TWR methodology must be explicit for GIPS compliance.",
+  "properties": {
+    "performance_id": {
+      "description": "Primary key for this performance record.",
+      "format": "uuid",
+      "title": "Performance Id",
+      "type": "string"
+    },
+    "account_ref": {
+      "description": "Canonical Account ID.",
+      "format": "uuid",
+      "title": "Account Ref",
+      "type": "string"
+    },
+    "client_ref": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Canonical Client ID.",
+      "title": "Client Ref"
+    },
+    "household_ref": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Canonical Household ID for household-level performance.",
+      "title": "Household Ref"
+    },
+    "period": {
+      "$ref": "#/$defs/PerformancePeriod",
+      "description": "Performance measurement period."
+    },
+    "twr_return": {
+      "description": "Time-weighted return as decimal (e.g., 0.085 = 8.5%).",
+      "title": "Twr Return",
+      "type": "number"
+    },
+    "irr_return": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Internal rate of return as decimal.",
+      "title": "Irr Return"
+    },
+    "gross_return": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Return before fees.",
+      "title": "Gross Return"
+    },
+    "net_return": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Return after fees.",
+      "title": "Net Return"
+    },
+    "benchmark_return": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Benchmark return for same period.",
+      "title": "Benchmark Return"
+    },
+    "benchmark_name": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Benchmark index name.",
+      "title": "Benchmark Name"
+    },
+    "benchmark_ticker": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Benchmark ticker.",
+      "title": "Benchmark Ticker"
+    },
+    "alpha": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Excess return over benchmark.",
+      "title": "Alpha"
+    },
+    "sharpe_ratio": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Risk-adjusted return metric. Required for suitability analysis.",
+      "title": "Sharpe Ratio"
+    },
+    "standard_deviation": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Portfolio volatility.",
+      "title": "Standard Deviation"
+    },
+    "max_drawdown": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Maximum peak-to-trough decline.",
+      "title": "Max Drawdown"
+    },
+    "start_date": {
+      "description": "Period start date.",
+      "format": "date",
+      "title": "Start Date",
+      "type": "string"
+    },
+    "end_date": {
+      "description": "Period end date.",
+      "format": "date",
+      "title": "End Date",
+      "type": "string"
+    },
+    "start_value": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Portfolio value at period start.",
+      "title": "Start Value"
+    },
+    "end_value": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Portfolio value at period end.",
+      "title": "End Value"
+    },
+    "net_flows": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Net cash flows during period.",
+      "title": "Net Flows"
+    },
+    "income_earned": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Dividends + interest earned during period.",
+      "title": "Income Earned"
+    },
+    "realized_gains": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Realized capital gains during period.",
+      "title": "Realized Gains"
+    },
+    "fees_paid": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Total fees paid during period.",
+      "title": "Fees Paid"
+    },
+    "methodology": {
+      "$ref": "#/$defs/PerformanceMethodology",
+      "description": "TWR calculation methodology. PENDING SME validation."
+    },
+    "is_gips_compliant": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": false,
+      "description": "True if follows GIPS standards.",
+      "title": "Is Gips Compliant"
+    },
+    "source_system": {
+      "description": "Source system that provided this performance data.",
+      "title": "Source System",
+      "type": "string"
+    },
+    "source_id": {
+      "description": "Vendor-specific performance record ID.",
+      "title": "Source Id",
+      "type": "string"
+    },
+    "as_of_date": {
+      "description": "Date this performance data is valid for.",
+      "format": "date",
+      "title": "As Of Date",
+      "type": "string"
+    }
+  },
+  "required": [
+    "performance_id",
+    "account_ref",
+    "period",
+    "twr_return",
+    "start_date",
+    "end_date",
+    "methodology",
+    "source_system",
+    "source_id",
+    "as_of_date"
+  ],
+  "title": "Performance",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://007.fsi/schemas/canonical/performance/v0.1.0"
+}

@@ -1,0 +1,42 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: |
+  Onboarding Specialist — AWS resources.
+  Owner: intelligence-layer team.
+
+  Resources:
+    - Onboarding sessions DynamoDB table (multi-day KYC workflows)
+
+  Depends on: platform-common.
+
+Parameters:
+  Prefix:       { Type: String, Default: fsi007 }
+  Environment:  { Type: String, Default: dev }
+
+Resources:
+
+  Onboarding:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub '${Prefix}-${Environment}-onboarding'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - { AttributeName: session_id, AttributeType: S }
+      KeySchema:
+        - { AttributeName: session_id, KeyType: HASH }
+      PointInTimeRecoverySpecification: { PointInTimeRecoveryEnabled: true }
+      SSESpecification:
+        SSEEnabled: true
+        SSEType: KMS
+        KMSMasterKeyId: !ImportValue '007-platform-KmsKeyId'
+      Tags:
+        - { Key: project, Value: '007' }
+        - { Key: environment, Value: !Ref Environment }
+        - { Key: module, Value: onboarding-specialist }
+
+Outputs:
+  OnboardingTableName:
+    Value: !Ref Onboarding
+    Export: { Name: '007-onboarding-specialist-OnboardingTableName' }
+  OnboardingTableArn:
+    Value: !GetAtt Onboarding.Arn
+    Export: { Name: '007-onboarding-specialist-OnboardingTableArn' }

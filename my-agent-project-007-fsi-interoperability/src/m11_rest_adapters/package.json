@@ -1,0 +1,28 @@
+{
+  "name": "@project-007/m11-rest-adapters-root",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Project 007 M11-REST adapters workspace root (shared SDK + 4 vendor adapters).",
+  "workspaces": [
+    "shared/mcp-sdk",
+    "salesforce_fsc",
+    "orion",
+    "emoney",
+    "schwab",
+    "smarsh_archive"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "test:sdk": "npm test --workspace=@project-007/mcp-sdk",
+    "test:sfdc": "npm test --workspace=@project-007/m11-salesforce-fsc-adapter",
+    "test:orion": "npm test --workspace=@project-007/m11-orion-adapter",
+    "test:emoney": "npm test --workspace=@project-007/m11-emoney-adapter",
+    "test:schwab": "npm test --workspace=@project-007/m11-schwab-adapter",
+    "test:smarsh": "npm test --workspace=@project-007/m11-smarsh-archive-adapter",
+    "typecheck": "npm run typecheck --workspaces --if-present"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

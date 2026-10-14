@@ -1,0 +1,9 @@
+{
+  "run_id": "arc-3230b3a4f699",
+  "stage": 9,
+  "lesson_type": "failure",
+  "detail": "Stage 9 failed permanently: DCF model error: revenue_ttm must be positive",
+  "severity": "error",
+  "ticker": "MSFT",
+  "timestamp": "2026-04-22T19:16:31.776960+00:00"
+}

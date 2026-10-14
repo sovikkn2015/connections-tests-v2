@@ -1,0 +1,99 @@
+{
+  "bundle": "jurisdiction",
+  "gap": 7,
+  "schema_version": "1.0.0",
+  "description": "Gap 7 cross-border jurisdiction overlays with wsp_section cross-reference for Gap 3 bidirectional traceability.",
+  "rules": [
+    {
+      "file": "us/reg_bi.rego",
+      "package": "jurisdiction.us.reg_bi",
+      "rule_id": "jurisdiction.us.reg_bi.us_same_jurisdiction_ok",
+      "wsp_section": "Reg BI §15l-1",
+      "severity": "INFO"
+    },
+    {
+      "file": "eu/gdpr_lawful_basis.rego",
+      "package": "jurisdiction.eu.gdpr_lawful_basis",
+      "rule_id": "jurisdiction.eu.gdpr_lawful_basis.consent_basis_missing_consent",
+      "wsp_section": "GDPR Art. 6(1)(a)",
+      "severity": "REQUIRE_CONSENT"
+    },
+    {
+      "file": "eu/gdpr_lawful_basis.rego",
+      "package": "jurisdiction.eu.gdpr_lawful_basis",
+      "rule_id": "jurisdiction.eu.gdpr_lawful_basis.contract_basis_requires_scc",
+      "wsp_section": "GDPR Art. 6(1)(b)",
+      "severity": "REQUIRE_SCC"
+    },
+    {
+      "file": "eu/gdpr_lawful_basis.rego",
+      "package": "jurisdiction.eu.gdpr_lawful_basis",
+      "rule_id": "jurisdiction.eu.gdpr_lawful_basis.legitimate_interests_requires_scc",
+      "wsp_section": "GDPR Art. 6(1)(f)",
+      "severity": "REQUIRE_SCC"
+    },
+    {
+      "file": "eu/gdpr_lawful_basis.rego",
+      "package": "jurisdiction.eu.gdpr_lawful_basis",
+      "rule_id": "jurisdiction.eu.gdpr_lawful_basis.cross_border_eu_transfer_requires_basis",
+      "wsp_section": "GDPR Art. 46",
+      "severity": "REQUIRE_SCC"
+    },
+    {
+      "file": "eu/mifid2_suitability.rego",
+      "package": "jurisdiction.eu.mifid2_suitability",
+      "rule_id": "jurisdiction.eu.mifid2_suitability.retail_complex_no_suitability",
+      "wsp_section": "MiFID II Art. 25(2)",
+      "severity": "DENY"
+    },
+    {
+      "file": "eu/mifid2_suitability.rego",
+      "package": "jurisdiction.eu.mifid2_suitability",
+      "rule_id": "jurisdiction.eu.mifid2_suitability.retail_no_knowledge_assessment",
+      "wsp_section": "MiFID II Art. 25(3)",
+      "severity": "DENY"
+    },
+    {
+      "file": "uk/fca_consumer_duty.rego",
+      "package": "jurisdiction.uk.fca_consumer_duty",
+      "rule_id": "jurisdiction.uk.fca_consumer_duty.uk_same_jurisdiction_ok",
+      "wsp_section": "FCA Consumer Duty PRIN 2A",
+      "severity": "INFO"
+    },
+    {
+      "file": "sg/mas_notice_626.rego",
+      "package": "jurisdiction.sg.mas_notice_626",
+      "rule_id": "jurisdiction.sg.mas_notice_626.mas_retail_restricted_product",
+      "wsp_section": "MAS Notice 626 §9",
+      "severity": "DENY"
+    },
+    {
+      "file": "hk/hkma_sfc_marketing.rego",
+      "package": "jurisdiction.hk.hkma_sfc_marketing",
+      "rule_id": "jurisdiction.hk.hkma_sfc_marketing.sfc_complex_no_kyc",
+      "wsp_section": "SFC Code of Conduct §5.1A",
+      "severity": "DENY"
+    },
+    {
+      "file": "hk/hkma_sfc_marketing.rego",
+      "package": "jurisdiction.hk.hkma_sfc_marketing",
+      "rule_id": "jurisdiction.hk.hkma_sfc_marketing.sfc_mnpi_cross_border",
+      "wsp_section": "SFC Part XIVA",
+      "severity": "DENY"
+    },
+    {
+      "file": "conflict_resolution.rego",
+      "package": "jurisdiction.conflict_resolution",
+      "rule_id": "jurisdiction.conflict_resolution.erasure_vs_retention",
+      "wsp_section": "GDPR Art. 17(3)(b)",
+      "severity": "DENY_ERASURE"
+    },
+    {
+      "file": "conflict_resolution.rego",
+      "package": "jurisdiction.conflict_resolution",
+      "rule_id": "jurisdiction.conflict_resolution.retention_clock",
+      "wsp_section": "17 CFR §240.17a-4(e)(5)",
+      "severity": "INFO"
+    }
+  ]
+}

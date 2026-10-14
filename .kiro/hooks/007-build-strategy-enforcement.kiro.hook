@@ -1,0 +1,16 @@
+{
+  "enabled": true,
+  "name": "007 Build Strategy Enforcement",
+  "description": "Before any code write to the 007 project, verify the build strategy is being followed: spec exists for the module, we're building depth-first, not skipping phases, and tests accompany implementation.",
+  "version": "1",
+  "when": {
+    "type": "preToolUse",
+    "toolTypes": [
+      "write"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "ONLY if the file being written is inside my-agent-project-007-fsi-interoperability/src/ or my-agent-project-007-fsi-interoperability/tests/ or my-agent-project-007-fsi-interoperability/opa-bundles/. If NOT in those paths, respond ACCESS GRANTED.\n\nCheck these BUILD STRATEGY rules (from docs/007-build-strategy.md):\n\n1. SPEC-FIRST: Does a Kiro spec exist for this module? Check .kiro/specs/ for a spec file matching this module (M1-M13 or compliance gap). If no spec exists, BLOCK with message: \"No spec found for this module. Create a Kiro spec first (Requirements → Design → Tasks).\"\n\n2. DEPTH-FIRST: Is the previous module in the build order complete? Build order: M3 → M5 → M1 → M10 → M2/M4 → M6 → M7 → M11 → M9 → M8. If writing code for a later module while an earlier one has no tests or failing tests, WARN: \"Previous module may not be complete. Verify before proceeding.\"\n\n3. PHASE ORDER: Which phase does this module belong to? Phase 0: M3, M5. Phase 1: M1, M10, M2/M4, M6, Gap2, Gap6. Phase 2: M7, M11, M9, M8. If writing Phase N code before Phase N-1 integration tests exist, WARN.\n\n4. TDD CHECK: If this is a src/ file (implementation), is there a corresponding test file in tests/? If writing implementation without tests, WARN: \"Write tests WITH implementation, not after.\"\n\nIf all checks pass, respond ACCESS GRANTED."
+  }
+}

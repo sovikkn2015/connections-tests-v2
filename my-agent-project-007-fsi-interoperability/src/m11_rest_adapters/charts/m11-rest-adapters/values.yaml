@@ -1,0 +1,67 @@
+firm:
+  namespace: acme
+  name: acme-advisory
+
+m11:
+  secretsNamespace: vault
+  certIssuer: internal-ca
+
+  salesforce_fsc:
+    enabled: true
+    image:
+      repository: ghcr.io/project-007/m11-salesforce-fsc
+      tag: 0.1.0
+      digest: REPLACE_ME_SHA256
+    egressFQDNs:
+      - login.salesforce.com
+      - test.salesforce.com
+      - my.salesforce.com
+      - salesforce.com
+    rateLimitRpm: 4166
+    rateLimitBurst: 200
+    dailyLimit: 100000
+
+  orion:
+    enabled: true
+    image:
+      repository: ghcr.io/project-007/m11-orion
+      tag: 0.1.0
+      digest: REPLACE_ME_SHA256
+    egressFQDNs:
+      - api.orionadvisor.com
+      - stagingapi.orionadvisor.com
+    authMode: oauth
+    rateLimitRpm: 60
+    rateLimitBurst: 10
+
+  emoney:
+    enabled: true
+    image:
+      repository: ghcr.io/project-007/m11-emoney
+      tag: 0.1.0
+      digest: REPLACE_ME_SHA256
+    egressFQDNs:
+      - api.emoneyadvisor.com
+      - api-sandbox.emoneyadvisor.com
+    rateLimitRpm: 1800
+    rateLimitBurst: 30
+
+  schwab:
+    enabled: true
+    image:
+      repository: ghcr.io/project-007/m11-schwab
+      tag: 0.1.0
+      digest: REPLACE_ME_SHA256
+    egressFQDNs:
+      - api.schwabapi.com
+      - api-sandbox.schwabapi.com
+    rateLimitRpm: 120
+    rateLimitBurst: 20
+
+resources:
+  requests: { cpu: 100m, memory: 256Mi }
+  limits:   { cpu: 500m, memory: 512Mi }
+
+sidecar: { enabled: true }
+otel:    { enabled: false }
+hpa:     { enabled: false }

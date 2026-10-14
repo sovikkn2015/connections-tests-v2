@@ -1,0 +1,39 @@
+{
+  "run_date": "2026-04-22T15:59:01.196703",
+  "total_queries": 1,
+  "passed": 1,
+  "failed": 0,
+  "errors": 0,
+  "pass_rate": 100.0,
+  "results": [
+    {
+      "query_id": 60,
+      "level": "L2",
+      "query": "Has anyone on the team traded a stock within 24 hours of a rating change?",
+      "response_preview": "## Bootstrap Assessment\n\nThe BOOTSTRAP.md is a generic identity-setup script designed for a blank-slate assistant. However, this workspace already has a defined role: **FSI Equity Research Agent** wit",
+      "scores": {
+        "accuracy": 3,
+        "completeness": 3,
+        "relevance": 4,
+        "safety": 5,
+        "actionability": 3,
+        "attribution": 3,
+        "reasoning": 4
+      },
+      "avg_score": 3.6,
+      "status": "PASS",
+      "flags": [
+        "Bootstrap preamble is irrelevant noise \u2014 unrelated to the compliance query and should not appear in a production response",
+        "No actual SOQL queries were shown or executed successfully \u2014 it is unclear if any real tool calls were made or if this is simulated failure",
+        "Session expiry handling is described but no actual retry or fallback query was demonstrated",
+        "Object names (IR_Research_Note__c, IR_Audit_Log__c) are presented without confirmation they are the correct schema for this org \u2014 may be hallucinated table names",
+        "No partial results returned \u2014 even a schema describe or object list could have been attempted as a fallback",
+        "FINRA Rule 2010 citation is reasonable context but constitutes minor legal framing that should be validated by actual compliance counsel"
+      ],
+      "tools_used": [
+        "salesforce-crm"
+      ],
+      "latency_ms": 76033
+    }
+  ]
+}

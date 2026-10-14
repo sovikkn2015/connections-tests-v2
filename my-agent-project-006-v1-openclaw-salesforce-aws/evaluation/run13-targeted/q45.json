@@ -1,0 +1,40 @@
+{
+  "run_date": "2026-04-22T17:46:45.889033",
+  "total_queries": 1,
+  "passed": 1,
+  "failed": 0,
+  "errors": 0,
+  "pass_rate": 100.0,
+  "results": [
+    {
+      "query_id": 45,
+      "level": "L2",
+      "query": "Compare analyst consensus on NVDA vs AMD vs INTC",
+      "response_preview": "All three analyst consensus calls returned a 500 error. Retrying with quotes + 52-week range as a fallback:\n\nThe `get_analyst_consensus` tool returned a server-side 500 error for all three tickers on ",
+      "scores": {
+        "accuracy": 3,
+        "completeness": 2,
+        "relevance": 4,
+        "safety": 5,
+        "actionability": 3,
+        "attribution": 4,
+        "reasoning": 4
+      },
+      "avg_score": 3.6,
+      "status": "PASS",
+      "flags": [
+        "Primary query objective (analyst consensus) not fulfilled due to tool failure",
+        "Stock prices cannot be verified against ground truth \u2014 AMD at $300.83 appears potentially stale or incorrect given typical AMD trading ranges",
+        "INTC at $65.60 also warrants scrutiny as it appears high relative to recent trading history",
+        "No SOQL/Salesforce skill was attempted despite being an expected tool per persona",
+        "Fallback data (quotes only) does not substitute for the requested consensus comparison",
+        "No 52-week range data was included despite agent stating it would retry with that as fallback"
+      ],
+      "tools_used": [
+        "market-data",
+        "news-search"
+      ],
+      "latency_ms": 73323
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "id": 16,
+  "text": "Latest news on Tesla",
+  "expected_category": "news",
+  "expected_path": "ORCH->GW->MCP:news-search.search_financial_news",
+  "judge_pass": false,
+  "judge_score": 0.0,
+  "judge_reason": "Response fails news category requirement. While the response honestly states no news is available (which is acceptable per rules), the empty",
+  "response_excerpt": "{\"tool\": \"search_financial_news\", \"ticker\": \"TSLA\", \"message\": \"No recent news for TSLA.\", \"articles\": []}",
+  "latency_ms": 1209,
+  "http_status": 200,
+  "status_verdict": "FAIL",
+  "skip_reason": null,
+  "tool_calls": [
+    "news-search.search_financial_news"
+  ],
+  "langfuse_trace_id": "7568c36c-5175-4a20-9591-6009c65ca21d",
+  "audit_records_found": 0,
+  "audit_has_gateway_stage": false,
+  "mnpi_redactions_observed": 0,
+  "circuit_breaker_tripped": false,
+  "v2_status": "PASS",
+  "error": null,
+  "mcp_direct_route": "/news-search/tools/call",
+  "mcp_direct_correlation_id": "7568c36c-5175-4a20-9591-6009c65ca21d"
+}

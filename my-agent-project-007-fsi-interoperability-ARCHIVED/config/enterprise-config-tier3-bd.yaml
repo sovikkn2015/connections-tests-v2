@@ -1,0 +1,69 @@
+# Enterprise Config Template — Tier 3 Broker-Dealer
+# Stricter compliance requirements than Tier 4 RIA.
+
+firm:
+  name: "National Financial Partners"
+  lei: "5493001KJTIIGC8Y1R12"
+  crd_number: "789012"
+  registration_type: "dual_registered"  # most BDs are dual-registered
+
+archetype: "tier3_broker_dealer"
+
+jurisdiction:
+  primary: "US"
+  data_residency: "US"
+
+deployment:
+  topology: "cloud"
+  region: "us-east-1"
+  runtime: "managed-agents"
+
+vendors:
+  crm: "salesforce_fsc"
+  portfolio: "orion"
+  planning: "emoney"
+  custodians: ["pershing", "schwab"]
+  market_data: "alpha_vantage"
+  compliance_archive: "smarsh"  # REQUIRED for BDs
+
+channels:
+  enabled: ["slack", "teams", "web"]
+  primary: "teams"
+
+compliance:
+  suitability_standard: "reg_bi"  # Reg BI applies to BD recommendations
+  reg_bi_enabled: true
+  smarsh_enabled: true  # REQUIRED — $11B+ in fines for archiving failures
+  principal_review_enabled: true  # REQUIRED — FINRA 2210
+  principal_review_mode: "pre_use"  # pre_use | post_use
+  principal_review_sla_hours: 4
+  worm_retention_years: 6
+  mnpi_filtering: "tier3_advisor_level"
+  bsa_aml_enabled: true
+  ctr_threshold: 10000
+  sar_structuring_threshold: 8000
+
+  reg_bi_config:
+    template: "default"
+    conflict_inventory:
+      - type: "revenue_sharing"
+        description: "Firm receives revenue sharing from XYZ Fund Family"
+        mitigation: "Disclosed in Form CRS and account opening documents"
+    auto_generate: true
+    require_advisor_review: true
+    narrative_model: "haiku"
+
+specialists:
+  enabled: ["client_service", "research", "execution", "onboarding"]
+  supervisor_model: "haiku"
+  research_model: "sonnet"
+  client_service_model: "haiku"
+  execution_model: "haiku"
+  onboarding_model: "haiku"
+
+memory:
+  l1_ttl_hours: 8
+  l2_retention_days: 7
+  l3_retention_years: 2
+  l4_enabled: true
+  l5_enabled: true

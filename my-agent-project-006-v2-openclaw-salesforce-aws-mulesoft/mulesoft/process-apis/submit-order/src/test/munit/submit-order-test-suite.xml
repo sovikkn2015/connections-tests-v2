@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Project 006 v2 - submit-order Process API MUnit test suite.
+
+  Three hermetic tests - NO network calls to Alpaca. The HTTP request to
+  paper-api.alpaca.markets is mocked so `mvn test` runs offline in CI.
+
+    1. assert-403-when-approval-token-hash-missing
+    2. assert-400-when-ticker-missing
+    3. assert-200-happy-path-mock-mode
+         Uses mock_mode=true on the Mule config so the flow returns a
+         MULE-ORDER-* canned response WITHOUT the HTTP request step.
+         This verifies: validation pass + normalize + mock branch.
+-->
+<mule xmlns="http://www.mulesoft.org/schema/mule/core"
+      xmlns:munit="http://www.mulesoft.org/schema/mule/munit"
+      xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+      xmlns:http="http://www.mulesoft.org/schema/mule/http"
+      xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+      xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="
+        http://www.mulesoft.org/schema/mule/core
+          http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+        http://www.mulesoft.org/schema/mule/munit
+          http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+        http://www.mulesoft.org/schema/mule/munit-tools
+          http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd
+        http://www.mulesoft.org/schema/mule/http
+          http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+        http://www.mulesoft.org/schema/mule/ee/core
+          http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+
+    <munit:config name="submit-order-test-suite.xml">
+        <munit:parameterizations>
+            <munit:parameterization name="mock">
+                <munit:parameters>
+                    <!-- Force mock mode inside the flow so the happy-path test
+                         does not hit Alpaca. The 400/403 branches don't reach
+                         the HTTP step so this parameter is harmless for them. -->
+                    <munit:parameter propertyName="mock_mode" value="true"/>
+                </munit:parameters>
+            </munit:parameterization>
+        </munit:parameterizations>
+    </munit:config>
+
+    <!-- Pull the production flow config into the test harness. -->
+    <munit:dynamic-port propertyName="http.port"/>
+
+    <!-- ================================================================ -->
+    <!-- Test 1: 403 when approval_token_hash is missing                  -->
+    <!-- ================================================================ -->
+    <munit:test name="assert-403-when-approval-token-hash-missing"
+                doc:name="403 on missing approval_token_hash"
+                description="Missing approval_token_hash mimics the HITL gate and must return 403.">
+        <munit:execution>
+            <!-- Invoke the main flow directly with a payload missing approval_token_hash. -->
+            <munit:set-event>
+                <munit:payload value="#[output application/json --- { ticker: 'AAPL', side: 'BUY', quantity: 10, client_id: 'CLI-1', account_id: 'ACC-1' }]"/>
+            </munit:set-event>
+            <flow-ref name="submit-order-main-flow"/>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that doc:name="httpStatus == 403"
+                                     expression="#[vars.httpStatus]"
+                                     is="#[MunitTools::equalTo(403)]"/>
+            <munit-tools:assert-that doc:name="error == approval_required"
+                                     expression="#[payload.error]"
+                                     is="#[MunitTools::equalTo('approval_required')]"/>
+        </munit:validation>
+    </munit:test>
+
+    <!-- ================================================================ -->
+    <!-- Test 2: 400 when ticker is missing                               -->
+    <!-- ================================================================ -->
+    <munit:test name="assert-400-when-ticker-missing"
+                doc:name="400 on missing ticker"
+                description="A valid approval_token_hash present but ticker missing -> 400 missing_fields.">
+        <munit:execution>
+            <munit:set-event>
+                <munit:payload value="#[output application/json --- { side: 'BUY', quantity: 10, client_id: 'CLI-1', account_id: 'ACC-1', approval_token_hash: 'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789' }]"/>
+            </munit:set-event>
+            <flow-ref name="submit-order-main-flow"/>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that doc:name="httpStatus == 400"
+                                     expression="#[vars.httpStatus]"
+                                     is="#[MunitTools::equalTo(400)]"/>
+            <munit-tools:assert-that doc:name="error == missing_fields"
+                                     expression="#[payload.error]"
+                                     is="#[MunitTools::equalTo('missing_fields')]"/>
+            <munit-tools:assert-that doc:name="ticker in missing_fields"
+                                     expression="#[payload.missing_fields contains 'ticker']"
+                                     is="#[MunitTools::equalTo(true)]"/>
+        </munit:validation>
+    </munit:test>
+
+    <!-- ================================================================ -->
+    <!-- Test 3: 200 happy path with mock_mode=true (NO Alpaca call)      -->
+    <!-- ================================================================ -->
+    <munit:test name="assert-200-happy-path-mock-mode"
+                doc:name="200 happy path (mock mode, no Alpaca)"
+                description="Valid payload + mock_mode=true -> MULE-ORDER-* canned response, zero HTTP calls.">
+
+        <munit:behavior>
+            <!--
+              Belt-and-braces: even with mock_mode=true the flow SHOULD NOT
+              reach the outbound request step. Mock the HTTP client anyway so
+              that if the branch logic ever regresses, the test fails loudly
+              with "MUNIT_UNEXPECTED_CALL" instead of hitting the network.
+            -->
+            <munit-tools:mock-when doc:name="Mock Alpaca HTTP request (should never fire)"
+                                   processor="http:request">
+                <munit-tools:with-attributes>
+                    <munit-tools:with-attribute whereValue="alpaca-paper-api-config" attributeName="config-ref"/>
+                </munit-tools:with-attributes>
+                <munit-tools:then-return>
+                    <munit-tools:payload value='#[output application/json --- { error: "MUNIT_UNEXPECTED_CALL", message: "mock_mode test must not reach Alpaca" }]'/>
+                </munit-tools:then-return>
+            </munit-tools:mock-when>
+        </munit:behavior>
+
+        <munit:execution>
+            <munit:set-event>
+                <munit:payload value="#[output application/json --- { ticker: 'AAPL', side: 'BUY', quantity: 10, order_type: 'MARKET', client_id: 'CLI-1', account_id: 'ACC-1', approval_token_hash: 'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789' }]"/>
+            </munit:set-event>
+            <flow-ref name="submit-order-main-flow"/>
+        </munit:execution>
+
+        <munit:validation>
+            <!-- No httpStatus override means implicit 200 -->
+            <munit-tools:assert-that doc:name="status == SUBMITTED"
+                                     expression="#[payload.status]"
+                                     is="#[MunitTools::equalTo('SUBMITTED')]"/>
+            <munit-tools:assert-that doc:name="order_id starts with MULE-ORDER-"
+                                     expression="#[payload.order_id startsWith 'MULE-ORDER-']"
+                                     is="#[MunitTools::equalTo(true)]"/>
+            <munit-tools:assert-that doc:name="ticker preserved"
+                                     expression="#[payload.ticker]"
+                                     is="#[MunitTools::equalTo('AAPL')]"/>
+            <munit-tools:assert-that doc:name="quantity preserved"
+                                     expression="#[payload.quantity]"
+                                     is="#[MunitTools::equalTo(10)]"/>
+            <!-- Prove Alpaca was never called (else payload.error would be MUNIT_UNEXPECTED_CALL) -->
+            <munit-tools:assert-that doc:name="Alpaca NOT called (guard mock did not fire)"
+                                     expression="#[payload.error default '']"
+                                     is="#[MunitTools::not(MunitTools::equalTo('MUNIT_UNEXPECTED_CALL'))]"/>
+        </munit:validation>
+    </munit:test>
+
+</mule>

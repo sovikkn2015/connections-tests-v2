@@ -1,0 +1,76 @@
+{{- /*
+Wave 4 egress narrowing. Spec: .kiro/specs/ops-hardening-wave4-egress-narrowing.md.
+M10 audit egress: Langfuse + S3/MinIO + CRM + Vault.
+*/}}
+{{- $mode := "allow-all" -}}
+{{- if and .Values.global .Values.global.networkPolicy .Values.global.networkPolicy.egressMode -}}
+{{-   $mode = .Values.global.networkPolicy.egressMode -}}
+{{- end -}}
+{{- if and .Values.networkPolicy .Values.networkPolicy.egressMode -}}
+{{-   $mode = .Values.networkPolicy.egressMode -}}
+{{- end -}}
+{{- $allowlist := default list .Values.egressAllowlist -}}
+{{- if and (eq $mode "allowlist") (eq (len $allowlist) 0) -}}
+{{-   fail "M10 audit-logger egressAllowlist must be non-empty in allowlist mode. See deploy/helm/007-fsi/VALUES-EGRESS-README.md." -}}
+{{- end -}}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "007.fullname" . }}
+  labels:
+    {{- include "007.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "007.selectorLabels" . | nindent 6 }}
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: m6-mcp-gateway
+      ports:
+        - protocol: TCP
+          port: {{ .Values.service.probePort }}
+    - from: []
+      ports:
+        - protocol: TCP
+          port: {{ .Values.service.probePort }}
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+{{- if eq $mode "allow-all" }}
+    - {}
+{{- else }}
+  {{- range $allowlist }}
+    - to:
+      {{- if .host }}
+        - ipBlock:
+            cidr: {{ .host }}/32
+      {{- else if .namespace }}
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ .namespace | quote }}
+          podSelector:
+            matchLabels:
+              {{- toYaml .podLabels | nindent 14 }}
+      {{- else }}
+        {{- fail "egressAllowlist entry must have host OR namespace+podLabels" }}
+      {{- end }}
+      ports:
+        - protocol: {{ default "TCP" .protocol }}
+          port: {{ .port }}
+  {{- end }}
+{{- end }}

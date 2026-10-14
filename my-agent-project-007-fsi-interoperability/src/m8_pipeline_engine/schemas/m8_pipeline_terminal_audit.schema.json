@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://007-fsi/schemas/m8_pipeline_terminal_audit.schema.json",
+  "title": "M8 Pipeline Terminal Audit Payload",
+  "type": "object",
+  "required": [
+    "source", "event_type", "pipeline_run_id", "thread_id",
+    "tenant_id", "firm_id", "trace_id", "timestamp",
+    "status", "final_stage", "wall_clock_seconds"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "source": {"const": "m8"},
+    "event_type": {"type": "string", "minLength": 1},
+    "pipeline_run_id": {"type": "string"},
+    "thread_id": {"type": "string"},
+    "tenant_id": {"type": "string"},
+    "firm_id": {"type": "string"},
+    "trace_id": {"type": "string"},
+    "timestamp": {"type": "string", "format": "date-time"},
+    "status": {"enum": ["completed","paused","rejected","timed_out","terminated","failed"]},
+    "final_stage": {"type": "integer", "minimum": 0, "maximum": 23},
+    "wall_clock_seconds": {"type": "number", "minimum": 0},
+    "total_input_tokens": {"type": "integer", "minimum": 0},
+    "total_output_tokens": {"type": "integer", "minimum": 0},
+    "reason_code": {"type": ["string","null"]},
+    "dropped_instruments": {"type": "array", "items": {"type": "string"}}
+  }
+}

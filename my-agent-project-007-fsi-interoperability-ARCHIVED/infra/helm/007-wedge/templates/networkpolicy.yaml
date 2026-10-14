@@ -1,0 +1,33 @@
+{{- if .Values.security.networkPolicy.enabled }}
+# NetworkPolicy: only M6 takes outside traffic; M1/M2/M10/Redis accept only
+# from within the wedge release (Rule 23 per-module isolation).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "007-wedge.fullname" . }}-inside-only
+  labels: {{- include "007-wedge.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchExpressions:
+      - key: component
+        operator: In
+        values: [m1-identity, m2-m4-policy, m10-audit-logger, redis]
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels: {{- include "007-wedge.selectorLabels" . | nindent 14 }}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "007-wedge.fullname" . }}-m6-from-ingress
+  labels: {{- include "007-wedge.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels: {{- include "007-wedge.selectorLabels" . | nindent 6 }}
+      component: m6-gateway
+  policyTypes: [Ingress]
+  ingress:
+    - {}   # allow from anywhere (ALB); mTLS enforced at app layer
+{{- end }}

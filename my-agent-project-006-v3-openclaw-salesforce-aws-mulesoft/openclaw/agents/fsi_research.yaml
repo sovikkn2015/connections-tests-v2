@@ -1,0 +1,119 @@
+# fsi-research persona — 6 agents (1 orchestrator + 5 specialists)
+# Consumed by the coordinator + openclaw.json. Full system prompts are
+# authoritative in openclaw/orchestration/topology.py; YAML carries the
+# structured metadata + a short summary for runtime introspection.
+
+persona: fsi_research
+display_name: "FSI Research (Sarah)"
+channels: [web, slack]
+default_orchestrator: research_orchestrator
+
+agents:
+
+  - id: research_orchestrator
+    role: orchestrator
+    model: sonnet
+    description: >
+      Plans, fans out 5 specialists in parallel via asyncio.gather,
+      synthesizes a cited brief. Never calls MCP tools directly.
+    system_prompt_summary: |
+      Orchestrator for Sarah's research. Dispatches market/filings/sentiment/
+      compliance/statement specialists in parallel. Every synthesized sentence
+      must carry a source_chunk_id; unsourced sentences are stripped server-side.
+      MNPI-aware: treats [MNPI_REDACTED] blocks as empty. If compliance returns
+      DENY, marks rm_consumable=false and surfaces reasons.
+    tool_allowlist:
+      - dispatch_specialist
+      - synthesize_brief
+      - publish_brief
+    mcp_allowlist:
+      - salesforce-crm
+    memory_scope: [session, artifact]
+    timeout_s: 120
+    parallel_fanout: true
+
+  - id: market_specialist
+    role: specialist
+    model: sonnet
+    description: >
+      Quote, volume, technicals via market-data MCP. Finnhub primary;
+      Alpha Vantage fallback. Always returns source_chunk_id.
+    system_prompt_summary: |
+      Market data only. Calls market-data MCP. Returns ticker/price/
+      change_pct/volume/avg_volume_30d/implied_move/source_chunk_id/as_of.
+      Never fabricates; returns tool_failure AgentError on vendor outage
+      so the orchestrator can synthesize around it.
+    tool_allowlist:
+      - rag_retrieve
+    mcp_allowlist:
+      - market-data
+    memory_scope: [session]
+    timeout_s: 25
+
+  - id: filings_specialist
+    role: specialist
+    model: sonnet
+    description: >
+      10-K/10-Q/8-K retrieval + section-aware RAG via rag-retrieve skill.
+      Every fact carries a source_chunk_id pointing to the filing section.
+    system_prompt_summary: |
+      SEC filings scope. Calls sec-edgar MCP for retrieval, rag-retrieve
+      skill for section-aware BM25+Titan+structural retrieval with Cohere
+      Rerank. Returns filing_type/filing_date/relevant_sections/citations.
+    tool_allowlist:
+      - rag_retrieve
+      - financial_statement_analysis
+    mcp_allowlist:
+      - sec-edgar
+    memory_scope: [session]
+    timeout_s: 25
+
+  - id: sentiment_specialist
+    role: specialist
+    model: sonnet
+    description: >
+      30-day news sentiment via Tavily + Sonnet scoring. LLM does sentiment
+      natively; no Comprehend or FinBERT per steering rule.
+    system_prompt_summary: |
+      News scope. Calls news-search MCP (Tavily) for 30-day window. Scores
+      sentiment in-prompt via Sonnet 4.6. Returns sentiment_score/confidence/
+      tone_drivers/key_events/source_chunk_ids. Always cites headlines.
+    tool_allowlist: []
+    mcp_allowlist:
+      - news-search
+    memory_scope: [session]
+    timeout_s: 20
+
+  - id: compliance_specialist
+    role: specialist
+    model: sonnet
+    description: >
+      Pre-publication compliance screening: restricted list, trading window,
+      MNPI flags, concentration. DENY is a hard stop.
+    system_prompt_summary: |
+      Uses compliance-screening skill. Output status in ALLOW/DENY/REVIEW
+      with reasons. DENY writes IR_Audit_Log__c row with COMPLIANCE_BLOCKED.
+      Never softens a DENY. Steering rules 8, 9.
+    tool_allowlist:
+      - compliance_screening
+    mcp_allowlist:
+      - salesforce-crm
+    memory_scope: [session]
+    timeout_s: 20
+
+  - id: statement_specialist
+    role: specialist
+    model: sonnet
+    description: >
+      Deterministic financial-statement analysis — growth, margins, ROE,
+      peer comparisons. Numbers come from calculators, not the LLM.
+    system_prompt_summary: |
+      Calls financial-statement-analysis skill (Pydantic canonical statements
+      + pure-Python calculators over XBRL-parsed data). LLM decides WHICH
+      analyses to run and HOW to narrate; LLM never computes numbers.
+    tool_allowlist:
+      - financial_statement_analysis
+    mcp_allowlist:
+      - sec-edgar
+    memory_scope: [session]
+    timeout_s: 30

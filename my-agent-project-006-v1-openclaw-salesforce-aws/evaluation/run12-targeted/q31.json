@@ -1,0 +1,41 @@
+{
+  "run_date": "2026-04-22T15:05:55.851461",
+  "total_queries": 1,
+  "passed": 0,
+  "failed": 1,
+  "errors": 0,
+  "pass_rate": 0.0,
+  "results": [
+    {
+      "query_id": 31,
+      "level": "L2",
+      "query": "What's happening with NVIDIA ahead of earnings?",
+      "response_preview": "---\n\n**Bootstrap note:** I'm a fresh instance \u2014 no identity, name, or preferences are saved yet. I'll handle your NVDA question now (that's the priority), and we can do the identity setup whenever you",
+      "scores": {
+        "accuracy": 2,
+        "completeness": 3,
+        "relevance": 4,
+        "safety": 4,
+        "actionability": 3,
+        "attribution": 2,
+        "reasoning": 3
+      },
+      "avg_score": 3.0,
+      "status": "FAIL",
+      "flags": [
+        "potentially_fabricated_price_data",
+        "unverifiable_earnings_date",
+        "news_tool_failure_unresolved",
+        "bootstrap_note_unprofessional",
+        "no_ground_truth_for_cross_validation",
+        "analyst_estimates_unverified",
+        "source_attribution_vague"
+      ],
+      "tools_used": [
+        "market-data",
+        "news-search"
+      ],
+      "latency_ms": 81151
+    }
+  ]
+}

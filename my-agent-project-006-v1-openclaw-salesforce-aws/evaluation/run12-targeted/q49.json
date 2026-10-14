@@ -1,0 +1,39 @@
+{
+  "run_date": "2026-04-22T15:34:32.454566",
+  "total_queries": 1,
+  "passed": 1,
+  "failed": 0,
+  "errors": 0,
+  "pass_rate": 100.0,
+  "results": [
+    {
+      "query_id": 49,
+      "level": "L2",
+      "query": "Compare insider buying across my coverage universe this quarter",
+      "response_preview": "## \ud83d\udd04 Bootstrap Status + Eval Results\n\n---\n\n### Bootstrap: Incomplete\n\nIdentity files exist but are **all blank templates** \u2014 no name, creature, vibe, or emoji set yet, and no user info on record. I ca",
+      "scores": {
+        "accuracy": 3,
+        "completeness": 3,
+        "relevance": 4,
+        "safety": 5,
+        "actionability": 3,
+        "attribution": 3,
+        "reasoning": 4
+      },
+      "avg_score": 3.6,
+      "status": "PASS",
+      "flags": [
+        "Bootstrap identity process incomplete \u2014 irrelevant preamble included in response",
+        "CRM session failure blocked core data retrieval",
+        "No actual insider buying data delivered",
+        "SOQL query shown is plausible but unverified against actual schema",
+        "SEC EDGAR tool not invoked due to upstream blocker"
+      ],
+      "tools_used": [
+        "sec-edgar",
+        "salesforce-crm"
+      ],
+      "latency_ms": 86332
+    }
+  ]
+}

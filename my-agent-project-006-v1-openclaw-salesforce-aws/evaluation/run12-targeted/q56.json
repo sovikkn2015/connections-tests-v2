@@ -1,0 +1,41 @@
+{
+  "run_date": "2026-04-22T15:52:10.916479",
+  "total_queries": 1,
+  "passed": 1,
+  "failed": 0,
+  "errors": 0,
+  "pass_rate": 100.0,
+  "results": [
+    {
+      "query_id": 56,
+      "level": "L2",
+      "query": "Can I trade MSFT right now? Check restricted list and trading window",
+      "response_preview": "---\n\n## \u26a0\ufe0f Bootstrap Note\n\nThis workspace's `IDENTITY.md` is still a blank template \u2014 identity hasn't been established yet. I'll flag that, but since you've sent a live trading-compliance eval, I'm ha",
+      "scores": {
+        "accuracy": 3,
+        "completeness": 3,
+        "relevance": 4,
+        "safety": 4,
+        "actionability": 4,
+        "attribution": 3,
+        "reasoning": 4
+      },
+      "avg_score": 3.6,
+      "status": "PASS",
+      "flags": [
+        "CRM session failure means core compliance check (restricted list) was not actually performed \u2014 result is inconclusive, not a verified clear or block",
+        "MSFT price of $432.39 cited from Finnhub but cannot be cross-checked against ground truth; price may be stale or hallucinated",
+        "Trading window status listed as 'check required' rather than actually checked \u2014 incomplete execution of the task",
+        "Earnings blackout not actually verified despite being listed as a required check",
+        "Bootstrap/IDENTITY.md commentary is noise and unprofessional in a compliance context",
+        "No SOQL query shown or logged \u2014 expected tool usage (SF skill) not demonstrated or transparently reported",
+        "Pre-clearance status labeled 'unknown' without attempt to query relevant CRM objects"
+      ],
+      "tools_used": [
+        "market-data",
+        "salesforce-crm"
+      ],
+      "latency_ms": 90807
+    }
+  ]
+}

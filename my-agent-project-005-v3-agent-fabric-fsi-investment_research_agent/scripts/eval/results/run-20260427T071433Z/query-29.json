@@ -1,0 +1,26 @@
+{
+  "id": 29,
+  "text": "Tell me about NVDA",
+  "expected_category": "company_profile",
+  "expected_path": "ORCH->CRM+MCP:market-data.get_quote",
+  "judge_pass": false,
+  "judge_score": 0.3,
+  "judge_reason": "Response provides price data (quote) but fails to meet company_profile requirements. Must name the company (NVIDIA) AND provide at least one",
+  "response_excerpt": "{\"tool\": \"get_quote\", \"ticker\": \"NVDA\", \"quote\": {\"price\": \"208.2700\", \"change\": \"8.6300\", \"change_percent\": \"4.3228%\", \"volume\": \"214134441\", \"high\": \"210.9500\", \"low\": \"199.8100\", \"open\": \"199.9600\", \"previous_close\": \"199.6400\", \"latest_",
+  "latency_ms": 657,
+  "http_status": 200,
+  "status_verdict": "FAIL",
+  "skip_reason": null,
+  "tool_calls": [
+    "market-data.get_quote"
+  ],
+  "langfuse_trace_id": "16d68858-c144-47a8-8f52-dec2283d6b95",
+  "audit_records_found": 0,
+  "audit_has_gateway_stage": false,
+  "mnpi_redactions_observed": 0,
+  "circuit_breaker_tripped": false,
+  "v2_status": "PASS",
+  "error": null,
+  "mcp_direct_route": "/market-data/tools/call",
+  "mcp_direct_correlation_id": "16d68858-c144-47a8-8f52-dec2283d6b95"
+}

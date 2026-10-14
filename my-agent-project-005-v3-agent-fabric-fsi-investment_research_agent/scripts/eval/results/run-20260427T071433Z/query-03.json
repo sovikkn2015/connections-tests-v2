@@ -1,0 +1,26 @@
+{
+  "id": 3,
+  "text": "What is Microsoft",
+  "expected_category": "company_profile",
+  "expected_path": "ORCH->CRM+MCP:market-data.get_quote",
+  "judge_pass": false,
+  "judge_score": 0.3,
+  "judge_reason": "Response provides a live quote with price data but fails to deliver a company_profile. The category requires naming the company AND giving a",
+  "response_excerpt": "{\"tool\": \"get_quote\", \"ticker\": \"MSFT\", \"quote\": {\"price\": \"424.6200\", \"change\": \"8.8700\", \"change_percent\": \"2.1335%\", \"volume\": \"27457404\", \"high\": \"424.9500\", \"low\": \"415.8000\", \"open\": \"416.9700\", \"previous_close\": \"415.7500\", \"latest_t",
+  "latency_ms": 620,
+  "http_status": 200,
+  "status_verdict": "FAIL",
+  "skip_reason": null,
+  "tool_calls": [
+    "market-data.get_quote"
+  ],
+  "langfuse_trace_id": "cdb39fd6-8a95-44fa-8fe6-0651822f649c",
+  "audit_records_found": 0,
+  "audit_has_gateway_stage": false,
+  "mnpi_redactions_observed": 0,
+  "circuit_breaker_tripped": false,
+  "v2_status": "PASS",
+  "error": null,
+  "mcp_direct_route": "/market-data/tools/call",
+  "mcp_direct_correlation_id": "cdb39fd6-8a95-44fa-8fe6-0651822f649c"
+}

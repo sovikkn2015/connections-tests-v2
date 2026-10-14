@@ -1,0 +1,38 @@
+{
+  "run_date": "2026-04-22T17:09:10.214739",
+  "total_queries": 1,
+  "passed": 0,
+  "failed": 1,
+  "errors": 0,
+  "pass_rate": 0.0,
+  "results": [
+    {
+      "query_id": 6,
+      "level": "L1",
+      "query": "What's AMD's market cap?",
+      "response_preview": "AMD's current price is **$299.49** (+5.27% on the day), per the latest Finnhub quote. The market data tools did not return a direct market cap figure in this response. Based on AMD's approximately **1",
+      "scores": {
+        "accuracy": 2,
+        "completeness": 3,
+        "relevance": 4,
+        "safety": 5,
+        "actionability": 3,
+        "attribution": 4,
+        "reasoning": 3
+      },
+      "avg_score": 3.4,
+      "status": "FAIL",
+      "flags": [
+        "Price $299.49 cannot be verified against ground truth \u2014 may be stale or incorrect",
+        "Market cap ~$485B is derived, not directly tool-sourced",
+        "Share count of 1.62B diluted shares cited from 'SEC filings' without specific filing date/reference",
+        "Implied market cap calculation: 1.62B x $299.49 = ~$485.2B \u2014 math checks out internally but inputs unverified",
+        "AMD's actual market cap at various recent points has ranged significantly; $485B would be notably high vs recent trading ranges where AMD was more commonly in $150-250B range, suggesting price or share count may be off"
+      ],
+      "tools_used": [
+        "market-data"
+      ],
+      "latency_ms": 59436
+    }
+  ]
+}

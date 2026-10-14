@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<AiEvaluationDefinition xmlns="http://soap.sforce.com/2006/04/metadata">
+    <name>WA_P1to5_Advisor_Full_Test</name>
+    <subjectName>WA_P1to5_Advisor</subjectName>
+    <subjectType>AGENT</subjectType>
+    <!-- CLIENT LOOKUP (5 cases — one per household) -->
+    <testCase>
+        <number>1</number>
+        <inputs><utterance>Tell me about the Johnson household</utterance></inputs>
+        <expectation><expectedValue>client_lookup</expectedValue><name>topic_sequence_match</name></expectation>
+        <expectation><expectedValue>[&apos;get_client_360&apos;]</expectedValue><name>action_sequence_match</name></expectation>
+        <expectation><expectedValue>Returns Johnson household with AUM and members</expectedValue><name>bot_response_rating</name></expectation>
+    </testCase>
+    <testCase>
+        <number>2</number>
+        <inputs><utterance>Tell me about the Chen family</utterance></inputs>
+        <expectation><expectedValue>client_lookup</expectedValue><name>topic_sequence_match</name></expectation>
+        <expectation><expectedValue>[&apos;get_client_360&apos;]</expectedValue><name>action_sequence_match</name></expectation>
+        <expectation><expectedValue>Returns Chen family with AUM and members</expectedValue><name>bot_response_rating</name></expectation>
+    </testCase>
+    <testCase>
+        <number>3</number>
+        <inputs><utterance>Tell me about the Martinez household</utterance></inputs>
+        <expectation><expectedValue>client_lookup</expectedValue><name>topic_sequence_match</name></expectation>
+        <expectation><expectedValue>[&apos;get_client_360&apos;]</expectedValue><name>action_sequence_match</name></expectation>
+        <expectation><expectedValue>Returns Martinez household with AUM and members</expectedValue><name>bot_response_rating</name></expectation>
+    </testCase>
+    <testCase>
+        <number>4</number>
+        <inputs><utterance>Tell me about the Patel family</utterance></inputs>
+        <expectation><expectedValue>client_lookup</expectedValue><name>topic_sequence_match</name></expectation>
+        <expectation><expectedValue>[&apos;get_client_360&apos;]</expectedValue><name>action_sequence_match</name></expectation>
+        <expectation><expectedValue>Returns Patel family with AUM and members</expectedValue><name>bot_response_rating</name></expectation>
+    </testCase>
+    <testCase>
+        <number>5</number>
+        <inputs><utterance>Tell me about the Williams family</utterance></inputs>
+        <expectation><expectedValue>client_lookup</expectedValue><name>topic_sequence_match</name></expectation>
+        <expectation><expectedValue>[&apos;get_client_360&apos;]</expectedValue><name>action_sequence_match</name></expectation>
+        <expectation><expectedValue>Returns Williams family with AUM and members</expectedValue><name>bot_response_rating</name></expectation>
+    </testCase>
+    <!-- PORTFOLIO REVIEW (3 cases) -->
+    <testCase>
+        <number>6</number>
+        <inputs><utterance>How is Wei Chen&apos;s portfolio?</utterance></inputs>
+        <expectation><expectedValue>portfolio_review</expectedValue><name>topic_sequence_match</name></expectation>
+        <expectation><expectedValue>[&apos;get_portfolio_summary&apos;]</expectedValue><name>action_sequence_match</name></expectation>
+        <expectation><expectedValue>Returns portfolio with allocation and returns for Wei Chen</expectedValue><name>bot_response_rating</name></expectation>
+    </testCase>
+    <testCase>
+        <number>7</number>
+        <inputs><utterance>How is Raj Patel&apos;s portfolio performing?</utterance></inputs>
+        <expectation><expectedValue>portfolio_review</expectedValue><name>topic_sequence_match</name></expectation>
+        <expectation><expectedValue>[&apos;get_portfolio_summary&apos;]</expectedValue><name>action_sequence_match</name></expectation>
+        <expectation><expectedValue>Returns portfolio data for Raj Patel</expectedValue><name>bot_response_rating</name></expectation>
+    </testCase>
+    <testCase>
+        <number>8</number>
+        <inputs><utterance>Show me James Williams portfolio</utterance></inputs>
+        <expectation><expectedValue>portfolio_review</expectedValue><name>topic_sequence_match</name></expectation>
+        <expectation><expectedValue>[&apos;get_portfolio_summary&apos;]</expectedValue><name>action_sequence_match</name></expectation>
+        <expectation><expectedValue>Returns portfolio data for James Williams</expectedValue><name>bot_response_rating</name></expectation>
+    </testCase>
+    <!-- GOAL PLANNING (3 cases) -->
+    <testCase>
+        <number>9</number>
+        <inputs><utterance>What are the Johnsons&apos; retirement goals?</utterance></inputs>
+        <expectation><expectedValue>goal_planning</expectedValue><name>topic_sequence_match</name></expectation>
+        <expectation><expectedValue>[&apos;get_financial_goals&apos;]</expectedValue><name>action_sequence_match</name></expectation>
+        <expectation><expectedValue>Returns financial goals for the Johnson family</expectedValue><name>bot_response_rating</name></expectation>
+    </testCase>
+    <testCase>
+        <number>10</number>
+        <inputs><utterance>What are the Patels&apos; goals?</utterance></inputs>
+        <expectation><expectedValue>goal_planning</expectedValue><name>topic_sequence_match</name></expectation>
+        <expectation><expectedValue>[&apos;get_financial_goals&apos;]</expectedValue><name>action_sequence_match</name></expectation>
+        <expectation><expectedValue>Returns financial goals for the Patel family</expectedValue><name>bot_response_rating</name></expectation>
+    </testCase>
+    <testCase>
+        <number>11</number>
+        <inputs><utterance>What goals does Carlos Martinez have?</utterance></inputs>
+        <expectation><expectedValue>goal_planning</expectedValue><name>topic_sequence_match</name></expectation>
+        <expectation><expectedValue>[&apos;get_financial_goals&apos;]</expectedValue><name>action_sequence_match</name></expectation>
+        <expectation><expectedValue>Returns financial goals for Carlos Martinez</expectedValue><name>bot_response_rating</name></expectation>
+    </testCase>
+    <!-- MEETING PREP (3 cases) -->
+    <testCase>
+        <number>12</number>
+        <inputs><utterance>Prep me for my meeting with Sarah Johnson</utterance></inputs>
+        <expectation><expectedValue>meeting_prep</expectedValue><name>topic_sequence_match</name></expectation>
+        <expectation><expectedValue>[&apos;get_meeting_prep&apos;]</expectedValue><name>action_sequence_match</name></expectation>
+        <expectation><expectedValue>Returns meeting brief for Sarah Johnson</expectedValue><name>bot_response_rating</name></expectation>
+    </testCase>
+    <testCase>
+        <number>13</number>
+        <inputs><utterance>Prep me for my meeting with Carlos</utterance></inputs>
+        <expectation><expectedValue>meeting_prep</expectedValue><name>topic_sequence_match</name></expectation>
+        <expectation><expectedValue>[&apos;get_meeting_prep&apos;]</expectedValue><name>action_sequence_match</name></expectation>
+        <expectation><expectedValue>Returns meeting brief for Carlos Martinez</expectedValue><name>bot_response_rating</name></expectation>
+    </testCase>
+    <testCase>
+        <number>14</number>
+        <inputs><utterance>Prepare my meeting with Raj Patel</utterance></inputs>
+        <expectation><expectedValue>meeting_prep</expectedValue><name>topic_sequence_match</name></expectation>
+        <expectation><expectedValue>[&apos;get_meeting_prep&apos;]</expectedValue><name>action_sequence_match</name></expectation>
+        <expectation><expectedValue>Returns meeting brief for Raj Patel</expectedValue><name>bot_response_rating</name></expectation>
+    </testCase>
+    <!-- REBALANCING (3 cases) -->
+    <testCase>
+        <number>15</number>
+        <inputs><utterance>Does Sarah Johnson need rebalancing?</utterance></inputs>
+        <expectation><expectedValue>rebalancing_alerts</expectedValue><name>topic_sequence_match</name></expectation>
+        <expectation><expectedValue>[&apos;check_rebalancing&apos;]</expectedValue><name>action_sequence_match</name></expectation>
+        <expectation><expectedValue>Returns drift analysis for Sarah Johnson</expectedValue><name>bot_response_rating</name></expectation>
+    </testCase>
+    <testCase>
+        <number>16</number>
+        <inputs><utterance>Check rebalancing for Wei Chen</utterance></inputs>
+        <expectation><expectedValue>rebalancing_alerts</expectedValue><name>topic_sequence_match</name></expectation>
+        <expectation><expectedValue>[&apos;check_rebalancing&apos;]</expectedValue><name>action_sequence_match</name></expectation>
+        <expectation><expectedValue>Returns drift analysis for Wei Chen</expectedValue><name>bot_response_rating</name></expectation>
+    </testCase>
+    <testCase>
+        <number>17</number>
+        <inputs><utterance>Does the Martinez account need rebalancing?</utterance></inputs>
+        <expectation><expectedValue>rebalancing_alerts</expectedValue><name>topic_sequence_match</name></expectation>
+        <expectation><expectedValue>[&apos;check_rebalancing&apos;]</expectedValue><name>action_sequence_match</name></expectation>
+        <expectation><expectedValue>Returns drift analysis for the Martinez account</expectedValue><name>bot_response_rating</name></expectation>
+    </testCase>
+    <!-- TRANSACTION HISTORY (3 cases) -->
+    <testCase>
+        <number>18</number>
+        <inputs><utterance>Show me recent transactions for Sarah Johnson</utterance></inputs>
+        <expectation><expectedValue>transaction_history</expectedValue><name>topic_sequence_match</name></expectation>
+        <expectation><expectedValue>[&apos;get_transactions&apos;]</expectedValue><name>action_sequence_match</name></expectation>
+        <expectation><expectedValue>Returns recent transactions for Sarah Johnson</expectedValue><name>bot_response_rating</name></expectation>
+    </testCase>
+    <testCase>
+        <number>19</number>
+        <inputs><utterance>What are Wei Chen&apos;s latest transactions?</utterance></inputs>
+        <expectation><expectedValue>transaction_history</expectedValue><name>topic_sequence_match</name></expectation>
+        <expectation><expectedValue>[&apos;get_transactions&apos;]</expectedValue><name>action_sequence_match</name></expectation>
+        <expectation><expectedValue>Returns latest transactions for Wei Chen</expectedValue><name>bot_response_rating</name></expectation>
+    </testCase>
+    <testCase>
+        <number>20</number>
+        <inputs><utterance>Show me Raj Patel&apos;s transaction history</utterance></inputs>
+        <expectation><expectedValue>transaction_history</expectedValue><name>topic_sequence_match</name></expectation>
+        <expectation><expectedValue>[&apos;get_transactions&apos;]</expectedValue><name>action_sequence_match</name></expectation>
+        <expectation><expectedValue>Returns transaction history for Raj Patel</expectedValue><name>bot_response_rating</name></expectation>
+    </testCase>
+    <!-- COMPLIANCE CHECK (3 cases) -->
+    <testCase>
+        <number>21</number>
+        <inputs><utterance>Is the Patel account compliant?</utterance></inputs>
+        <expectation><expectedValue>compliance_check</expectedValue><name>topic_sequence_match</name></expectation>
+        <expectation><expectedValue>[&apos;run_compliance&apos;]</expectedValue><name>action_sequence_match</name></expectation>
+        <expectation><expectedValue>Returns compliance report for the Patel account</expectedValue><name>bot_response_rating</name></expectation>
+    </testCase>
+    <testCase>
+        <number>22</number>
+        <inputs><utterance>Run a compliance check on the Martinez household</utterance></inputs>
+        <expectation><expectedValue>compliance_check</expectedValue><name>topic_sequence_match</name></expectation>
+        <expectation><expectedValue>[&apos;run_compliance&apos;]</expectedValue><name>action_sequence_match</name></expectation>
+        <expectation><expectedValue>Returns compliance report for the Martinez household</expectedValue><name>bot_response_rating</name></expectation>
+    </testCase>
+    <testCase>
+        <number>23</number>
+        <inputs><utterance>Check compliance for Wei Chen</utterance></inputs>
+        <expectation><expectedValue>compliance_check</expectedValue><name>topic_sequence_match</name></expectation>
+        <expectation><expectedValue>[&apos;run_compliance&apos;]</expectedValue><name>action_sequence_match</name></expectation>
+        <expectation><expectedValue>Returns compliance report for Wei Chen</expectedValue><name>bot_response_rating</name></expectation>
+    </testCase>
+    <!-- REFERRAL TRACKING (3 cases) -->
+    <testCase>
+        <number>24</number>
+        <inputs><utterance>Who referred the Williams family?</utterance></inputs>
+        <expectation><expectedValue>referral_tracking</expectedValue><name>topic_sequence_match</name></expectation>
+        <expectation><expectedValue>[&apos;get_referrals&apos;]</expectedValue><name>action_sequence_match</name></expectation>
+        <expectation><expectedValue>Returns referral info for the Williams family</expectedValue><name>bot_response_rating</name></expectation>
+    </testCase>
+    <testCase>
+        <number>25</number>
+        <inputs><utterance>Who referred the Johnsons?</utterance></inputs>
+        <expectation><expectedValue>referral_tracking</expectedValue><name>topic_sequence_match</name></expectation>
+        <expectation><expectedValue>[&apos;get_referrals&apos;]</expectedValue><name>action_sequence_match</name></expectation>
+        <expectation><expectedValue>Returns referral info for the Johnson family</expectedValue><name>bot_response_rating</name></expectation>
+    </testCase>
+    <testCase>
+        <number>26</number>
+        <inputs><utterance>What&apos;s the referral source for the Patels?</utterance></inputs>
+        <expectation><expectedValue>referral_tracking</expectedValue><name>topic_sequence_match</name></expectation>
+        <expectation><expectedValue>[&apos;get_referrals&apos;]</expectedValue><name>action_sequence_match</name></expectation>
+        <expectation><expectedValue>Returns referral source for the Patel family</expectedValue><name>bot_response_rating</name></expectation>
+    </testCase>
+    <!-- ESCALATION (2 cases) -->
+    <testCase>
+        <number>27</number>
+        <inputs><utterance>Transfer me to a specialist</utterance></inputs>
+        <expectation><expectedValue>escalation</expectedValue><name>topic_sequence_match</name></expectation>
+        <expectation><expectedValue>The agent escalates to a human specialist</expectedValue><name>bot_response_rating</name></expectation>
+    </testCase>
+    <testCase>
+        <number>28</number>
+        <inputs><utterance>I need to speak to a human</utterance></inputs>
+        <expectation><expectedValue>escalation</expectedValue><name>topic_sequence_match</name></expectation>
+        <expectation><expectedValue>The agent escalates to a human representative</expectedValue><name>bot_response_rating</name></expectation>
+    </testCase>
+    <!-- OFF TOPIC (2 cases) -->
+    <testCase>
+        <number>29</number>
+        <inputs><utterance>What is the weather today?</utterance></inputs>
+        <expectation><expectedValue>off_topic</expectedValue><name>topic_sequence_match</name></expectation>
+        <expectation><expectedValue>The agent redirects to wealth advisory topics</expectedValue><name>bot_response_rating</name></expectation>
+    </testCase>
+    <testCase>
+        <number>30</number>
+        <inputs><utterance>What&apos;s the stock price of Apple?</utterance></inputs>
+        <expectation><expectedValue>off_topic</expectedValue><name>topic_sequence_match</name></expectation>
+        <expectation><expectedValue>The agent redirects to wealth advisory topics</expectedValue><name>bot_response_rating</name></expectation>
+    </testCase>
+    <!-- FUZZY MATCHING EDGE CASES (2 cases) -->
+    <testCase>
+        <number>31</number>
+        <inputs><utterance>Tell me about the Johnsons</utterance></inputs>
+        <expectation><expectedValue>client_lookup</expectedValue><name>topic_sequence_match</name></expectation>
+        <expectation><expectedValue>[&apos;get_client_360&apos;]</expectedValue><name>action_sequence_match</name></expectation>
+        <expectation><expectedValue>Returns Johnson household info despite plural form</expectedValue><name>bot_response_rating</name></expectation>
+    </testCase>
+    <testCase>
+        <number>32</number>
+        <inputs><utterance>How is Carlos doing on his goals?</utterance></inputs>
+        <expectation><expectedValue>goal_planning</expectedValue><name>topic_sequence_match</name></expectation>
+        <expectation><expectedValue>[&apos;get_financial_goals&apos;]</expectedValue><name>action_sequence_match</name></expectation>
+        <expectation><expectedValue>Returns financial goals for Carlos Martinez using first name only</expectedValue><name>bot_response_rating</name></expectation>
+    </testCase>
+</AiEvaluationDefinition>

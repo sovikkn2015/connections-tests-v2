@@ -1,0 +1,36 @@
+{
+  "results": [
+    {
+      "id": 1,
+      "level": "L1",
+      "status": "ACCEPTED",
+      "query": "What's NVIDIA trading at?"
+    },
+    {
+      "id": 5,
+      "level": "L1",
+      "status": "ACCEPTED",
+      "query": "MSFT volume today vs 30-day average"
+    },
+    {
+      "id": 11,
+      "level": "L1",
+      "status": "ACCEPTED",
+      "query": "Who covers Apple on our team?"
+    },
+    {
+      "id": 15,
+      "level": "L1",
+      "status": "ACCEPTED",
+      "query": "What's Client Nakamura's risk tolerance?"
+    },
+    {
+      "id": 21,
+      "level": "L1",
+      "status": "ACCEPTED",
+      "query": "Show me NVIDIA's latest 10-Q"
+    }
+  ],
+  "total": 5,
+  "accepted": 5
+}

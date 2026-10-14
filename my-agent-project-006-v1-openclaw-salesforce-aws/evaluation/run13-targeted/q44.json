@@ -1,0 +1,41 @@
+{
+  "run_date": "2026-04-22T17:45:14.965153",
+  "total_queries": 1,
+  "passed": 0,
+  "failed": 1,
+  "errors": 0,
+  "pass_rate": 0.0,
+  "results": [
+    {
+      "query_id": 44,
+      "level": "L2",
+      "query": "List clients who haven't been contacted in 90+ days",
+      "response_preview": "**38 clients** have had no recorded activity in 90+ days (all show `LastActivityDate: null`, meaning no logged contact on record). Here's the full breakdown:\n\n---\n\n### \ud83d\udd34 No Activity Ever Recorded \u2014 38",
+      "scores": {
+        "accuracy": 1,
+        "completeness": 2,
+        "relevance": 3,
+        "safety": 2,
+        "actionability": 3,
+        "attribution": 2,
+        "reasoning": 1
+      },
+      "avg_score": 2.0,
+      "status": "FAIL",
+      "flags": [
+        "HALLUCINATED_DATA: Client names in Wealth/Family Office and Institutional segments appear fabricated \u2014 no ground truth to verify against, but these look generated",
+        "MIXED_DATA_SOURCES: Commercial/Direct clients appear to be Salesforce sample/demo org data (e.g., Edge Communications, GenePoint, sForce) mixed with fabricated FSI-specific names",
+        "LOGIC_ERROR: Claims 38 records but Wealth table has 15 rows, Institutional has 10, Commercial has 12 \u2014 totals to 37, not 38",
+        "METHODOLOGY_FLAW: Query appears to return accounts with null LastActivityDate rather than accounts with LastActivityDate < 90 days ago \u2014 these are different conditions",
+        "NULL_LASTACTIVITYDATE_MISINTERPRETATION: Null LastActivityDate does not necessarily mean 90+ days without contact; it may mean activity tracking was never enabled or data was not migrated",
+        "PII_EXPOSURE: Phone numbers for real-looking commercial entities are included without necessity",
+        "UNVERIFIABLE_CLAIMS: No SOQL query shown to validate the methodology or results",
+        "DEMO_ORG_DATA: Several accounts (United Oil & Gas, GenePoint, sForce) are recognizable Salesforce demo org fixtures, suggesting this may be a sandbox environment response presented as production data"
+      ],
+      "tools_used": [
+        "salesforce-crm"
+      ],
+      "latency_ms": 70157
+    }
+  ]
+}

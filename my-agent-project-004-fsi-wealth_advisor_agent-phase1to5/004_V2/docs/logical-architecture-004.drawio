@@ -1,0 +1,343 @@
+<mxfile host="draw.io" modified="2025-01-01T00:00:00.000Z" agent="draw.io" version="21.0.0" type="device">
+  <diagram name="Logical Architecture" id="logical-004">
+    <mxGraphModel dx="1500" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1500" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <!-- Title -->
+        <mxCell id="title" value="Project 004: Wealth Advisor P1-5 — Logical Architecture" style="text;html=0;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=18;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="400" y="10" width="700" height="30" as="geometry"/>
+        </mxCell>
+
+        <!-- ===== USER PERSONAS (Top-Left) ===== -->
+        <mxCell id="label-personas" value="User Personas" style="text;html=0;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=11;fontStyle=2;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="20" y="50" width="100" height="20" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="persona-advisor" value="Wealth Advisor" style="shape=mxgraph.basic.person;fillColor=#E1D5E7;strokeColor=#9673a6;rounded=1;whiteSpace=wrap;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="75" width="90" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="persona-client" value="Client (Portal)" style="shape=mxgraph.basic.person;fillColor=#E1D5E7;strokeColor=#9673a6;rounded=1;whiteSpace=wrap;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="160" y="75" width="90" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="persona-compliance" value="Compliance Officer" style="shape=mxgraph.basic.person;fillColor=#E1D5E7;strokeColor=#9673a6;rounded=1;whiteSpace=wrap;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="280" y="75" width="90" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="persona-admin" value="Admin" style="shape=mxgraph.basic.person;fillColor=#E1D5E7;strokeColor=#9673a6;rounded=1;whiteSpace=wrap;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="400" y="75" width="90" height="70" as="geometry"/>
+        </mxCell>
+
+        <!-- ===== CHANNELS (Top-Right) ===== -->
+        <mxCell id="label-channels" value="Channels" style="text;html=0;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=11;fontStyle=2;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="1200" y="50" width="60" height="20" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="chan-web" value="Web Portal" style="rounded=1;whiteSpace=wrap;fillColor=#F5F5F5;strokeColor=#999999;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1200" y="75" width="100" height="35" as="geometry"/>
+        </mxCell>
+        <mxCell id="chan-slack" value="Slack" style="rounded=1;whiteSpace=wrap;fillColor=#F5F5F5;strokeColor=#999999;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1320" y="75" width="100" height="35" as="geometry"/>
+        </mxCell>
+        <mxCell id="chan-mobile" value="Mobile" style="rounded=1;whiteSpace=wrap;fillColor=#F5F5F5;strokeColor=#999999;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1260" y="115" width="100" height="35" as="geometry"/>
+        </mxCell>
+
+        <!-- ===== BUSINESS CAPABILITIES — CLIENT SERVICES DOMAIN ===== -->
+        <mxCell id="domain-client-bg" value="" style="rounded=1;whiteSpace=wrap;fillColor=#DAE8FC;strokeColor=#6c8ebf;opacity=20;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="30" y="175" width="730" height="130" as="geometry"/>
+        </mxCell>
+        <mxCell id="domain-client-label" value="Client Services" style="text;html=0;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=11;fontStyle=3;fontColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="40" y="178" width="100" height="20" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="cap-client360" value="Client 360 View&#xa;&#xa;Unified client profile,&#xa;household, members" style="rounded=1;whiteSpace=wrap;fillColor=#DAE8FC;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;verticalAlign=top;spacingTop=4;align=center;" vertex="1" parent="1">
+          <mxGeometry x="40" y="200" width="170" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="cap-portfolio" value="Portfolio Intelligence&#xa;&#xa;Account balances,&#xa;allocations, performance" style="rounded=1;whiteSpace=wrap;fillColor=#DAE8FC;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;verticalAlign=top;spacingTop=4;align=center;" vertex="1" parent="1">
+          <mxGeometry x="225" y="200" width="170" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="cap-goals" value="Goal Tracking&#xa;&#xa;Financial goals,&#xa;progress, gap analysis" style="rounded=1;whiteSpace=wrap;fillColor=#DAE8FC;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;verticalAlign=top;spacingTop=4;align=center;" vertex="1" parent="1">
+          <mxGeometry x="410" y="200" width="170" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="cap-meetings" value="Meeting Management&#xa;&#xa;Prep briefs, action&#xa;items, scheduling" style="rounded=1;whiteSpace=wrap;fillColor=#DAE8FC;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;verticalAlign=top;spacingTop=4;align=center;" vertex="1" parent="1">
+          <mxGeometry x="595" y="200" width="155" height="90" as="geometry"/>
+        </mxCell>
+
+        <!-- ===== BUSINESS CAPABILITIES — RISK & COMPLIANCE DOMAIN ===== -->
+        <mxCell id="domain-risk-bg" value="" style="rounded=1;whiteSpace=wrap;fillColor=#F8CECC;strokeColor=#b85450;opacity=20;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="780" y="175" width="540" height="130" as="geometry"/>
+        </mxCell>
+        <mxCell id="domain-risk-label" value="Risk &amp; Compliance" style="text;html=0;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=11;fontStyle=3;fontColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="790" y="178" width="120" height="20" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="cap-rebalance" value="Rebalancing Alerts&#xa;&#xa;Drift detection,&#xa;rebalance triggers" style="rounded=1;whiteSpace=wrap;fillColor=#F8CECC;strokeColor=#b85450;fontSize=11;fontStyle=1;verticalAlign=top;spacingTop=4;align=center;" vertex="1" parent="1">
+          <mxGeometry x="790" y="200" width="160" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="cap-compliance" value="Compliance Monitoring&#xa;&#xa;Policy checks,&#xa;regulatory alerts" style="rounded=1;whiteSpace=wrap;fillColor=#F8CECC;strokeColor=#b85450;fontSize=11;fontStyle=1;verticalAlign=top;spacingTop=4;align=center;" vertex="1" parent="1">
+          <mxGeometry x="965" y="200" width="165" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="cap-audit" value="Audit Trail&#xa;&#xa;Activity logging,&#xa;session tracking" style="rounded=1;whiteSpace=wrap;fillColor=#F8CECC;strokeColor=#b85450;fontSize=11;fontStyle=1;verticalAlign=top;spacingTop=4;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1145" y="200" width="160" height="90" as="geometry"/>
+        </mxCell>
+
+        <!-- ===== BUSINESS CAPABILITIES — GROWTH DOMAIN ===== -->
+        <mxCell id="domain-growth-bg" value="" style="rounded=1;whiteSpace=wrap;fillColor=#DAE8FC;strokeColor=#6c8ebf;opacity=20;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="30" y="320" width="370" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="domain-growth-label" value="Growth" style="text;html=0;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=11;fontStyle=3;fontColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="40" y="323" width="50" height="20" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="cap-referral" value="Referral Pipeline&#xa;&#xa;Referral tracking,&#xa;source analysis" style="rounded=1;whiteSpace=wrap;fillColor=#DAE8FC;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;verticalAlign=top;spacingTop=4;align=center;" vertex="1" parent="1">
+          <mxGeometry x="40" y="345" width="170" height="85" as="geometry"/>
+        </mxCell>
+        <mxCell id="cap-txn-analytics" value="Transaction Analytics&#xa;&#xa;Transaction patterns,&#xa;volume insights" style="rounded=1;whiteSpace=wrap;fillColor=#DAE8FC;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;verticalAlign=top;spacingTop=4;align=center;" vertex="1" parent="1">
+          <mxGeometry x="225" y="345" width="170" height="85" as="geometry"/>
+        </mxCell>
+
+        <!-- ===== BUSINESS CAPABILITIES — MARKET INTELLIGENCE DOMAIN ===== -->
+        <mxCell id="domain-market-bg" value="" style="rounded=1;whiteSpace=wrap;fillColor=#FFF2CC;strokeColor=#d6b656;opacity=20;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="420" y="320" width="370" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="domain-market-label" value="Market Intelligence" style="text;html=0;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=11;fontStyle=3;fontColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="430" y="323" width="120" height="20" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="cap-market" value="Market Data&#xa;&#xa;Real-time quotes,&#xa;indices, benchmarks" style="rounded=1;whiteSpace=wrap;fillColor=#FFF2CC;strokeColor=#d6b656;fontSize=11;fontStyle=1;verticalAlign=top;spacingTop=4;align=center;" vertex="1" parent="1">
+          <mxGeometry x="430" y="345" width="170" height="85" as="geometry"/>
+        </mxCell>
+        <mxCell id="cap-news" value="Financial News&#xa;&#xa;News feeds, market&#xa;sentiment, alerts" style="rounded=1;whiteSpace=wrap;fillColor=#FFF2CC;strokeColor=#d6b656;fontSize=11;fontStyle=1;verticalAlign=top;spacingTop=4;align=center;" vertex="1" parent="1">
+          <mxGeometry x="615" y="345" width="165" height="85" as="geometry"/>
+        </mxCell>
+
+        <!-- ===== BUSINESS CAPABILITIES — ESCALATION DOMAIN ===== -->
+        <mxCell id="domain-esc-bg" value="" style="rounded=1;whiteSpace=wrap;fillColor=#F5F5F5;strokeColor=#999999;opacity=30;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="810" y="320" width="370" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="domain-esc-label" value="Escalation" style="text;html=0;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=11;fontStyle=3;fontColor=#999999;" vertex="1" parent="1">
+          <mxGeometry x="820" y="323" width="70" height="20" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="cap-handoff" value="Human Handoff&#xa;&#xa;Specialist routing,&#xa;warm transfer" style="rounded=1;whiteSpace=wrap;fillColor=#F5F5F5;strokeColor=#999999;fontSize=11;fontStyle=1;verticalAlign=top;spacingTop=4;align=center;" vertex="1" parent="1">
+          <mxGeometry x="820" y="345" width="170" height="85" as="geometry"/>
+        </mxCell>
+        <mxCell id="cap-guardrails" value="Off-Topic Guardrails&#xa;&#xa;Topic boundaries,&#xa;safe responses" style="rounded=1;whiteSpace=wrap;fillColor=#F5F5F5;strokeColor=#999999;fontSize=11;fontStyle=1;verticalAlign=top;spacingTop=4;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1005" y="345" width="165" height="85" as="geometry"/>
+        </mxCell>
+
+        <!-- ===== SECURITY & COMPLIANCE (Right side) ===== -->
+        <mxCell id="label-security" value="Security &amp; Compliance" style="text;html=0;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=11;fontStyle=2;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="1210" y="320" width="140" height="20" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="sec-rbac" value="Role-Based Access" style="rounded=1;whiteSpace=wrap;fillColor=#F8CECC;strokeColor=#b85450;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1210" y="345" width="140" height="35" as="geometry"/>
+        </mxCell>
+        <mxCell id="sec-privacy" value="Data Privacy" style="rounded=1;whiteSpace=wrap;fillColor=#F8CECC;strokeColor=#b85450;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1210" y="390" width="140" height="35" as="geometry"/>
+        </mxCell>
+        <mxCell id="sec-logging" value="Compliance Logging" style="rounded=1;whiteSpace=wrap;fillColor=#F8CECC;strokeColor=#b85450;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1360" y="345" width="140" height="35" as="geometry"/>
+        </mxCell>
+
+        <!-- ===== UNIFIED DATA PLATFORM ===== -->
+        <mxCell id="label-udp" value="Data Unification Layer" style="text;html=0;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=11;fontStyle=2;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="20" y="465" width="150" height="20" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="udp-box" value="Unified Data Platform&#xa;&#xa;Harmonizes internal CRM data and external feeds into a single canonical model for all business capabilities" style="rounded=1;whiteSpace=wrap;fillColor=#F5F5F5;strokeColor=#999999;fontSize=12;fontStyle=1;verticalAlign=top;spacingTop=5;align=center;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="30" y="485" width="1470" height="70" as="geometry"/>
+        </mxCell>
+
+        <!-- ===== DATA DOMAINS (Bottom) ===== -->
+        <mxCell id="label-data" value="Data Domains" style="text;html=0;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=11;fontStyle=2;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="20" y="580" width="90" height="20" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="data-clients" value="Client Data" style="shape=cylinder3;whiteSpace=wrap;boundedLbl=1;backgroundOutline=1;size=8;fillColor=#D5E8D4;strokeColor=#82b366;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="30" y="600" width="120" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="data-accounts" value="Financial Accounts" style="shape=cylinder3;whiteSpace=wrap;boundedLbl=1;backgroundOutline=1;size=8;fillColor=#D5E8D4;strokeColor=#82b366;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="170" y="600" width="140" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="data-goals" value="Goals" style="shape=cylinder3;whiteSpace=wrap;boundedLbl=1;backgroundOutline=1;size=8;fillColor=#D5E8D4;strokeColor=#82b366;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="330" y="600" width="100" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="data-meetings" value="Meetings" style="shape=cylinder3;whiteSpace=wrap;boundedLbl=1;backgroundOutline=1;size=8;fillColor=#D5E8D4;strokeColor=#82b366;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="450" y="600" width="100" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="data-txns" value="Transactions" style="shape=cylinder3;whiteSpace=wrap;boundedLbl=1;backgroundOutline=1;size=8;fillColor=#D5E8D4;strokeColor=#82b366;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="570" y="600" width="110" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="data-referrals" value="Referrals" style="shape=cylinder3;whiteSpace=wrap;boundedLbl=1;backgroundOutline=1;size=8;fillColor=#D5E8D4;strokeColor=#82b366;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="700" y="600" width="100" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="data-audit" value="Audit Logs" style="shape=cylinder3;whiteSpace=wrap;boundedLbl=1;backgroundOutline=1;size=8;fillColor=#D5E8D4;strokeColor=#82b366;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="820" y="600" width="110" height="50" as="geometry"/>
+        </mxCell>
+
+        <!-- ===== EXTERNAL SYSTEMS ===== -->
+        <mxCell id="label-external" value="External Systems" style="text;html=0;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=11;fontStyle=2;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="1020" y="580" width="110" height="20" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="ext-market" value="Market Data Providers" style="rounded=1;whiteSpace=wrap;fillColor=#FFF2CC;strokeColor=#d6b656;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1020" y="605" width="150" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="ext-news" value="News Feeds" style="rounded=1;whiteSpace=wrap;fillColor=#FFF2CC;strokeColor=#d6b656;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1190" y="605" width="120" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="ext-search" value="Search APIs" style="rounded=1;whiteSpace=wrap;fillColor=#FFF2CC;strokeColor=#d6b656;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1330" y="605" width="120" height="40" as="geometry"/>
+        </mxCell>
+
+        <!-- ===== ARROWS: Personas to Capability Domains ===== -->
+        <mxCell id="edge-adv-c360" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#9673a6;strokeWidth=1.5;" edge="1" source="persona-advisor" target="cap-client360" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge-adv-port" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#9673a6;strokeWidth=1.5;" edge="1" source="persona-advisor" target="cap-portfolio" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge-adv-goals" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#9673a6;strokeWidth=1.5;" edge="1" source="persona-advisor" target="cap-goals" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge-adv-meet" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#9673a6;strokeWidth=1.5;" edge="1" source="persona-advisor" target="cap-meetings" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge-adv-market" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#9673a6;strokeWidth=1.5;" edge="1" source="persona-advisor" target="cap-market" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge-adv-referral" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#9673a6;strokeWidth=1.5;" edge="1" source="persona-advisor" target="cap-referral" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge-client-c360" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#9673a6;strokeWidth=1.5;dashed=1;" edge="1" source="persona-client" target="cap-client360" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge-compliance-comp" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#9673a6;strokeWidth=1.5;dashed=1;" edge="1" source="persona-compliance" target="cap-compliance" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge-compliance-audit" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#9673a6;strokeWidth=1.5;dashed=1;" edge="1" source="persona-compliance" target="cap-audit" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge-admin-rbac" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#9673a6;strokeWidth=1.5;dashed=1;" edge="1" source="persona-admin" target="sec-rbac" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- ===== ARROWS: Channels to Personas ===== -->
+        <mxCell id="edge-web-adv" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#999999;strokeWidth=1;dashed=1;" edge="1" source="chan-web" target="persona-advisor" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge-slack-adv" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#999999;strokeWidth=1;dashed=1;" edge="1" source="chan-slack" target="persona-advisor" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- ===== ARROWS: Capabilities to Unified Data Platform ===== -->
+        <mxCell id="edge-c360-udp" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#999999;strokeWidth=1.5;" edge="1" source="cap-client360" target="udp-box" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge-port-udp" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#999999;strokeWidth=1.5;" edge="1" source="cap-portfolio" target="udp-box" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge-goals-udp" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#999999;strokeWidth=1.5;" edge="1" source="cap-goals" target="udp-box" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge-meet-udp" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#999999;strokeWidth=1.5;" edge="1" source="cap-meetings" target="udp-box" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge-rebal-udp" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#999999;strokeWidth=1.5;" edge="1" source="cap-rebalance" target="udp-box" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge-ref-udp" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#999999;strokeWidth=1.5;" edge="1" source="cap-referral" target="udp-box" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge-txn-udp" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#999999;strokeWidth=1.5;" edge="1" source="cap-txn-analytics" target="udp-box" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge-audit-udp" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#999999;strokeWidth=1.5;" edge="1" source="cap-audit" target="udp-box" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- ===== ARROWS: Data Domains to Unified Data Platform ===== -->
+        <mxCell id="edge-dc-udp" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#82b366;strokeWidth=1.5;" edge="1" source="data-clients" target="udp-box" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge-da-udp" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#82b366;strokeWidth=1.5;" edge="1" source="data-accounts" target="udp-box" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge-dg-udp" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#82b366;strokeWidth=1.5;" edge="1" source="data-goals" target="udp-box" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge-dm-udp" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#82b366;strokeWidth=1.5;" edge="1" source="data-meetings" target="udp-box" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge-dt-udp" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#82b366;strokeWidth=1.5;" edge="1" source="data-txns" target="udp-box" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge-dr-udp" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#82b366;strokeWidth=1.5;" edge="1" source="data-referrals" target="udp-box" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge-dau-udp" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#82b366;strokeWidth=1.5;" edge="1" source="data-audit" target="udp-box" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- ===== ARROWS: External Systems to Unified Data Platform ===== -->
+        <mxCell id="edge-ext-market-udp" value="feeds" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#d6b656;strokeWidth=1.5;" edge="1" source="ext-market" target="udp-box" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge-ext-news-udp" value="feeds" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#d6b656;strokeWidth=1.5;" edge="1" source="ext-news" target="udp-box" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge-ext-search-udp" value="feeds" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#d6b656;strokeWidth=1.5;" edge="1" source="ext-search" target="udp-box" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- ===== LEGEND ===== -->
+        <mxCell id="legend-box" value="" style="rounded=1;whiteSpace=wrap;fillColor=#F5F5F5;strokeColor=#CCCCCC;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="20" y="680" width="900" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="legend-title" value="Legend" style="text;html=0;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="30" y="685" width="50" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="leg-p" value="" style="rounded=1;whiteSpace=wrap;fillColor=#E1D5E7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="30" y="715" width="20" height="15" as="geometry"/>
+        </mxCell>
+        <mxCell id="leg-p-t" value="User Persona" style="text;html=0;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="55" y="715" width="80" height="15" as="geometry"/>
+        </mxCell>
+        <mxCell id="leg-c" value="" style="rounded=1;whiteSpace=wrap;fillColor=#DAE8FC;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="150" y="715" width="20" height="15" as="geometry"/>
+        </mxCell>
+        <mxCell id="leg-c-t" value="Business Capability" style="text;html=0;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="175" y="715" width="110" height="15" as="geometry"/>
+        </mxCell>
+        <mxCell id="leg-d" value="" style="rounded=1;whiteSpace=wrap;fillColor=#D5E8D4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="300" y="715" width="20" height="15" as="geometry"/>
+        </mxCell>
+        <mxCell id="leg-d-t" value="Data Domain" style="text;html=0;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="325" y="715" width="80" height="15" as="geometry"/>
+        </mxCell>
+        <mxCell id="leg-e" value="" style="rounded=1;whiteSpace=wrap;fillColor=#FFF2CC;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="420" y="715" width="20" height="15" as="geometry"/>
+        </mxCell>
+        <mxCell id="leg-e-t" value="External System" style="text;html=0;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="445" y="715" width="90" height="15" as="geometry"/>
+        </mxCell>
+        <mxCell id="leg-s" value="" style="rounded=1;whiteSpace=wrap;fillColor=#F8CECC;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="550" y="715" width="20" height="15" as="geometry"/>
+        </mxCell>
+        <mxCell id="leg-s-t" value="Security / Compliance" style="text;html=0;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="575" y="715" width="120" height="15" as="geometry"/>
+        </mxCell>
+        <mxCell id="leg-f" value="" style="rounded=1;whiteSpace=wrap;fillColor=#F5F5F5;strokeColor=#999999;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="710" y="715" width="20" height="15" as="geometry"/>
+        </mxCell>
+        <mxCell id="leg-f-t" value="Unified Data Platform / Process" style="text;html=0;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="735" y="715" width="180" height="15" as="geometry"/>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

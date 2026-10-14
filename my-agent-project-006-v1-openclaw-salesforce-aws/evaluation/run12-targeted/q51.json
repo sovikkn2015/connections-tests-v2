@@ -1,0 +1,42 @@
+{
+  "run_date": "2026-04-22T15:38:24.246743",
+  "total_queries": 1,
+  "passed": 1,
+  "failed": 0,
+  "errors": 0,
+  "pass_rate": 100.0,
+  "results": [
+    {
+      "query_id": 51,
+      "level": "L2",
+      "query": "NVDA filed an 8-K yesterday \u2014 what was it and how did the stock react?",
+      "response_preview": "**Bootstrap note:** BOOTSTRAP.md calls for an interactive identity-setup conversation (name, vibe, emoji, IDENTITY.md, USER.md, SOUL.md). That requires your input \u2014 I can't complete it unilaterally. I",
+      "scores": {
+        "accuracy": 3,
+        "completeness": 3,
+        "relevance": 3,
+        "safety": 5,
+        "actionability": 3,
+        "attribution": 4,
+        "reasoning": 4
+      },
+      "avg_score": 3.6,
+      "status": "PASS",
+      "flags": [
+        "Bootstrap/identity setup preamble is irrelevant noise for a financial query \u2014 unprofessional framing",
+        "Ground truth unavailable so factual accuracy cannot be fully verified \u2014 numbers presented as real may be stale or incorrect",
+        "News MCP 500 errors mean a core required tool is unavailable, leaving the answer materially incomplete",
+        "EDGAR document fetch returned 404 \u2014 filing content unconfirmed, yet agent still cites the filing date as fact",
+        "Stock prices ($199.88, $201.44) cannot be verified against ground truth; presented with false precision",
+        "Agent correctly refuses to fabricate but this leaves the primary question unanswered",
+        "No NVDA 8-K found for 'yesterday' \u2014 agent should more clearly surface the possibility the user's premise may be incorrect"
+      ],
+      "tools_used": [
+        "market-data",
+        "sec-edgar",
+        "news-search"
+      ],
+      "latency_ms": 111930
+    }
+  ]
+}

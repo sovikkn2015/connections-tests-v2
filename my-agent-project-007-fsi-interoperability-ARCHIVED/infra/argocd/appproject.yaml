@@ -1,0 +1,143 @@
+# Project 007 FSI Platform — ArgoCD AppProject
+# Defines RBAC, source repos, destination namespaces, and cluster resource whitelists.
+# Rule 20: Zero credentials — repo access configured via ArgoCD repo credentials, not here.
+# Rule 23: Namespace isolation. NetworkPolicy per module.
+
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: 007-fsi-platform
+  namespace: argocd
+  labels:
+    app.kubernetes.io/part-of: 007-fsi-platform
+    app.kubernetes.io/managed-by: argocd
+  annotations:
+    argocd.argoproj.io/description: "Project 007 FSI Interoperability Platform"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io/finalizer
+spec:
+  description: >
+    Project 007 FSI Interoperability Platform. 13 modules across trust layer,
+    intelligence layer, and MCP adapters. Supports cloud and hybrid topologies.
+
+  # ─── Source Repositories ─────────────────────────────────────
+  sourceRepos:
+    - <REPO_URL>
+
+  # ─── Destination Namespaces ──────────────────────────────────
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: fsi-007
+    - server: https://kubernetes.default.svc
+      namespace: fsi-007-hybrid
+    - server: https://kubernetes.default.svc
+      namespace: fsi-007-infra
+
+  # ─── Cluster Resource Whitelist ──────────────────────────────
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
+    - group: networking.k8s.io
+      kind: NetworkPolicy
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRole
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRoleBinding
+    - group: cert-manager.io
+      kind: ClusterIssuer
+
+  # ─── Namespace Resource Whitelist ────────────────────────────
+  namespaceResourceWhitelist:
+    - group: ""
+      kind: ConfigMap
+    - group: ""
+      kind: Secret
+    - group: ""
+      kind: Service
+    - group: ""
+      kind: ServiceAccount
+    - group: ""
+      kind: PersistentVolumeClaim
+    - group: apps
+      kind: Deployment
+    - group: apps
+      kind: StatefulSet
+    - group: batch
+      kind: Job
+    - group: batch
+      kind: CronJob
+    - group: networking.k8s.io
+      kind: Ingress
+    - group: networking.k8s.io
+      kind: NetworkPolicy
+    - group: policy
+      kind: PodDisruptionBudget
+    - group: autoscaling
+      kind: HorizontalPodAutoscaler
+    - group: cert-manager.io
+      kind: Certificate
+    - group: cert-manager.io
+      kind: Issuer
+
+  # ─── Namespace Resource Blacklist ────────────────────────────
+  namespaceResourceBlacklist:
+    - group: ""
+      kind: ResourceQuota
+    - group: ""
+      kind: LimitRange
+
+  # ─── RBAC Roles ──────────────────────────────────────────────
+  roles:
+    - name: platform-admin
+      description: "Full access to all 007 FSI Platform applications"
+      policies:
+        - p, proj:007-fsi-platform:platform-admin, applications, *, 007-fsi-platform/*, allow
+        - p, proj:007-fsi-platform:platform-admin, logs, get, 007-fsi-platform/*, allow
+        - p, proj:007-fsi-platform:platform-admin, exec, create, 007-fsi-platform/*, allow
+      groups:
+        - 007-platform-admins
+
+    - name: trust-layer-engineer
+      description: "Access to trust layer modules (M1, M2/M4, M6, M10)"
+      policies:
+        - p, proj:007-fsi-platform:trust-layer-engineer, applications, get, 007-fsi-platform/*, allow
+        - p, proj:007-fsi-platform:trust-layer-engineer, applications, sync, 007-fsi-platform/007-fsi-platform-cloud, allow
+        - p, proj:007-fsi-platform:trust-layer-engineer, applications, sync, 007-fsi-platform/007-fsi-platform-hybrid, allow
+        - p, proj:007-fsi-platform:trust-layer-engineer, logs, get, 007-fsi-platform/*, allow
+      groups:
+        - 007-trust-layer-engineers
+
+    - name: compliance-viewer
+      description: "Read-only access for compliance review and SOC 2 auditors"
+      policies:
+        - p, proj:007-fsi-platform:compliance-viewer, applications, get, 007-fsi-platform/*, allow
+        - p, proj:007-fsi-platform:compliance-viewer, logs, get, 007-fsi-platform/*, allow
+      groups:
+        - 007-compliance-team
+        - 007-soc2-auditors
+
+  # ─── Sync Windows ───────────────────────────────────────────
+  syncWindows:
+    - kind: allow
+      schedule: "0 8 * * 1-5"
+      duration: 10h
+      applications:
+        - "*"
+      namespaces:
+        - fsi-007
+        - fsi-007-hybrid
+    - kind: deny
+      schedule: "0 0 * * 0,6"
+      duration: 48h
+      applications:
+        - "007-fsi-platform-hybrid"
+      namespaces:
+        - fsi-007-hybrid
+
+  # ─── Orphaned Resources ─────────────────────────────────────
+  orphanedResources:
+    warn: true
+    ignore:
+      - group: ""
+        kind: ConfigMap
+        name: kube-root-ca.crt

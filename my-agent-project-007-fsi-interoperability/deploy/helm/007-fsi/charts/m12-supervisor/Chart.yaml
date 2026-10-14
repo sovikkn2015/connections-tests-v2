@@ -1,0 +1,11 @@
+apiVersion: v2
+name: m12-supervisor
+description: M12 -- Supervisor glue (M9 intent -> M8 pipeline / Execution / Onboarding) with Haiku orchestration.
+type: application
+version: 0.1.0
+appVersion: "0.2.0"
+keywords:
+  - 007-fsi
+  - intelligence-layer
+  - supervisor
+  - orchestration

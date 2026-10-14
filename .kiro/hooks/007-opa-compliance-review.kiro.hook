@@ -1,0 +1,15 @@
+{
+  "name": "007 OPA Compliance Review",
+  "version": "1.0.0",
+  "description": "When OPA/Rego files are edited in the 007 project, verify they follow compliance design patterns.",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "my-agent-project-007-fsi-interoperability/opa-bundles/**/*.rego"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "An OPA/Rego file was edited in the 007 project. Verify:\n1. FAIL-CLOSED: Does the default decision deny access? (default check := {\"decision\": \"DENY\"})\n2. WSP ANNOTATION: Does every rule include a wsp_section field in its output? This is required for WSP-to-YAML mapping (ARCH-06 Gap 3).\n3. ARCHETYPE AWARENESS: Does the rule check input.archetype or input.role for per-archetype behavior?\n4. AUDIT FIELDS: Does the rule output include rule name and bundle version for audit trail?\n5. NO LLM: Does this rule call any LLM or external service? OPA rules must be deterministic only.\nIf violations found, list them. If clean, confirm."
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "enabled": true,
+  "name": "006 Gap Remediation Review",
+  "description": "After any file is written inside the 006 project folder, verify it addresses a specific gap from the assessment and follows all architecture rules.",
+  "version": "1",
+  "when": {
+    "type": "postToolUse",
+    "toolTypes": [
+      "write"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Check if the file just written is inside my-agent-project-006-v1-openclaw-salesforce-aws/. If yes, verify: (1) it addresses a specific PARTIAL/NOT DONE/BROKEN task from docs/006-design-vs-reality-assessment.md, (2) it follows the architecture rules in .kiro/steering/006-gap-remediation.md, (3) no credentials are hardcoded, (4) MNPI fields are not sent to LLM prompts. Report which assessment task this addresses and whether it passes all checks."
+  }
+}

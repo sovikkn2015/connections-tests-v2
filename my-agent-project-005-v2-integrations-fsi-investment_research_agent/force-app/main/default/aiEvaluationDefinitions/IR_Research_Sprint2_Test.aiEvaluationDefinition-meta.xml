@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<AiEvaluationDefinition xmlns="http://soap.sforce.com/2006/04/metadata">
+    <name>IR_Research_Sprint2_Test</name>
+    <subjectName>IR_Research_Agent</subjectName>
+    <subjectType>AGENT</subjectType>
+    <!-- SEC FILINGS — MCP placeholder (3 cases) -->
+    <testCase>
+        <number>1</number>
+        <inputs><utterance>Show me NVIDIA latest 10-Q</utterance></inputs>
+        <expectation><expectedValue>sec_filings</expectedValue><name>topic_sequence_match</name></expectation>
+        <expectation><expectedValue>Agent mentions SEC filings integration coming in a future sprint</expectedValue><name>bot_response_rating</name></expectation>
+    </testCase>
+    <testCase>
+        <number>2</number>
+        <inputs><utterance>What did NVIDIA file recently?</utterance></inputs>
+        <expectation><expectedValue>sec_filings</expectedValue><name>topic_sequence_match</name></expectation>
+        <expectation><expectedValue>Agent mentions SEC filings integration coming in a future sprint</expectedValue><name>bot_response_rating</name></expectation>
+    </testCase>
+    <testCase>
+        <number>3</number>
+        <inputs><utterance>Any insider trading at Apple?</utterance></inputs>
+        <expectation><expectedValue>sec_filings</expectedValue><name>topic_sequence_match</name></expectation>
+        <expectation><expectedValue>Agent mentions SEC filings integration coming in a future sprint</expectedValue><name>bot_response_rating</name></expectation>
+    </testCase>
+    <!-- MARKET DATA — MCP placeholder (5 cases) -->
+    <testCase>
+        <number>4</number>
+        <inputs><utterance>What is NVIDIA trading at right now?</utterance></inputs>
+        <expectation><expectedValue>market_data</expectedValue><name>topic_sequence_match</name></expectation>
+        <expectation><expectedValue>Agent mentions real-time market data coming in a future sprint</expectedValue><name>bot_response_rating</name></expectation>
+    </testCase>
+    <testCase>
+        <number>5</number>
+        <inputs><utterance>Show me NVIDIA price history</utterance></inputs>
+        <expectation><expectedValue>market_data</expectedValue><name>topic_sequence_match</name></expectation>
+        <expectation><expectedValue>Agent mentions market data coming in a future sprint</expectedValue><name>bot_response_rating</name></expectation>
+    </testCase>
+    <testCase>
+        <number>6</number>
+        <inputs><utterance>What is the analyst consensus on MSFT?</utterance></inputs>
+        <expectation><expectedValue>market_data</expectedValue><name>topic_sequence_match</name></expectation>
+        <expectation><expectedValue>Agent mentions market data coming in a future sprint</expectedValue><name>bot_response_rating</name></expectation>
+    </testCase>
+    <testCase>
+        <number>7</number>
+        <inputs><utterance>Any news about NVIDIA?</utterance></inputs>
+        <expectation><expectedValue>market_data</expectedValue><name>topic_sequence_match</name></expectation>
+        <expectation><expectedValue>Agent mentions market data or news coming in a future sprint</expectedValue><name>bot_response_rating</name></expectation>
+    </testCase>
+    <testCase>
+        <number>8</number>
+        <inputs><utterance>What is the sentiment on Apple in the news?</utterance></inputs>
+        <expectation><expectedValue>market_data</expectedValue><name>topic_sequence_match</name></expectation>
+        <expectation><expectedValue>Agent mentions market data coming in a future sprint</expectedValue><name>bot_response_rating</name></expectation>
+    </testCase>
+    <!-- CROSS-TOPIC (1 case) -->
+    <testCase>
+        <number>9</number>
+        <inputs><utterance>Show me NVIDIA 10-K and current price</utterance></inputs>
+        <expectation><expectedValue>sec_filings</expectedValue><name>topic_sequence_match</name></expectation>
+        <expectation><expectedValue>Agent mentions SEC filings and market data coming in a future sprint</expectedValue><name>bot_response_rating</name></expectation>
+    </testCase>
+    <!-- FALLBACK TO CRM (1 case) -->
+    <testCase>
+        <number>10</number>
+        <inputs><utterance>What is happening with JPMorgan ahead of earnings?</utterance></inputs>
+        <expectation><expectedValue>company_lookup</expectedValue><name>topic_sequence_match</name></expectation>
+        <expectation><expectedValue>[&apos;get_company_info&apos;]</expectedValue><name>action_sequence_match</name></expectation>
+        <expectation><expectedValue>Returns JPMorgan company information from CRM including earnings date</expectedValue><name>bot_response_rating</name></expectation>
+    </testCase>
+</AiEvaluationDefinition>

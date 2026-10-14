@@ -1,0 +1,37 @@
+{
+  "run_date": "2026-04-22T17:27:34.405342",
+  "total_queries": 1,
+  "passed": 1,
+  "failed": 0,
+  "errors": 0,
+  "pass_rate": 100.0,
+  "results": [
+    {
+      "query_id": 27,
+      "level": "L1",
+      "query": "Any regulatory news affecting pharma stocks?",
+      "response_preview": "All three **news-search MCP tools are returning a 500 server error** on retry. Per operating rules, I cannot fabricate current news when tools fail.\n\n---\n\n**What I can tell you right now:**\n\nThe news-",
+      "scores": {
+        "accuracy": 5,
+        "completeness": 3,
+        "relevance": 4,
+        "safety": 5,
+        "actionability": 4,
+        "attribution": 4,
+        "reasoning": 5
+      },
+      "avg_score": 4.3,
+      "status": "PASS",
+      "flags": [
+        "Tool failure prevented primary query fulfillment",
+        "No actual regulatory news delivered \u2014 core ask unanswered",
+        "Completeness capped due to inability to surface any pharma regulatory headlines"
+      ],
+      "tools_used": [
+        "sec-edgar",
+        "news-search"
+      ],
+      "latency_ms": 65656
+    }
+  ]
+}

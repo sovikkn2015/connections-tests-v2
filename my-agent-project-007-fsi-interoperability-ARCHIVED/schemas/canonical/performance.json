@@ -1,0 +1,220 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://007.fsi/schemas/canonical/performance/v0.1.0",
+  "title": "Performance",
+  "description": "Canonical portfolio performance metrics. Maps from Orion Performance API, Envestnet Tamarac Reporting. TWR vs IRR methodology must be explicit \u2014 different vendors default differently.",
+  "type": "object",
+  "required": [
+    "performance_id",
+    "account_ref",
+    "period",
+    "twr_return",
+    "start_date",
+    "end_date",
+    "source_system"
+  ],
+  "properties": {
+    "performance_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Primary key for this performance record"
+    },
+    "account_ref": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Canonical Account ID"
+    },
+    "client_ref": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid",
+      "description": "Canonical Client ID"
+    },
+    "household_ref": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid",
+      "description": "Canonical Household ID for household-level performance"
+    },
+    "period": {
+      "type": "string",
+      "enum": [
+        "mtd",
+        "qtd",
+        "ytd",
+        "1y",
+        "3y",
+        "5y",
+        "10y",
+        "itd",
+        "custom"
+      ],
+      "description": "Performance measurement period"
+    },
+    "twr_return": {
+      "type": "number",
+      "description": "Time-weighted return as decimal (e.g., 0.085 = 8.5%). GIPS-compliant methodology."
+    },
+    "irr_return": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Internal rate of return as decimal. Better for accounts with significant cash flows."
+    },
+    "gross_return": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Return before fees"
+    },
+    "net_return": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Return after fees"
+    },
+    "benchmark_return": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Benchmark return for same period"
+    },
+    "benchmark_name": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Benchmark index name (e.g., 'S&P 500', 'Bloomberg US Agg')"
+    },
+    "benchmark_ticker": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Benchmark ticker (e.g., 'SPX', 'AGG')"
+    },
+    "alpha": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Excess return over benchmark"
+    },
+    "sharpe_ratio": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Risk-adjusted return metric"
+    },
+    "standard_deviation": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Portfolio volatility"
+    },
+    "max_drawdown": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Maximum peak-to-trough decline"
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Period start date"
+    },
+    "end_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Period end date"
+    },
+    "start_value": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Portfolio value at period start"
+    },
+    "end_value": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Portfolio value at period end"
+    },
+    "net_flows": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Net cash flows during period"
+    },
+    "income_earned": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Dividends + interest earned during period"
+    },
+    "realized_gains": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Realized capital gains during period"
+    },
+    "fees_paid": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Total fees paid during period"
+    },
+    "methodology": {
+      "type": "string",
+      "enum": [
+        "modified_dietz",
+        "daily_valuation",
+        "irr_only"
+      ],
+      "description": "TWR calculation methodology. Orion uses daily valuation. Some custodians use modified Dietz."
+    },
+    "is_gips_compliant": {
+      "type": "boolean",
+      "default": false,
+      "description": "True if performance calculation follows GIPS standards"
+    },
+    "source_system": {
+      "type": "string",
+      "enum": [
+        "orion",
+        "envestnet",
+        "schwab",
+        "fidelity",
+        "pershing",
+        "manual"
+      ],
+      "description": "Source system that provided this performance data"
+    },
+    "source_id": {
+      "type": "string",
+      "description": "Vendor-specific performance record ID"
+    },
+    "as_of_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date this performance data is valid for"
+    }
+  }
+}

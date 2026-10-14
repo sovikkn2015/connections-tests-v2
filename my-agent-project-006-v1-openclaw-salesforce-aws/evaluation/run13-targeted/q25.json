@@ -1,0 +1,38 @@
+{
+  "run_date": "2026-04-22T17:24:29.254708",
+  "total_queries": 1,
+  "passed": 1,
+  "failed": 0,
+  "errors": 0,
+  "pass_rate": 100.0,
+  "results": [
+    {
+      "query_id": 25,
+      "level": "L1",
+      "query": "Any news about Tesla today?",
+      "response_preview": "The **news-search MCP is currently returning a 500 error** across all three available news tools (`get_news_coverage`, `search_financial_news`, `get_headlines`). I retried with fallback approaches and",
+      "scores": {
+        "accuracy": 5,
+        "completeness": 3,
+        "relevance": 4,
+        "safety": 5,
+        "actionability": 4,
+        "attribution": 3,
+        "reasoning": 5
+      },
+      "avg_score": 4.1,
+      "status": "PASS",
+      "flags": [
+        "News MCP unavailable \u2014 primary query unanswered",
+        "Cannot verify 500 error claim independently",
+        "Alternative tools offered but not executed proactively"
+      ],
+      "tools_used": [
+        "market-data",
+        "sec-edgar",
+        "news-search"
+      ],
+      "latency_ms": 66882
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "name": "circuit_breaker",
+  "passed": false,
+  "details": {
+    "lambda_name": "ir-market-data-mcp-prod",
+    "env_var": "ALPHA_VANTAGE_API_KEY",
+    "recovery_s": 30,
+    "original_value_snapshot": "(redacted)",
+    "failure_statuses": [
+      200,
+      200,
+      200
+    ],
+    "post_break_status": 200,
+    "cb_tripped_header_seen": false,
+    "waiting_recovery_s": 30,
+    "recovery_status": 200,
+    "cleanup_step": "env var restored"
+  },
+  "error": null
+}

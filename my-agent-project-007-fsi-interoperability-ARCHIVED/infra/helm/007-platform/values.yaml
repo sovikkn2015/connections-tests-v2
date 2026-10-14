@@ -1,0 +1,157 @@
+# Project 007 FSI Platform — Default Helm values
+# Override per topology: values-cloud.yaml, values-hybrid.yaml
+
+global:
+  imageRegistry: ""
+  imagePullPolicy: IfNotPresent
+  # Runtime toggle (Rule 3): managed-agents | strands-sdk
+  agentRuntime: managed-agents
+  # LLM provider (Rule 15): bedrock | azure | gcp | self-hosted
+  llmProvider: bedrock
+  awsRegion: us-east-1
+
+# ─── Module Configs ──────────────────────────────────────────────
+
+m1Identity:
+  enabled: true
+  image:
+    repository: 007-fsi/m1-identity
+    tag: "0.1.0"
+  replicas: 2
+  port: 8001
+  env:
+    KEYCLOAK_URL: http://keycloak:8080
+  resources:
+    requests: { cpu: 100m, memory: 128Mi }
+    limits: { cpu: 500m, memory: 256Mi }
+
+m2m4Policy:
+  enabled: true
+  image:
+    repository: 007-fsi/m2-m4-policy
+    tag: "0.1.0"
+  replicas: 2
+  port: 8002
+  env:
+    OPA_URL: http://opa:8181
+  resources:
+    requests: { cpu: 100m, memory: 128Mi }
+    limits: { cpu: 500m, memory: 256Mi }
+
+m6McpGateway:
+  enabled: true
+  image:
+    repository: 007-fsi/m6-mcp-gateway
+    tag: "0.1.0"
+  replicas: 3
+  port: 8006
+  env:
+    REDIS_URL: redis://redis:6379
+    M1_URL: http://m1-identity:8001
+    M2_URL: http://m2-m4-policy:8002
+    M4_URL: http://m2-m4-policy:8002
+    M10_URL: http://m10-audit-logger:8010
+  resources:
+    requests: { cpu: 250m, memory: 256Mi }
+    limits: { cpu: "1", memory: 512Mi }
+
+m8Pipeline:
+  enabled: true
+  image:
+    repository: 007-fsi/m8-pipeline
+    tag: "0.1.0"
+  replicas: 2
+  port: 8008
+  env:
+    M6_URL: http://m6-mcp-gateway:8006
+  resources:
+    requests: { cpu: 250m, memory: 512Mi }
+    limits: { cpu: "1", memory: "1Gi" }
+
+m9IntentRouter:
+  enabled: true
+  image:
+    repository: 007-fsi/m9-intent-router
+    tag: "0.1.0"
+  replicas: 2
+  port: 8009
+  env:
+    M1_URL: http://m1-identity:8001
+    M6_URL: http://m6-mcp-gateway:8006
+  resources:
+    requests: { cpu: 100m, memory: 128Mi }
+    limits: { cpu: 500m, memory: 256Mi }
+
+m10AuditLogger:
+  enabled: true
+  image:
+    repository: 007-fsi/m10-audit-logger
+    tag: "0.1.0"
+  replicas: 2
+  port: 8010
+  env:
+    MINIO_ENDPOINT: http://minio:9000
+    LANGFUSE_URL: http://langfuse:3000
+  resources:
+    requests: { cpu: 100m, memory: 128Mi }
+    limits: { cpu: 500m, memory: 256Mi }
+
+# ─── M13 FIX Bridge (StatefulSet — Phase 4) ─────────────────────
+# Stateful FIX 4.2 TCP sessions. Separate from M11 (Rule 11).
+# Only enabled in hybrid/on-prem topologies.
+
+m13FixBridge:
+  enabled: false  # Only enabled in hybrid/on-prem
+  image:
+    repository: 007-fsi/m13-fix-bridge
+    tag: "0.1.0"
+  replicas: 1  # StatefulSet — single instance per broker
+  port: 8030
+  storage:
+    sessionState:
+      size: 10Gi
+      storageClass: ""  # Use default
+    messageStore:
+      size: 20Gi
+      storageClass: ""  # Use default
+  env:
+    FIX_BROKER_HOST: ""
+    FIX_BROKER_PORT: "9876"
+    FIX_SENDER_COMP_ID: ""
+    FIX_TARGET_COMP_ID: ""
+    FIX_PROTOCOL_VERSION: "FIX.4.2"
+    STATE_BACKEND: postgresql
+    STATE_DB_URL: ""
+    FIX_HEARTBEAT_INTERVAL: "30"
+    FIX_RECONNECT_INTERVAL: "5"
+    FIX_MAX_RECONNECT_ATTEMPTS: "10"
+  resources:
+    requests: { cpu: 250m, memory: 256Mi }
+    limits: { cpu: "1", memory: 512Mi }
+
+# ─── Infrastructure (external in production) ─────────────────────
+
+# ─── TLS / mTLS Configuration (Rule 21) ─────────────────────────
+# All inter-module communication uses mTLS.
+# cert-manager issues short-lived certs (24hr rotation).
+# Customers must install cert-manager and configure an Issuer.
+
+tls:
+  enabled: false  # Enable in production
+  issuerName: ""
+  issuerKind: ClusterIssuer
+  duration: 24h
+  renewBefore: 8h
+
+# ─── Infrastructure (external in production) ─────────────────────
+
+postgresql:
+  enabled: true
+  auth:
+    database: fsi007
+
+redis:
+  enabled: true
+
+opa:
+  enabled: true

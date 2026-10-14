@@ -1,0 +1,9 @@
+{
+  "run_id": "arc-0c3d7666c125",
+  "stage": 9,
+  "lesson_type": "failure",
+  "detail": "Stage 9 failed permanently: DCF model error: revenue_ttm must be positive",
+  "severity": "error",
+  "ticker": "TSMC",
+  "timestamp": "2026-04-22T19:18:39.029586+00:00"
+}

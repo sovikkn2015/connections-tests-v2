@@ -1,0 +1,9 @@
+{
+  "timestamp": "2026-04-26T09:23:38.953252Z",
+  "status": "skipped",
+  "path": "B-fallback",
+  "reason": "Agent Fabric not in org entitlement (subscription category: Developer/Trial)",
+  "agents": [],
+  "mcp_servers": [],
+  "routing": []
+}

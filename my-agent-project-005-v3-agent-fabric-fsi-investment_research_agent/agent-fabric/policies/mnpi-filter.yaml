@@ -1,0 +1,23 @@
+# MNPI Content Filter — blocks holdings amounts, trade intentions, wire details
+apiVersion: gateway.mulesoft.com/v1alpha1
+kind: PolicyBinding
+metadata:
+  name: mnpi-content-filter
+spec:
+  targetRef:
+    kind: ApiInstance
+    name: fsi-mcp-servers
+  policyRef:
+    name: content-filter
+  config:
+    blockedFields:
+      - "FinServ__Shares__c"
+      - "FinServ__MarketValue__c"
+      - "FinServ__Price__c"
+      - "Trade_Amount__c"
+      - "Wire_Amount__c"
+      - "Position_Size__c"
+      - "Balance__c"
+    action: redact  # redact field values, don't block entire request
+    logViolations: true
+    auditDestination: ir-audit-log

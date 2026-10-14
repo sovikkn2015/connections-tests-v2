@@ -1,0 +1,102 @@
+#%RAML 1.0
+title: Initiate Wire Process API (v3)
+version: v3
+baseUri: /api
+mediaType: application/json
+description: |
+  Project 006 v3 - MuleSoft Process API for initiate_wire action.
+  Live backend: Dwolla sandbox, after OFAC SDN screen of beneficiary name.
+  Mock branch via mock_mode=true for offline dev.
+  All calls originate from the mulesoft-actions Lambda.
+  Dual-auth required when amount_usd > 100,000 (steering rule 5).
+
+types:
+  InitiateWireRequest:
+    type: object
+    additionalProperties: false
+    properties:
+      amount_usd:
+        type: number
+        minimum: 0.01
+      currency:
+        type: string
+        enum: [USD, EUR, GBP, JPY]
+        required: false
+        default: USD
+      beneficiary_bank: string
+      beneficiary_account: string
+      source_account_id: string
+      reference_memo:
+        type: string
+        required: false
+      plan_hash:
+        type: string
+        pattern: "^[a-f0-9]{64}$"
+      approval_token_hash:
+        type: string
+        pattern: "^[a-f0-9]{64}$"
+      dual_approval_token_hash:
+        type: string
+        description: Required when amount_usd > 100,000.
+        pattern: "^[a-f0-9]{64}$"
+        required: false
+
+  InitiateWireResponse:
+    type: object
+    properties:
+      wire_id:
+        type: string
+      status:
+        type: string
+        enum: [initiated, pending, rejected, ofac_blocked]
+      amount_usd: number
+      currency:
+        type: string
+        enum: [USD, EUR, GBP, JPY]
+      beneficiary_bank: string
+      beneficiary_account: string
+      source_account_id: string
+      submitted_at: integer
+      mulesoft_reference: string
+
+  ErrorResponse:
+    type: object
+    properties:
+      error: string
+      message: string
+      missing_fields?:
+        type: array
+        items: string
+
+/wires:
+  post:
+    body:
+      application/json:
+        type: InitiateWireRequest
+    responses:
+      200:
+        body:
+          application/json:
+            type: InitiateWireResponse
+      400:
+        body:
+          application/json:
+            type: ErrorResponse
+      403:
+        body:
+          application/json:
+            type: ErrorResponse
+      451:
+        description: Blocked by OFAC SDN match.
+        body:
+          application/json:
+            type: ErrorResponse
+
+/health:
+  get:
+    responses:
+      200:
+        body:
+          application/json:
+            example: |
+              {"status": "ok", "mode": "dwolla-sandbox", "api": "initiate-wire-process-api", "version": "v3"}

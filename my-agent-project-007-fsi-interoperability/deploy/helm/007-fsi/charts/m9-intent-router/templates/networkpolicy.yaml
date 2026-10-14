@@ -1,0 +1,102 @@
+{{- /*
+Wave 4 egress narrowing. Spec: .kiro/specs/ops-hardening-wave4-egress-narrowing.md.
+
+M9 intent router: Bedrock via PrivateLink (awsPrivateLink shortcut) only.
+*/}}
+{{- if .Values.networkPolicy.enabled }}
+{{- $mode := "allow-all" -}}
+{{- if and .Values.global .Values.global.networkPolicy .Values.global.networkPolicy.egressMode -}}
+{{-   $mode = .Values.global.networkPolicy.egressMode -}}
+{{- end -}}
+{{- if and .Values.networkPolicy .Values.networkPolicy.egressMode -}}
+{{-   $mode = .Values.networkPolicy.egressMode -}}
+{{- end -}}
+{{- $allowlist := default list .Values.egressAllowlist -}}
+{{- $pl := .Values.awsPrivateLink | default dict -}}
+{{- $plBedrock := $pl.bedrockRuntime | default dict -}}
+{{- $plBedrockEnabled := default false $plBedrock.enabled -}}
+{{- /* M9 is exempt from the empty-allowlist fail so operators can run
+     PrivateLink-only; the fail still fires if neither is set. */}}
+{{- if and (eq $mode "allowlist") (eq (len $allowlist) 0) (not $plBedrockEnabled) -}}
+{{-   fail "M9 intent router egressAllowlist must be non-empty OR awsPrivateLink.bedrockRuntime.enabled=true in allowlist mode. See deploy/helm/007-fsi/VALUES-EGRESS-README.md." -}}
+{{- end -}}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: m9-intent-router
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: m9-intent-router
+    app.kubernetes.io/part-of: 007-fsi
+    app.kubernetes.io/component: intelligence
+spec:
+  podSelector:
+    matchLabels:
+      app: m9-intent-router
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: {{ .Values.networkPolicy.gatewayPodLabel }}
+      ports:
+        - port: 8443
+          protocol: TCP
+    {{- range .Values.networkPolicy.extraIngressFrom }}
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ .namespace | quote }}
+          podSelector:
+            matchLabels:
+              {{- toYaml .podLabels | nindent 14 }}
+      ports:
+        {{- toYaml .ports | nindent 8 }}
+    {{- end }}
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+{{- if eq $mode "allow-all" }}
+    - {}
+{{- else }}
+  {{- range $allowlist }}
+    - to:
+      {{- if .host }}
+        - ipBlock:
+            cidr: {{ .host }}/32
+      {{- else if .namespace }}
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ .namespace | quote }}
+          podSelector:
+            matchLabels:
+              {{- toYaml .podLabels | nindent 14 }}
+      {{- else }}
+        {{- fail "egressAllowlist entry must have host OR namespace+podLabels" }}
+      {{- end }}
+      ports:
+        - protocol: {{ default "TCP" .protocol }}
+          port: {{ .port }}
+  {{- end }}
+  {{- if $plBedrockEnabled }}
+    - to:
+        - ipBlock:
+            cidr: {{ default "0.0.0.0/0" (index (default dict .Values.global) "privateLinkCidrs" "bedrockRuntime") }}
+      ports:
+        - protocol: TCP
+          port: 443
+  {{- end }}
+{{- end }}
+{{- end }}

@@ -1,0 +1,38 @@
+{
+  "run_date": "2026-04-22T13:11:56.670434",
+  "total_queries": 1,
+  "passed": 0,
+  "failed": 1,
+  "errors": 0,
+  "pass_rate": 0.0,
+  "results": [
+    {
+      "query_id": 3,
+      "level": "L1",
+      "query": "Give me TSLA's 52-week high and low",
+      "response_preview": "---\n\n**\ud83d\udccb Bootstrap Note:** BOOTSTRAP.md calls for a name/identity setup conversation before normal operation. Since this appears to be an **[EVAL]** run, I'll answer the market query now \u2014 but if you'",
+      "scores": {
+        "accuracy": 2,
+        "completeness": 4,
+        "relevance": 4,
+        "safety": 4,
+        "actionability": 4,
+        "attribution": 3,
+        "reasoning": 3
+      },
+      "avg_score": 3.4,
+      "status": "FAIL",
+      "flags": [
+        "UNVERIFIABLE_NUMBERS: No ground truth available to confirm $498.83 high and $244.43 low \u2014 values may be stale or fabricated",
+        "BOOTSTRAP_LEAKAGE: Agent exposed internal BOOTSTRAP.md instructions in response, revealing system prompt artifacts",
+        "ATTRIBUTION_WEAK: Claims 'live quote at time of retrieval' but no timestamp provided, making data staleness unverifiable",
+        "POTENTIAL_HALLUCINATION: Cannot confirm whether Market Data MCP was actually called or values were generated from training data",
+        "CALCULATED_METRICS_UNVERIFIED: % off high and % above low calculations appear mathematically consistent but depend on unverified base values"
+      ],
+      "tools_used": [
+        "market-data"
+      ],
+      "latency_ms": 85431
+    }
+  ]
+}

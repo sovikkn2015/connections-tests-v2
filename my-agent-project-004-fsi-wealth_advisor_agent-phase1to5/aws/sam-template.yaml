@@ -1,0 +1,217 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Wealth Advisor Workbench — Frontend hosting + OAuth token proxy.
+  Deploys S3 bucket, CloudFront distribution (OAC), and a Lambda-backed
+  token proxy for Salesforce OAuth2 PKCE (avoids CORS on SF token endpoint).
+
+Parameters:
+  Stage:
+    Type: String
+    Default: prod
+    AllowedValues: [dev, staging, prod]
+    Description: Deployment stage name
+  EcaClientId:
+    Type: String
+    NoEcho: true
+    Default: CONFIGURE_AFTER_DEPLOY
+    Description: External Client App consumer key for Agent API
+  EcaClientSecret:
+    Type: String
+    NoEcho: true
+    Default: CONFIGURE_AFTER_DEPLOY
+    Description: External Client App consumer secret for Agent API
+
+Globals:
+  Function:
+    Timeout: 15
+    MemorySize: 128
+    Runtime: python3.10
+
+Resources:
+
+  # ────────── API Gateway ──────────
+  WealthAdvisorApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Sub "wa-workbench-api-${Stage}"
+      StageName: !Ref Stage
+      Auth:
+        DefaultAuthorizer: NONE
+      Cors:
+        AllowOrigin: "'*'"
+        AllowMethods: "'POST, OPTIONS'"
+        AllowHeaders: "'Content-Type'"
+
+  # ────────── OAuth Token Proxy ──────────
+  TokenProxyFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "wa-token-proxy-${Stage}"
+      Handler: index.handler
+      Runtime: python3.10
+      InlineCode: |
+        import json
+        import urllib.request
+        import urllib.parse
+        import os
+
+        SF_TOKEN_URL = os.environ.get("SF_TOKEN_URL", "https://orgfarm-035b70d101-dev-ed.develop.my.salesforce.com/services/oauth2/token")
+        ALLOWED_ORIGIN = os.environ.get("ALLOWED_ORIGIN", "*")
+
+        def handler(event, context):
+            headers = {
+                "Access-Control-Allow-Origin": ALLOWED_ORIGIN,
+                "Access-Control-Allow-Methods": "POST, OPTIONS",
+                "Access-Control-Allow-Headers": "Content-Type",
+            }
+            if event.get("httpMethod") == "OPTIONS":
+                return {"statusCode": 200, "headers": headers, "body": ""}
+            try:
+                # Check if this is an agent-token request
+                path = event.get("path", "") or event.get("resource", "")
+                if "agent-token" in path:
+                    eca_id = os.environ.get("ECA_CLIENT_ID", "")
+                    eca_secret = os.environ.get("ECA_CLIENT_SECRET", "")
+                    if not eca_id or not eca_secret or eca_id == "CONFIGURE_AFTER_DEPLOY":
+                        return {"statusCode": 500, "headers": headers, "body": json.dumps({"error": "ECA not configured"})}
+                    form = urllib.parse.urlencode({
+                        "grant_type": "client_credentials",
+                        "client_id": eca_id,
+                        "client_secret": eca_secret,
+                    }).encode("utf-8")
+                    req = urllib.request.Request(SF_TOKEN_URL, data=form,
+                        headers={"Content-Type": "application/x-www-form-urlencoded"}, method="POST")
+                    with urllib.request.urlopen(req, timeout=15) as resp:
+                        data = resp.read().decode("utf-8")
+                        return {"statusCode": 200, "headers": {**headers, "Content-Type": "application/json"}, "body": data}
+
+                body = event.get("body", "")
+                req = urllib.request.Request(
+                    SF_TOKEN_URL,
+                    data=body.encode("utf-8") if body else b"",
+                    headers={"Content-Type": "application/x-www-form-urlencoded"},
+                    method="POST",
+                )
+                with urllib.request.urlopen(req, timeout=10) as resp:
+                    data = resp.read().decode("utf-8")
+                    return {"statusCode": 200, "headers": {**headers, "Content-Type": "application/json"}, "body": data}
+            except urllib.error.HTTPError as e:
+                err_body = e.read().decode("utf-8") if e.fp else str(e)
+                return {"statusCode": e.code, "headers": headers, "body": err_body}
+            except Exception as e:
+                return {"statusCode": 500, "headers": headers, "body": json.dumps({"error": str(e)})}
+      Description: OAuth2 token exchange proxy — avoids CORS on SF token endpoint
+      Environment:
+        Variables:
+          SF_TOKEN_URL: https://orgfarm-035b70d101-dev-ed.develop.my.salesforce.com/services/oauth2/token
+          ALLOWED_ORIGIN: !Sub "https://${FrontendDistribution.DomainName}"
+          ECA_CLIENT_ID: !Ref EcaClientId
+          ECA_CLIENT_SECRET: !Ref EcaClientSecret
+      Events:
+        TokenExchange:
+          Type: Api
+          Properties:
+            RestApiId: !Ref WealthAdvisorApi
+            Path: /oauth/token
+            Method: POST
+        TokenPreflight:
+          Type: Api
+          Properties:
+            RestApiId: !Ref WealthAdvisorApi
+            Path: /oauth/token
+            Method: OPTIONS
+        AgentTokenExchange:
+          Type: Api
+          Properties:
+            RestApiId: !Ref WealthAdvisorApi
+            Path: /oauth/agent-token
+            Method: POST
+        AgentTokenPreflight:
+          Type: Api
+          Properties:
+            RestApiId: !Ref WealthAdvisorApi
+            Path: /oauth/agent-token
+            Method: OPTIONS
+
+  # ────────── Frontend S3 Bucket ──────────
+  FrontendBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "wa-workbench-${Stage}-${AWS::AccountId}"
+      WebsiteConfiguration:
+        IndexDocument: index.html
+        ErrorDocument: index.html
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  FrontendBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref FrontendBucket
+      PolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action: s3:GetObject
+            Resource: !Sub "${FrontendBucket.Arn}/*"
+            Condition:
+              StringEquals:
+                AWS:SourceArn: !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/${FrontendDistribution}"
+
+  # ────────── CloudFront OAC ──────────
+  FrontendOAC:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig:
+        Name: !Sub "wa-frontend-oac-${Stage}"
+        OriginAccessControlOriginType: s3
+        SigningBehavior: always
+        SigningProtocol: sigv4
+
+  # ────────── CloudFront Distribution ──────────
+  FrontendDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        DefaultRootObject: index.html
+        Origins:
+          - Id: S3Origin
+            DomainName: !GetAtt FrontendBucket.RegionalDomainName
+            OriginAccessControlId: !GetAtt FrontendOAC.Id
+            S3OriginConfig:
+              OriginAccessIdentity: ""
+        DefaultCacheBehavior:
+          TargetOriginId: S3Origin
+          ViewerProtocolPolicy: redirect-to-https
+          AllowedMethods: [GET, HEAD]
+          CachedMethods: [GET, HEAD]
+          ForwardedValues:
+            QueryString: false
+        CustomErrorResponses:
+          - ErrorCode: 403
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+          - ErrorCode: 404
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+        Comment: !Sub "Wealth Advisor Workbench - ${Stage}"
+
+Outputs:
+  ApiGatewayUrl:
+    Description: API Gateway endpoint URL (token proxy)
+    Value: !Sub "https://${WealthAdvisorApi}.execute-api.${AWS::Region}.amazonaws.com/${Stage}"
+  FrontendUrl:
+    Description: Frontend CloudFront URL
+    Value: !Sub "https://${FrontendDistribution.DomainName}"
+  FrontendBucketName:
+    Description: S3 bucket for frontend assets
+    Value: !Ref FrontendBucket
+  CloudFrontDistributionId:
+    Description: CloudFront distribution ID (for cache invalidation)
+    Value: !Ref FrontendDistribution

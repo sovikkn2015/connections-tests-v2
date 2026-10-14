@@ -1,0 +1,429 @@
+{
+  "$defs": {
+    "ActionItem": {
+      "description": "Action item from an interaction.",
+      "properties": {
+        "description": {
+          "description": "Action item description.",
+          "title": "Description",
+          "type": "string"
+        },
+        "assigned_to": {
+          "description": "Person assigned to this action item.",
+          "title": "Assigned To",
+          "type": "string"
+        },
+        "due_date": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Due date for the action item.",
+          "title": "Due Date"
+        },
+        "status": {
+          "default": "pending",
+          "description": "Status: pending, in_progress, completed, cancelled.",
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "description",
+        "assigned_to"
+      ],
+      "title": "ActionItem",
+      "type": "object"
+    },
+    "Attendee": {
+      "description": "Person who attended an interaction.",
+      "properties": {
+        "name": {
+          "description": "Attendee name.",
+          "title": "Name",
+          "type": "string"
+        },
+        "role": {
+          "description": "Role: client, spouse, advisor, associate, specialist, attorney, cpa, other.",
+          "title": "Role",
+          "type": "string"
+        },
+        "canonical_ref": {
+          "anyOf": [
+            {
+              "format": "uuid",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Canonical ID if known.",
+          "title": "Canonical Ref"
+        }
+      },
+      "required": [
+        "name",
+        "role"
+      ],
+      "title": "Attendee",
+      "type": "object"
+    },
+    "ComplianceReview": {
+      "description": "Principal review status for BD communications (FINRA 2210).",
+      "properties": {
+        "required": {
+          "description": "True if principal review is required.",
+          "title": "Required",
+          "type": "boolean"
+        },
+        "review_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Review queue ID.",
+          "title": "Review Id"
+        },
+        "status": {
+          "default": "not_required",
+          "description": "Status: not_required, pending, approved, rejected.",
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "required"
+      ],
+      "title": "ComplianceReview",
+      "type": "object"
+    },
+    "CrmWriteBack": {
+      "description": "Status of write-back to CRM systems.",
+      "properties": {
+        "salesforce_fsc": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CrmWriteBackEntry"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "SF FSC write-back status."
+        },
+        "wealthbox": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CrmWriteBackEntry"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Wealthbox write-back status."
+        },
+        "redtail": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CrmWriteBackEntry"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Redtail write-back status."
+        }
+      },
+      "title": "CrmWriteBack",
+      "type": "object"
+    },
+    "CrmWriteBackEntry": {
+      "description": "Write-back status for a single CRM vendor.",
+      "properties": {
+        "record_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "CRM record ID after write-back.",
+          "title": "Record Id"
+        },
+        "written_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "When write-back occurred.",
+          "title": "Written At"
+        },
+        "status": {
+          "default": "pending",
+          "description": "Write-back status: pending, written, failed.",
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "title": "CrmWriteBackEntry",
+      "type": "object"
+    }
+  },
+  "description": "Canonical meeting/interaction summary. CRM write-back. Principal review required for BD (FINRA 2210).",
+  "properties": {
+    "canonical_id": {
+      "description": "Primary key for this interaction summary.",
+      "format": "uuid",
+      "title": "Canonical Id",
+      "type": "string"
+    },
+    "client_ref": {
+      "description": "Canonical Client ID.",
+      "format": "uuid",
+      "title": "Client Ref",
+      "type": "string"
+    },
+    "household_ref": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Canonical Household ID.",
+      "title": "Household Ref"
+    },
+    "advisor_ref": {
+      "description": "Canonical Advisor ID (from M1 AID).",
+      "format": "uuid",
+      "title": "Advisor Ref",
+      "type": "string"
+    },
+    "interaction_type": {
+      "description": "Type: meeting, phone_call, email, chat, video_call, in_person.",
+      "title": "Interaction Type",
+      "type": "string"
+    },
+    "interaction_date": {
+      "description": "Date of the interaction.",
+      "format": "date",
+      "title": "Interaction Date",
+      "type": "string"
+    },
+    "start_time": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Interaction start time.",
+      "title": "Start Time"
+    },
+    "end_time": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Interaction end time.",
+      "title": "End Time"
+    },
+    "duration_minutes": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Duration in minutes.",
+      "title": "Duration Minutes"
+    },
+    "summary": {
+      "description": "Agent-generated summary (MNPI-filtered before storage).",
+      "title": "Summary",
+      "type": "string"
+    },
+    "topics_discussed": {
+      "description": "Topics discussed.",
+      "items": {
+        "type": "string"
+      },
+      "title": "Topics Discussed",
+      "type": "array"
+    },
+    "action_items": {
+      "description": "Action items from the interaction.",
+      "items": {
+        "$ref": "#/$defs/ActionItem"
+      },
+      "title": "Action Items",
+      "type": "array"
+    },
+    "attendees": {
+      "description": "People who attended.",
+      "items": {
+        "$ref": "#/$defs/Attendee"
+      },
+      "title": "Attendees",
+      "type": "array"
+    },
+    "sentiment": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Client sentiment: positive, neutral, concerned, negative.",
+      "title": "Sentiment"
+    },
+    "next_meeting_date": {
+      "anyOf": [
+        {
+          "format": "date",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Scheduled next meeting date.",
+      "title": "Next Meeting Date"
+    },
+    "crm_write_back": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/CrmWriteBack"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Status of write-back to CRM systems."
+    },
+    "compliance_review": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ComplianceReview"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Principal review status if BD (FINRA 2210)."
+    },
+    "channel": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Channel: slack, teams, whatsapp, web, email, phone, in_person.",
+      "title": "Channel"
+    },
+    "trace_id": {
+      "description": "Links to M10 audit trail.",
+      "title": "Trace Id",
+      "type": "string"
+    },
+    "source_system": {
+      "description": "Source system.",
+      "title": "Source System",
+      "type": "string"
+    },
+    "source_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Vendor-specific interaction ID.",
+      "title": "Source Id"
+    },
+    "created_at": {
+      "description": "Record creation timestamp.",
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "updated_at": {
+      "description": "Record last update timestamp.",
+      "format": "date-time",
+      "title": "Updated At",
+      "type": "string"
+    }
+  },
+  "required": [
+    "canonical_id",
+    "client_ref",
+    "advisor_ref",
+    "interaction_type",
+    "interaction_date",
+    "summary",
+    "trace_id",
+    "source_system",
+    "created_at",
+    "updated_at"
+  ],
+  "title": "InteractionSummary",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://007.fsi/schemas/canonical/interaction-summary/v0.1.0"
+}

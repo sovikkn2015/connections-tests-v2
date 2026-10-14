@@ -1,0 +1,38 @@
+{
+  "run_date": "2026-04-22T19:33:23.064400",
+  "total_queries": 1,
+  "passed": 1,
+  "failed": 0,
+  "errors": 0,
+  "pass_rate": 100.0,
+  "results": [
+    {
+      "query_id": 67,
+      "level": "L3",
+      "query": "If NVDA drops 15% post-earnings, which clients lose more than $100K?",
+      "response_preview": "This query **cannot be answered from the connected CRM** \u2014 and here's a precise accounting of why, plus what the data does support.\n\n---\n\n**Why this specific question is unanswerable from CRM:**\n\nThe ",
+      "scores": {
+        "accuracy": 4,
+        "completeness": 4,
+        "relevance": 5,
+        "safety": 5,
+        "actionability": 4,
+        "attribution": 4,
+        "reasoning": 5
+      },
+      "avg_score": 4.4,
+      "status": "PASS",
+      "flags": [
+        "NVDA price of $201.79 cannot be independently verified against ground truth \u2014 marked plausible but unconfirmed",
+        "Minor rounding: $201.79 * 0.85 = $171.52 checks out; $100K / $30.27 = 3,304 shares checks out; $201.79 * 3,304 = $667,115 checks out",
+        "No ground truth available to validate the CRM schema claim that FinServ__FinancialHolding__c does not exist \u2014 agent is asserting this confidently which could be wrong",
+        "Response correctly escalates the data gap rather than fabricating client names or positions"
+      ],
+      "tools_used": [
+        "market-data",
+        "salesforce-crm"
+      ],
+      "latency_ms": 85993
+    }
+  ]
+}

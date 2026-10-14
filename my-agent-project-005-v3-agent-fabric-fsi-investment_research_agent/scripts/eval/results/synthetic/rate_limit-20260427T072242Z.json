@@ -1,0 +1,17 @@
+{
+  "name": "rate_limit",
+  "passed": false,
+  "details": {
+    "mode": "live",
+    "route": "/sec-edgar/tools/call",
+    "total_sent": 60,
+    "elapsed_s": 2.213,
+    "status_2xx": 60,
+    "status_429": 0,
+    "status_other": 0,
+    "status_distribution": {
+      "200": 60
+    }
+  },
+  "error": null
+}

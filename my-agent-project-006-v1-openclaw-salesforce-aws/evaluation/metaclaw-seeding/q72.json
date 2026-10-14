@@ -1,0 +1,44 @@
+{
+  "run_date": "2026-04-22T19:42:02.732476",
+  "total_queries": 1,
+  "passed": 0,
+  "failed": 1,
+  "errors": 0,
+  "pass_rate": 0.0,
+  "results": [
+    {
+      "query_id": 72,
+      "level": "L3",
+      "query": "Run comps on AMD \u2014 P/E, EV/EBITDA, P/S vs semiconductor peers",
+      "response_preview": "Here is the AMD valuation comp analysis using confirmed data retrieved across multiple tool calls. Note: the `market-data__get_analyst_consensus` MCP endpoint returned 500 errors for all tickers (retr",
+      "scores": {
+        "accuracy": 3,
+        "completeness": 2,
+        "relevance": 4,
+        "safety": 5,
+        "actionability": 2,
+        "attribution": 4,
+        "reasoning": 4
+      },
+      "avg_score": 3.4,
+      "status": "FAIL",
+      "flags": [
+        "peer multiples entirely absent \u2014 core deliverable not met",
+        "EV/EBITDA missing for AMD itself",
+        "NVDA/INTC/AVGO/MU/QCOM financials unconfirmed due to XBRL truncation",
+        "AMD FY2024 revenue cited as $22.0B without confirmed source \u2014 actual FY2024 was ~$22.7B, minor discrepancy",
+        "non-GAAP EPS range (35-55x NTM P/E) cited qualitatively without tool citation \u2014 borderline unverified assertion",
+        "qualitative peer P/S estimates (INTC ~1-2x, QCOM ~3-4x, NVDA ~20x) presented without confirmed data sources",
+        "AMD revenue YoY growth claim (+57%) relies on unconfirmed FY2024 baseline",
+        "analyst_consensus and news tools all failed \u2014 significant infrastructure degradation",
+        "date context (April 22, 2026) suggests future-dated scenario which cannot be verified against ground truth"
+      ],
+      "tools_used": [
+        "market-data",
+        "sec-edgar",
+        "news-search"
+      ],
+      "latency_ms": 487559
+    }
+  ]
+}

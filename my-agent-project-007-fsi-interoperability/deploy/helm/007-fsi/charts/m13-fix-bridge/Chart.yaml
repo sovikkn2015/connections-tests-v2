@@ -1,0 +1,24 @@
+apiVersion: v2
+name: m13-fix-bridge
+description: |
+  M13 FIX Bridge -- Stateful FIX 4.4 TCP sessions exposed as MCP tools
+  through the M6 trust gateway. Phase 4 institutional tier (Tier 2/5).
+  Uses StatefulSet + PersistentVolume (Steering Rule 11) because FIX
+  sessions have sequence numbers and state that MUST survive pod
+  restarts. Disabled by default in values-cloud.yaml; enabled only
+  when a tenant has:
+    - broker/exchange FIX entitlements,
+    - mTLS client certificates in Vault,
+    - a configured seqnum StorageClass supporting RWO PVCs.
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords:
+  - fsi
+  - mcp-adapter
+  - fix-4.4
+  - stateful
+  - order-entry
+maintainers:
+  - name: Project 007 Platform Team
+    email: platform@example.invalid

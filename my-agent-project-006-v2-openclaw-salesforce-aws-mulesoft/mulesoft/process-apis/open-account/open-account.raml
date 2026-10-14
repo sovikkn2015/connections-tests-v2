@@ -1,0 +1,95 @@
+#%RAML 1.0
+title: Open Account Process API
+version: v1
+baseUri: /api
+mediaType: application/json
+description: |
+  Project 006 v2 - MuleSoft Process API for open_account action.
+  Mock backend: returns canned account_number/status. Real core-banking + custodian integration
+  is a later step.
+  All calls originate from the mulesoft-actions Lambda (MCP server).
+  HITL approval is verified upstream; this API only enforces shape + presence of approval_token_hash.
+
+types:
+  OpenAccountRequest:
+    type: object
+    additionalProperties: false
+    properties:
+      client_id:
+        type: string
+      account_type:
+        type: string
+        enum: [BROKERAGE, MANAGED, IRA, ROTH_IRA, TRUST, "529"]
+      jurisdiction:
+        type: string
+        description: ISO 3166-1 alpha-2 country code
+        pattern: "^[A-Z]{2}$"
+      risk_profile:
+        type: string
+        enum: [CONSERVATIVE, MODERATE, AGGRESSIVE]
+        required: false
+      approval_token_hash:
+        type: string
+        description: SHA-256 hex digest of the raw ApprovalToken.
+        pattern: "^[a-f0-9]{64}$"
+
+  OpenAccountResponse:
+    type: object
+    properties:
+      account_number:
+        type: string
+        example: MULE-ACCT-A1B2C3D4E5
+      status:
+        type: string
+        enum: [OPEN]
+      account_type:
+        type: string
+        enum: [BROKERAGE, MANAGED, IRA, ROTH_IRA, TRUST, "529"]
+      jurisdiction: string
+      opened_at:
+        type: integer
+        description: Unix epoch seconds
+      mulesoft_reference:
+        type: string
+
+  ErrorResponse:
+    type: object
+    properties:
+      error: string
+      message: string
+      missing_fields?:
+        type: array
+        items: string
+
+/accounts:
+  post:
+    description: Open a new account. Mock returns a canned account number.
+    body:
+      application/json:
+        type: OpenAccountRequest
+    responses:
+      200:
+        description: Account opened.
+        body:
+          application/json:
+            type: OpenAccountResponse
+      400:
+        description: Missing required fields or invalid shape (e.g. non-2-letter jurisdiction).
+        body:
+          application/json:
+            type: ErrorResponse
+      403:
+        description: approval_token_hash missing.
+        body:
+          application/json:
+            type: ErrorResponse
+
+/health:
+  get:
+    description: Liveness probe.
+    responses:
+      200:
+        body:
+          application/json:
+            example: |
+              {"status": "ok", "mode": "mock", "api": "open-account-process-api"}

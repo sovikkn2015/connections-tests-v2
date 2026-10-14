@@ -1,0 +1,342 @@
+system:
+    instructions: "You are a wealth advisor tool. You MUST use the available actions to answer every question. Call the action first, then present the results."
+    messages:
+        welcome: "Wealth Advisor Assistant (Phase 1-5) ready. Ask me about any client — lookups, portfolios, goals, meetings, rebalancing, transactions, compliance, referrals, market data, or financial news."
+        error: "Action failed. Please try again."
+
+config:
+    developer_name: "WA_P1to5_Advisor"
+    default_agent_user: "Sovik Nath"
+    agent_label: "WA P1to5 Advisor"
+    description: "Wealth advisor powered by Data Cloud with 12 topics"
+
+variables:
+    result: mutable string = ""
+        description: "Result from the last action call"
+
+language:
+    default_locale: "en_US"
+    additional_locales: ""
+    all_additional_locales: False
+
+start_agent topic_selector:
+    label: "Topic Selector"
+    description: "Route to the right topic"
+
+    reasoning:
+        instructions:|
+            Select the tool that best matches the user's message.
+        actions:
+            go_to_client_lookup: @utils.transition to @topic.client_lookup
+                description: "User wants to look up a client or household"
+            go_to_portfolio_review: @utils.transition to @topic.portfolio_review
+                description: "User wants to review a portfolio or check performance"
+            go_to_goal_planning: @utils.transition to @topic.goal_planning
+                description: "User wants to check financial goals or progress"
+            go_to_meeting_prep: @utils.transition to @topic.meeting_prep
+                description: "User wants to prepare for a client meeting"
+            go_to_rebalancing_alerts: @utils.transition to @topic.rebalancing_alerts
+                description: "User wants to check if a client needs rebalancing"
+            go_to_transaction_history: @utils.transition to @topic.transaction_history
+                description: "User wants to see recent transactions"
+            go_to_compliance_check: @utils.transition to @topic.compliance_check
+                description: "User wants to check compliance or suitability"
+            go_to_referral_tracking: @utils.transition to @topic.referral_tracking
+                description: "User wants to look up referral information"
+            go_to_market_data: @utils.transition to @topic.market_data
+                description: "User wants market data, stock quotes, or index performance"
+            go_to_market_news: @utils.transition to @topic.market_news
+                description: "User wants financial news or headlines"
+            go_to_escalation: @utils.transition to @topic.escalation
+                description: "User wants to speak to a human"
+            go_to_off_topic: @utils.transition to @topic.off_topic
+                description: "User request is off-topic"
+
+topic client_lookup:
+    label: "Client Lookup"
+    description: "Look up client and household information from Data Cloud"
+
+    actions:
+        get_client_360:
+            description: "Look up a client or household by name from Data Cloud. Returns household members, AUM, accounts."
+            inputs:
+                clientName: string
+                    description: "The client or household name"
+            outputs:
+                clientSummary: string
+                    description: "Complete client and household summary"
+            target: "apex://DC_ClientLookupAction"
+
+    reasoning:
+        instructions:->
+            if @variables.result:
+                | Here is the client information:
+                  {!@variables.result}
+            else:
+                | Use get_client_360 to look up the client. Extract the name from the user message and call the action immediately.
+        actions:
+            get_client_360: @actions.get_client_360
+                with clientName=...
+                set @variables.result = @outputs.clientSummary
+
+topic portfolio_review:
+    label: "Portfolio Review"
+    description: "Review portfolio allocation and performance from Data Cloud"
+
+    actions:
+        get_portfolio_summary:
+            description: "Get portfolio summary for a client from Data Cloud. Returns balances, allocation, and YTD returns."
+            inputs:
+                clientName: string
+                    description: "The client name"
+            outputs:
+                portfolioSummary: string
+                    description: "Portfolio summary"
+            target: "apex://DC_PortfolioReviewAction"
+
+    reasoning:
+        instructions:->
+            if @variables.result:
+                | Here is the portfolio summary:
+                  {!@variables.result}
+            else:
+                | Use get_portfolio_summary to look up the portfolio. Extract the client name and call the action immediately.
+        actions:
+            get_portfolio_summary: @actions.get_portfolio_summary
+                with clientName=...
+                set @variables.result = @outputs.portfolioSummary
+
+topic goal_planning:
+    label: "Goal Planning"
+    description: "Review financial goals and progress from Data Cloud"
+
+    actions:
+        get_financial_goals:
+            description: "Get financial goals for a client from Data Cloud. Returns targets, progress, and gap analysis."
+            inputs:
+                clientName: string
+                    description: "The client or household name"
+            outputs:
+                goalsSummary: string
+                    description: "Financial goals with progress"
+            target: "apex://DC_GoalPlanningAction"
+
+    reasoning:
+        instructions:->
+            if @variables.result:
+                | Here are the financial goals:
+                  {!@variables.result}
+            else:
+                | Use get_financial_goals to look up the goals. Extract the name and call the action immediately.
+        actions:
+            get_financial_goals: @actions.get_financial_goals
+                with clientName=...
+                set @variables.result = @outputs.goalsSummary
+
+topic meeting_prep:
+    label: "Meeting Prep"
+    description: "Prepare a meeting brief from Data Cloud"
+
+    actions:
+        get_meeting_prep:
+            description: "Generate a meeting preparation brief from Data Cloud. Returns client summary, portfolio, goals, and talking points."
+            inputs:
+                clientName: string
+                    description: "The client name"
+            outputs:
+                meetingBrief: string
+                    description: "Complete meeting brief"
+            target: "apex://DC_MeetingPrepAction"
+
+    reasoning:
+        instructions:->
+            if @variables.result:
+                | Here is the meeting brief:
+                  {!@variables.result}
+            else:
+                | Use get_meeting_prep to prepare the brief. Extract the client name and call the action immediately.
+        actions:
+            get_meeting_prep: @actions.get_meeting_prep
+                with clientName=...
+                set @variables.result = @outputs.meetingBrief
+
+topic rebalancing_alerts:
+    label: "Rebalancing Alerts"
+    description: "Check if a client's portfolio needs rebalancing based on drift from target allocation"
+
+    actions:
+        check_rebalancing:
+            description: "Analyze portfolio drift from target allocation based on risk profile. Flags accounts drifting >5% from target."
+            inputs:
+                clientName: string
+                    description: "The client name"
+            outputs:
+                rebalancingAnalysis: string
+                    description: "Drift analysis per account"
+            target: "apex://DC_RebalancingAction"
+
+    reasoning:
+        instructions:->
+            if @variables.result:
+                | Here is the rebalancing analysis:
+                  {!@variables.result}
+            else:
+                | Use check_rebalancing to analyze the portfolio. Extract the client name and call the action immediately.
+        actions:
+            check_rebalancing: @actions.check_rebalancing
+                with clientName=...
+                set @variables.result = @outputs.rebalancingAnalysis
+
+topic transaction_history:
+    label: "Transaction History"
+    description: "View recent transactions for a client from Data Cloud"
+
+    actions:
+        get_transactions:
+            description: "Get recent transactions for a client from Data Cloud. Returns last 10 transactions with summary totals."
+            inputs:
+                clientName: string
+                    description: "The client name"
+            outputs:
+                transactionHistory: string
+                    description: "Recent transactions with totals"
+            target: "apex://DC_TransactionHistoryAction"
+
+    reasoning:
+        instructions:->
+            if @variables.result:
+                | Here is the transaction history:
+                  {!@variables.result}
+            else:
+                | Use get_transactions to look up transactions. Extract the client name and call the action immediately.
+        actions:
+            get_transactions: @actions.get_transactions
+                with clientName=...
+                set @variables.result = @outputs.transactionHistory
+
+topic compliance_check:
+    label: "Compliance Check"
+    description: "Run suitability and compliance checks on a client's accounts"
+
+    actions:
+        run_compliance:
+            description: "Check suitability, concentration risk, and allocation compliance. Returns pass/fail with specific violations."
+            inputs:
+                clientName: string
+                    description: "The client or household name"
+            outputs:
+                complianceReport: string
+                    description: "Compliance check results"
+            target: "apex://DC_ComplianceCheckAction"
+
+    reasoning:
+        instructions:->
+            if @variables.result:
+                | Here is the compliance report:
+                  {!@variables.result}
+            else:
+                | Use run_compliance to check compliance. Extract the client name and call the action immediately.
+        actions:
+            run_compliance: @actions.run_compliance
+                with clientName=...
+                set @variables.result = @outputs.complianceReport
+
+topic referral_tracking:
+    label: "Referral Tracking"
+    description: "Look up referral information for a client or household"
+
+    actions:
+        get_referrals:
+            description: "Get referral source, type, date, status, and estimated value for a household from Data Cloud."
+            inputs:
+                clientName: string
+                    description: "The client or household name"
+            outputs:
+                referralInfo: string
+                    description: "Referral tracking information"
+            target: "apex://DC_ReferralTrackingAction"
+
+    reasoning:
+        instructions:->
+            if @variables.result:
+                | Here is the referral information:
+                  {!@variables.result}
+            else:
+                | Use get_referrals to look up referrals. Extract the name and call the action immediately.
+        actions:
+            get_referrals: @actions.get_referrals
+                with clientName=...
+                set @variables.result = @outputs.referralInfo
+
+topic market_data:
+    label: "Market Data"
+    description: "Get real-time stock quotes, index values, and market data"
+
+    actions:
+        get_market_data:
+            description: "Fetch real-time market data including stock quotes and index values. Supports ticker symbols and common names like S&P 500, Apple, Dow."
+            inputs:
+                query: string
+                    description: "Ticker symbol, index name, or company name"
+            outputs:
+                marketSummary: string
+                    description: "Market data with price, change, and volume"
+            target: "apex://DC_MarketDataAction"
+
+    reasoning:
+        instructions:->
+            if @variables.result:
+                | Here is the market data:
+                  {!@variables.result}
+            else:
+                | Use get_market_data to fetch the requested market information. Extract the ticker symbol or company name from the user message.
+        actions:
+            get_market_data: @actions.get_market_data
+                with query=...
+                set @variables.result = @outputs.marketSummary
+
+topic market_news:
+    label: "Market News"
+    description: "Search for financial news articles by company, ticker, or topic"
+
+    actions:
+        search_news:
+            description: "Search for financial news articles. Returns top 5 headlines with title, source, date, and snippet."
+            inputs:
+                query: string
+                    description: "Company name, ticker symbol, or financial topic"
+            outputs:
+                newsSummary: string
+                    description: "Top headlines with summaries"
+            target: "apex://DC_NewsSearchAction"
+
+    reasoning:
+        instructions:->
+            if @variables.result:
+                | Here are the latest news articles:
+                  {!@variables.result}
+            else:
+                | Use search_news to find relevant news. Extract the company name, ticker, or topic from the user message.
+        actions:
+            search_news: @actions.search_news
+                with query=...
+                set @variables.result = @outputs.newsSummary
+
+topic escalation:
+    label: "Escalation"
+    description: "Transfer to a human specialist"
+
+    reasoning:
+        instructions:->
+            | Escalate immediately.
+        actions:
+            escalate_to_human: @utils.escalate
+                description: "Transfer to human"
+
+topic off_topic:
+    label: "Off Topic"
+    description: "Redirect off-topic requests"
+
+    reasoning:
+        instructions:->
+            | I can help with client lookups, portfolio reviews, goal planning, meeting prep, rebalancing analysis, transaction history, compliance checks, referral tracking, market data, and financial news.

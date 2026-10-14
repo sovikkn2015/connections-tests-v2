@@ -1,0 +1,93 @@
+# Credentials — NEVER commit
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+samconfig.toml
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+.pytest_cache/
+.venv/
+venv/
+env/
+.coverage
+htmlcov/
+
+# Node / React
+node_modules/
+frontend/dist/
+frontend/.vite/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# AWS SAM
+.aws-sam/
+packaged.yaml
+
+# Maven / MuleSoft
+mulesoft/**/target/
+mulesoft/**/.mule/
+mulesoft/**/.anypoint-settings.xml
+
+# Salesforce
+.sfdx/
+.sf/
+deploy-options.json
+retrieved/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# CDK
+cdk.out/
+cdk.context.json
+
+# LLMJ review outputs (regenerated each run)
+tests/llmj/reports/*.json
+tests/llmj/reports/*.md
+!tests/llmj/reports/.gitkeep
+
+# Build artifact dirs from CDK experimental runs
+aws/cdk/cdk.out/
+aws/cdk/cdk.out.kb/
+aws/cdk/cdk.out.research/
+
+# Scripts temp scratch (never a real config)
+scripts/_cors.json
+
+# Python venv
+.venv/
+
+# Finch / Docker working dir
+.finch/
+
+# Playwright E2E outputs (regenerated each run)
+e2e-report/
+test-results/
+playwright-report/

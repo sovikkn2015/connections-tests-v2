@@ -1,0 +1,85 @@
+{
+  "mcpServers": {
+    "market-data": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@anthropic/mcp-server-market-data"
+      ],
+      "env": {
+        "ALPHA_VANTAGE_API_KEY": "${ALPHA_VANTAGE_API_KEY}",
+        "MARKET_DATA_BASE_URL": "https://www.alphavantage.co/query",
+        "RATE_LIMIT_PER_MINUTE": "5",
+        "CACHE_TTL_SECONDS": "300"
+      },
+      "description": "MCP server for real-time and historical market data via Alpha Vantage API",
+      "capabilities": {
+        "tools": [
+          {
+            "name": "get_stock_quote",
+            "description": "Get real-time stock quote for a given ticker symbol",
+            "inputSchema": {
+              "type": "object",
+              "properties": {
+                "symbol": {
+                  "type": "string",
+                  "description": "Stock ticker symbol (e.g., AAPL, MSFT, SPY)"
+                }
+              },
+              "required": ["symbol"]
+            }
+          },
+          {
+            "name": "get_market_index",
+            "description": "Get current value and daily change for a market index",
+            "inputSchema": {
+              "type": "object",
+              "properties": {
+                "index": {
+                  "type": "string",
+                  "description": "Market index symbol (e.g., SPX, DJI, IXIC)",
+                  "enum": ["SPX", "DJI", "IXIC", "RUT"]
+                }
+              },
+              "required": ["index"]
+            }
+          },
+          {
+            "name": "get_historical_prices",
+            "description": "Get historical daily prices for a ticker over a date range",
+            "inputSchema": {
+              "type": "object",
+              "properties": {
+                "symbol": {
+                  "type": "string",
+                  "description": "Stock ticker symbol"
+                },
+                "period": {
+                  "type": "string",
+                  "description": "Time period for historical data",
+                  "enum": ["1W", "1M", "3M", "6M", "1Y", "5Y"]
+                }
+              },
+              "required": ["symbol", "period"]
+            }
+          },
+          {
+            "name": "get_sector_performance",
+            "description": "Get performance breakdown by market sector",
+            "inputSchema": {
+              "type": "object",
+              "properties": {
+                "period": {
+                  "type": "string",
+                  "description": "Performance period",
+                  "enum": ["realtime", "1D", "5D", "1M", "3M", "YTD", "1Y"]
+                }
+              },
+              "required": ["period"]
+            }
+          }
+        ]
+      }
+    }
+  }
+}

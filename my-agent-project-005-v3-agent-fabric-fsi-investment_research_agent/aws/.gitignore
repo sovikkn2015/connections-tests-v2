@@ -1,0 +1,5 @@
+.aws-sam/
+.env
+samconfig.toml
+__pycache__/
+*.pyc

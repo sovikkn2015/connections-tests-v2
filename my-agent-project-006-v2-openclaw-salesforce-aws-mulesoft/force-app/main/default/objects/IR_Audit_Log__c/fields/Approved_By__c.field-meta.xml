@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Approved_By__c</fullName>
+    <description>SF User Id of the first approver for this Phase 6 action. Required for MuleSoft writes. Never contains the raw HITL approval token.</description>
+    <externalId>false</externalId>
+    <label>Approved By</label>
+    <referenceTo>User</referenceTo>
+    <relationshipLabel>Approved Audit Logs</relationshipLabel>
+    <relationshipName>Approved_Audit_Logs</relationshipName>
+    <required>false</required>
+    <type>Lookup</type>
+</CustomField>

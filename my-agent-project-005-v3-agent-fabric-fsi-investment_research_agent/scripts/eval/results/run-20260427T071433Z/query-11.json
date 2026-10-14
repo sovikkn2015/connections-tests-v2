@@ -1,0 +1,26 @@
+{
+  "id": 11,
+  "text": "NVDA latest 10-K filing",
+  "expected_category": "sec_filing",
+  "expected_path": "ORCH->GW->MCP:sec-edgar.get_10k",
+  "judge_pass": true,
+  "judge_score": 0.95,
+  "judge_reason": "Response correctly identifies the filing type (10-K) and company (NVIDIA CORP) with multiple data points including accession numbers, filing",
+  "response_excerpt": "{\"tool\": \"get_10k\", \"ticker\": \"NVDA\", \"filings\": [{\"accession_number\": \"0001045810-26-000021\", \"filing_date\": \"2026-02-25\", \"form_type\": \"10-K\", \"company_name\": \"NVIDIA CORP\", \"description\": \"10-K\"}, {\"accession_number\": \"0001045810-25-0000",
+  "latency_ms": 2099,
+  "http_status": 200,
+  "status_verdict": "PASS",
+  "skip_reason": null,
+  "tool_calls": [
+    "sec-edgar.get_10k"
+  ],
+  "langfuse_trace_id": "de4b475b-a3d6-4497-8015-8b6d683a0a79",
+  "audit_records_found": 0,
+  "audit_has_gateway_stage": false,
+  "mnpi_redactions_observed": 0,
+  "circuit_breaker_tripped": false,
+  "v2_status": "DEGRADED",
+  "error": null,
+  "mcp_direct_route": "/sec-edgar/tools/call",
+  "mcp_direct_correlation_id": "de4b475b-a3d6-4497-8015-8b6d683a0a79"
+}

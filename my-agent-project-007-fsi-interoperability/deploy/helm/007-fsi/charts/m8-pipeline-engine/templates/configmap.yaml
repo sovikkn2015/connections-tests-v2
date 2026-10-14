@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: m8-pipeline-engine-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: m8-pipeline-engine
+    app.kubernetes.io/part-of: 007-fsi
+    app.kubernetes.io/component: intelligence
+data:
+  # Non-secret runtime configuration (R3.1-R3.11, R4.8).
+  # Vault paths are NOT secrets; the Vault VALUES behind them are.
+  AWS_REGION: {{ .Values.config.awsRegion | quote }}
+  M8_MODEL_PROVIDER: {{ .Values.config.modelProvider | quote }}
+  M8_MODEL_ID: {{ .Values.config.modelId | quote }}
+  M8_CHECKPOINTER_BACKEND: {{ .Values.config.checkpointerBackend | quote }}
+  M8_CHECKPOINTER_DSN_VAULT_PATH: {{ .Values.config.checkpointerDsnVaultPath | quote }}
+  M8_HITL_HMAC_KEY_VAULT_PATH: {{ .Values.config.hitlHmacKeyVaultPath | quote }}
+  M8_GATEWAY_BASE_URL: {{ .Values.config.gatewayBaseUrl | quote }}
+  M8_AUDIT_BASE_URL: {{ .Values.config.auditBaseUrl | quote }}
+  M8_HITL_TIMEOUT_SECONDS: {{ .Values.config.hitlTimeoutSeconds | quote }}
+  M8_MAX_WALL_CLOCK_SECONDS: {{ .Values.config.maxWallClockSeconds | quote }}
+  M8_ALERT_WALL_CLOCK_SECONDS: {{ .Values.config.alertWallClockSeconds | quote }}
+  schemaVersion: {{ .Values.config.schemaVersion | quote }}
+  configSchemaVersion: {{ .Values.config.configSchemaVersion | quote }}

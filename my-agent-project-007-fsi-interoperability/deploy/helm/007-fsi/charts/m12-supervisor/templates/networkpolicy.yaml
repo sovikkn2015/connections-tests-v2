@@ -1,0 +1,89 @@
+{{- /*
+Wave 4 egress narrowing. Spec: .kiro/specs/ops-hardening-wave4-egress-narrowing.md.
+
+M12 supervisor: intra-cluster egress to M8, M9, M6.
+*/}}
+{{- if .Values.networkPolicy.enabled }}
+{{- $mode := "allow-all" -}}
+{{- if and .Values.global .Values.global.networkPolicy .Values.global.networkPolicy.egressMode -}}
+{{-   $mode = .Values.global.networkPolicy.egressMode -}}
+{{- end -}}
+{{- if and .Values.networkPolicy .Values.networkPolicy.egressMode -}}
+{{-   $mode = .Values.networkPolicy.egressMode -}}
+{{- end -}}
+{{- $allowlist := default list .Values.egressAllowlist -}}
+{{- if and (eq $mode "allowlist") (eq (len $allowlist) 0) -}}
+{{-   fail "M12 supervisor egressAllowlist must be non-empty in allowlist mode. See deploy/helm/007-fsi/VALUES-EGRESS-README.md." -}}
+{{- end -}}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: m12-supervisor
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: m12-supervisor
+    app.kubernetes.io/part-of: 007-fsi
+    app.kubernetes.io/component: intelligence
+spec:
+  podSelector:
+    matchLabels:
+      app: m12-supervisor
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: {{ .Values.networkPolicy.gatewayPodLabel }}
+      ports:
+        - port: 8443
+          protocol: TCP
+    {{- range .Values.networkPolicy.extraIngressFrom }}
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ .namespace | quote }}
+          podSelector:
+            matchLabels:
+              {{- toYaml .podLabels | nindent 14 }}
+      ports:
+        {{- toYaml .ports | nindent 8 }}
+    {{- end }}
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+{{- if eq $mode "allow-all" }}
+    - {}
+{{- else }}
+  {{- range $allowlist }}
+    - to:
+      {{- if .host }}
+        - ipBlock:
+            cidr: {{ .host }}/32
+      {{- else if .namespace }}
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ .namespace | quote }}
+          podSelector:
+            matchLabels:
+              {{- toYaml .podLabels | nindent 14 }}
+      {{- else }}
+        {{- fail "egressAllowlist entry must have host OR namespace+podLabels" }}
+      {{- end }}
+      ports:
+        - protocol: {{ default "TCP" .protocol }}
+          port: {{ .port }}
+  {{- end }}
+{{- end }}
+{{- end }}

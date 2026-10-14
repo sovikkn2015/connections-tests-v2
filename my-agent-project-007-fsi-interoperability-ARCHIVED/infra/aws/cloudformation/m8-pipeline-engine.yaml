@@ -1,0 +1,44 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: |
+  M8 Pipeline Engine — AWS resources.
+  Owner: intelligence-layer team.
+
+  Resources:
+    - Pipeline checkpoint DynamoDB table (LangGraph checkpointer backend)
+
+  Depends on: platform-common.
+
+Parameters:
+  Prefix:       { Type: String, Default: fsi007 }
+  Environment:  { Type: String, Default: dev }
+
+Resources:
+
+  PipelineCheckpoint:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub '${Prefix}-${Environment}-m8-pipeline-ckpt'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - { AttributeName: thread_id, AttributeType: S }
+        - { AttributeName: checkpoint_id, AttributeType: S }
+      KeySchema:
+        - { AttributeName: thread_id, KeyType: HASH }
+        - { AttributeName: checkpoint_id, KeyType: RANGE }
+      PointInTimeRecoverySpecification: { PointInTimeRecoveryEnabled: true }
+      SSESpecification:
+        SSEEnabled: true
+        SSEType: KMS
+        KMSMasterKeyId: !ImportValue '007-platform-KmsKeyId'
+      Tags:
+        - { Key: project, Value: '007' }
+        - { Key: environment, Value: !Ref Environment }
+        - { Key: module, Value: m8-pipeline-engine }
+
+Outputs:
+  PipelineCheckpointTableName:
+    Value: !Ref PipelineCheckpoint
+    Export: { Name: '007-m8-pipeline-engine-PipelineCheckpointTableName' }
+  PipelineCheckpointTableArn:
+    Value: !GetAtt PipelineCheckpoint.Arn
+    Export: { Name: '007-m8-pipeline-engine-PipelineCheckpointTableArn' }

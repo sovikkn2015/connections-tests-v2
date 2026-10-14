@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Volatility_Alert_Threshold_Pct__c</fullName>
+    <label>Volatility Alert Threshold (%)</label>
+    <type>Number</type>
+    <precision>5</precision>
+    <scale>2</scale>
+    <defaultValue>5.00</defaultValue>
+    <externalId>false</externalId>
+</CustomField>

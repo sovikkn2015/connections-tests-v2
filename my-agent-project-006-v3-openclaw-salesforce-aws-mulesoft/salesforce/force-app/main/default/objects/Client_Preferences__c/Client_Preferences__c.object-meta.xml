@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <deploymentStatus>Deployed</deploymentStatus>
+    <description>Per-household auto-send preferences for volatility and earnings alerts. Consumed by compliance_sweep when deciding whether a Client_Inquiry__c (type=alert) is eligible for automatic client notification. Standard sharing; all field-level edits auditable via enableHistory.</description>
+    <enableActivities>false</enableActivities>
+    <enableHistory>true</enableHistory>
+    <enableReports>true</enableReports>
+    <enableSearch>true</enableSearch>
+    <label>Client Preferences</label>
+    <nameField>
+        <displayFormat>CP-{00000000}</displayFormat>
+        <label>Preferences Number</label>
+        <type>AutoNumber</type>
+    </nameField>
+    <pluralLabel>Client Preferences</pluralLabel>
+    <sharingModel>ReadWrite</sharingModel>
+</CustomObject>

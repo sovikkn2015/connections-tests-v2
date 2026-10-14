@@ -1,0 +1,19 @@
+# Circuit Breaker — per MCP server
+apiVersion: gateway.mulesoft.com/v1alpha1
+kind: PolicyBinding
+metadata:
+  name: circuit-breaker
+spec:
+  targetRef:
+    kind: ApiInstance
+    name: fsi-mcp-servers
+  policyRef:
+    name: circuit-breaker
+  config:
+    failureThreshold: 3
+    recoveryTimeout: 120  # seconds
+    halfOpenRequests: 1
+    failureCondition:
+      statusCodes: [500, 502, 503, 504]
+      timeoutMs: 30000
+    tripAction: return-503

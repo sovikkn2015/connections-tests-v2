@@ -1,0 +1,149 @@
+{{- if .Values.m6McpGateway.enabled }}
+# M6 Trust-Aware MCP Gateway — THE CORE OF 007
+# Every MCP call passes through M6. No exceptions (Rule 4).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "007-platform.fullname" . }}-m6-mcp-gateway
+  labels:
+    {{- include "007-platform.labels" . | nindent 4 }}
+    {{- include "007-platform.selectorLabels" (dict "module" "m6-mcp-gateway" "context" .) | nindent 4 }}
+spec:
+  replicas: {{ .Values.m6McpGateway.replicas }}
+  selector:
+    matchLabels:
+      {{- include "007-platform.selectorLabels" (dict "module" "m6-mcp-gateway" "context" .) | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "007-platform.labels" . | nindent 8 }}
+        {{- include "007-platform.selectorLabels" (dict "module" "m6-mcp-gateway" "context" .) | nindent 8 }}
+    spec:
+      containers:
+        - name: m6-mcp-gateway
+          image: {{ include "007-platform.image" (dict "image" .Values.m6McpGateway.image "global" .Values.global) }}
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.m6McpGateway.port }}
+              protocol: TCP
+          env:
+            {{- range $key, $value := .Values.m6McpGateway.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+            - name: AGENT_RUNTIME
+              value: {{ .Values.global.agentRuntime | quote }}
+            - name: LLM_PROVIDER
+              value: {{ .Values.global.llmProvider | quote }}
+            - name: AWS_DEFAULT_REGION
+              value: {{ .Values.global.awsRegion | quote }}
+            {{- if .Values.tls.enabled }}
+            - name: TLS_CERT_PATH
+              value: "/etc/certs/tls.crt"
+            - name: TLS_KEY_PATH
+              value: "/etc/certs/tls.key"
+            {{- end }}
+          {{- if .Values.tls.enabled }}
+          volumeMounts:
+            - name: tls-certs
+              mountPath: /etc/certs
+              readOnly: true
+          {{- end }}
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            {{- toYaml .Values.m6McpGateway.resources | nindent 12 }}
+      {{- if .Values.tls.enabled }}
+      volumes:
+        - name: tls-certs
+          secret:
+            secretName: {{ include "007-platform.fullname" . }}-m6-mcp-gateway-tls
+      {{- end }}
+---
+{{- if .Values.tls.enabled }}
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ include "007-platform.fullname" . }}-m6-mcp-gateway-tls
+  labels:
+    {{- include "007-platform.labels" . | nindent 4 }}
+spec:
+  secretName: {{ include "007-platform.fullname" . }}-m6-mcp-gateway-tls
+  duration: {{ .Values.tls.duration }}
+  renewBefore: {{ .Values.tls.renewBefore }}
+  issuerRef:
+    name: {{ .Values.tls.issuerName }}
+    kind: {{ .Values.tls.issuerKind }}
+  dnsNames:
+    - {{ include "007-platform.fullname" . }}-m6-mcp-gateway
+    - {{ include "007-platform.fullname" . }}-m6-mcp-gateway.{{ .Release.Namespace }}.svc
+---
+{{- end }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "007-platform.fullname" . }}-m6-mcp-gateway
+  labels:
+    {{- include "007-platform.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.m6McpGateway.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "007-platform.selectorLabels" (dict "module" "m6-mcp-gateway" "context" .) | nindent 4 }}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "007-platform.fullname" . }}-m6-mcp-gateway
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "007-platform.selectorLabels" (dict "module" "m6-mcp-gateway" "context" .) | nindent 6 }}
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: m8-pipeline
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: m9-intent-router
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: m12-agent-runtime
+      ports:
+        - port: {{ .Values.m6McpGateway.port }}
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: m1-identity
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: m2-m4-policy
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: m10-audit-logger
+        # M11 adapters (Rule 4: all vendor calls through M6)
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/part-of: 007-fsi-platform
+              app.kubernetes.io/component: m11-adapter
+{{- end }}

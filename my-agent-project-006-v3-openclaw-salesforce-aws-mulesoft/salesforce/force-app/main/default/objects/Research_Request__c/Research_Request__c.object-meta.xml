@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <deploymentStatus>Deployed</deploymentStatus>
+    <description>Queued research ask originating from a client inquiry or demand-signal cluster. Sarah picks these up and can upgrade into a published Research_Brief__c. Drives Narrative 2 (client-driven research).</description>
+    <enableActivities>true</enableActivities>
+    <enableHistory>true</enableHistory>
+    <enableReports>true</enableReports>
+    <enableSearch>true</enableSearch>
+    <label>Research Request</label>
+    <nameField>
+        <displayFormat>RR-{00000000}</displayFormat>
+        <label>Request Number</label>
+        <type>AutoNumber</type>
+    </nameField>
+    <pluralLabel>Research Requests</pluralLabel>
+    <sharingModel>ReadWrite</sharingModel>
+</CustomObject>

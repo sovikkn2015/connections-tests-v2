@@ -1,0 +1,372 @@
+{
+  "$defs": {
+    "AssetClass": {
+      "description": "12 broad asset classifications for SecurityProfile.",
+      "enum": [
+        "equity",
+        "fixed_income",
+        "etf",
+        "mutual_fund",
+        "option",
+        "future",
+        "commodity",
+        "crypto",
+        "alternative",
+        "money_market",
+        "preferred_stock",
+        "reit"
+      ],
+      "title": "AssetClass",
+      "type": "string"
+    }
+  },
+  "description": "Canonical security/instrument reference data. is_restricted and mnpi_flag are MNPI indicators for M2/M4.",
+  "properties": {
+    "canonical_id": {
+      "description": "Primary key for this security profile.",
+      "format": "uuid",
+      "title": "Canonical Id",
+      "type": "string"
+    },
+    "ticker": {
+      "description": "Exchange ticker symbol.",
+      "title": "Ticker",
+      "type": "string"
+    },
+    "security_name": {
+      "description": "Full legal or display name.",
+      "title": "Security Name",
+      "type": "string"
+    },
+    "asset_class": {
+      "$ref": "#/$defs/AssetClass",
+      "description": "Broad asset classification."
+    },
+    "cusip": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "CUSIP identifier.",
+      "title": "Cusip"
+    },
+    "isin": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "ISIN identifier.",
+      "title": "Isin"
+    },
+    "figi": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "FIGI identifier.",
+      "title": "Figi"
+    },
+    "sedol": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "SEDOL identifier.",
+      "title": "Sedol"
+    },
+    "bloomberg_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Bloomberg ticker format.",
+      "title": "Bloomberg Id"
+    },
+    "exchange": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Primary exchange MIC code.",
+      "title": "Exchange"
+    },
+    "sector": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "GICS sector.",
+      "title": "Sector"
+    },
+    "industry": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "GICS industry.",
+      "title": "Industry"
+    },
+    "market_cap": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Market capitalization.",
+      "title": "Market Cap"
+    },
+    "pe_ratio": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Price-to-earnings ratio.",
+      "title": "Pe Ratio"
+    },
+    "eps": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Earnings per share.",
+      "title": "Eps"
+    },
+    "dividend_yield": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Annual yield as decimal.",
+      "title": "Dividend Yield"
+    },
+    "beta": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Beta relative to market.",
+      "title": "Beta"
+    },
+    "fifty_two_week_high": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "52-week high price.",
+      "title": "Fifty Two Week High"
+    },
+    "fifty_two_week_low": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "52-week low price.",
+      "title": "Fifty Two Week Low"
+    },
+    "avg_volume_30d": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "30-day average trading volume.",
+      "title": "Avg Volume 30D"
+    },
+    "shares_outstanding": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Total shares outstanding.",
+      "title": "Shares Outstanding"
+    },
+    "description": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Business description.",
+      "title": "Description"
+    },
+    "country": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "ISO-3166-1 alpha-2 domicile.",
+      "title": "Country"
+    },
+    "currency": {
+      "description": "ISO 4217 currency code.",
+      "title": "Currency",
+      "type": "string"
+    },
+    "is_restricted": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": false,
+      "description": "True if on firm restricted list. M2 OPA checks this. MNPI indicator.",
+      "title": "Is Restricted"
+    },
+    "restricted_since": {
+      "anyOf": [
+        {
+          "format": "date",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Date added to restricted list.",
+      "title": "Restricted Since"
+    },
+    "mnpi_flag": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": false,
+      "description": "True if MNPI exists for this security. M4 filters before LLM. MNPI indicator.",
+      "title": "Mnpi Flag"
+    },
+    "last_updated": {
+      "description": "When this profile was last updated.",
+      "format": "date-time",
+      "title": "Last Updated",
+      "type": "string"
+    },
+    "source_system": {
+      "description": "Source system that provided this security data.",
+      "title": "Source System",
+      "type": "string"
+    },
+    "source_id": {
+      "description": "Vendor-specific security ID.",
+      "title": "Source Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "canonical_id",
+    "ticker",
+    "security_name",
+    "asset_class",
+    "currency",
+    "last_updated",
+    "source_system",
+    "source_id"
+  ],
+  "title": "SecurityProfile",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://007.fsi/schemas/canonical/security-profile/v0.1.0"
+}

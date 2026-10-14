@@ -1,0 +1,79 @@
+apiVersion: v2
+name: 007-fsi
+description: |
+  Project 007 FSI Interoperability Platform -- Trust Layer umbrella chart.
+  Wave 1 scope: M1 Identity, M2/M4 Policy Engine, M6 MCP Gateway,
+  M10 Audit Logger. Cloud topology only. Hybrid / on-prem are shipped
+  in later waves.
+
+  Intelligence-layer sub-charts (M8 pipeline engine, M9 intent router,
+  M12 supervisor) are present in the tree from a separate wave and
+  declared here with `condition:` guards so they can be disabled from
+  values-cloud.yaml. Wave 1 keeps them disabled so trust-layer install
+  stays focused.
+type: application
+version: 0.1.0
+appVersion: "0.3.0"
+icon: https://example.invalid/007-fsi/icon.png
+keywords:
+  - fsi
+  - trust-layer
+  - mcp-gateway
+  - opa
+  - audit
+  - compliance
+maintainers:
+  - name: Project 007 Platform Team
+    email: platform@example.invalid
+home: https://example.invalid/007-fsi
+sources:
+  - https://example.invalid/007-fsi
+dependencies:
+  # ---- Wave 1 trust-layer sub-charts (always enabled) ----
+  - name: m1-identity
+    version: 0.1.0
+    repository: "file://charts/m1-identity"
+  - name: m2-m4-policy-engine
+    version: 0.1.0
+    repository: "file://charts/m2-m4-policy-engine"
+  - name: m6-mcp-gateway
+    version: 0.1.0
+    repository: "file://charts/m6-mcp-gateway"
+  - name: m10-audit-logger
+    version: 0.1.0
+    repository: "file://charts/m10-audit-logger"
+  # ---- Intelligence-layer sub-charts from a separate wave ----
+  # Declared for helm-v4 completeness; disabled in values-cloud.yaml by
+  # default. Ops Hardening Wave 1 does NOT install these.
+  - name: m8-pipeline-engine
+    version: 0.1.0
+    repository: "file://charts/m8-pipeline-engine"
+    condition: m8-pipeline-engine.enabled
+  - name: m9-intent-router
+    version: 0.1.0
+    repository: "file://charts/m9-intent-router"
+    condition: m9-intent-router.enabled
+  - name: m12-supervisor
+    version: 0.1.0
+    repository: "file://charts/m12-supervisor"
+    condition: m12-supervisor.enabled
+  # ---- Phase 4 institutional adapters -- disabled by default ----
+  # BLPAPI (Bloomberg) + gRPC (ICE Data) are sub-charts for the polyglot
+  # M11 Python half (Steering Rule 10). They ship disabled because most
+  # tenants don't have Bloomberg Terminal seats or ICE Data entitlements.
+  - name: m11-blpapi-adapter
+    version: 0.1.0
+    repository: "file://charts/m11-blpapi-adapter"
+    condition: m11-blpapi-adapter.enabled
+  - name: m11-grpc-adapter
+    version: 0.1.0
+    repository: "file://charts/m11-grpc-adapter"
+    condition: m11-grpc-adapter.enabled
+  # ---- Phase 4 M13 FIX Bridge ----
+  # Stateful FIX 4.4 TCP sessions. SEPARATE module from M11 (Steering
+  # Rule 11) -- StatefulSet + PersistentVolume. Disabled by default;
+  # enabled per-tenant when broker FIX entitlements are provisioned.
+  - name: m13-fix-bridge
+    version: 0.1.0
+    repository: "file://charts/m13-fix-bridge"
+    condition: m13-fix-bridge.enabled

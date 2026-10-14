@@ -1,0 +1,146 @@
+{
+  "$defs": {
+    "CostBasisMethod": {
+      "description": "5 cost basis methods. REQUIRED on TaxLot \u2014 wrong cost basis = wrong tax reporting = regulatory violation.",
+      "enum": [
+        "specific_lot",
+        "average_cost",
+        "fifo",
+        "lifo",
+        "hifo"
+      ],
+      "title": "CostBasisMethod",
+      "type": "string"
+    }
+  },
+  "description": "Individual tax lot within a holding. cost_basis_method is REQUIRED \u2014 wrong cost basis = wrong tax reporting = regulatory violation.",
+  "properties": {
+    "lot_id": {
+      "description": "Primary key for this tax lot.",
+      "format": "uuid",
+      "title": "Lot Id",
+      "type": "string"
+    },
+    "holding_ref": {
+      "description": "Canonical Holding ID this lot belongs to.",
+      "title": "Holding Ref",
+      "type": "string"
+    },
+    "security_ref": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Canonical security identifier.",
+      "title": "Security Ref"
+    },
+    "acquisition_date": {
+      "description": "Date the lot was acquired.",
+      "format": "date",
+      "title": "Acquisition Date",
+      "type": "string"
+    },
+    "acquisition_price": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Price per unit at acquisition.",
+      "title": "Acquisition Price"
+    },
+    "quantity": {
+      "description": "Number of shares/units in this lot.",
+      "title": "Quantity",
+      "type": "number"
+    },
+    "cost_basis_method": {
+      "$ref": "#/$defs/CostBasisMethod",
+      "description": "REQUIRED. Cost basis method \u2014 regulatory risk if missing. Custodian defaults: Schwab=specific_lot, Fidelity=average_cost (MF)/specific_lot (equities)."
+    },
+    "cost_basis_amount": {
+      "description": "Total cost basis for this lot.",
+      "title": "Cost Basis Amount",
+      "type": "number"
+    },
+    "holding_period": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Tax holding period: short_term, long_term, unknown.",
+      "title": "Holding Period"
+    },
+    "unrealized_gain_loss": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Unrealized gain/loss for this lot.",
+      "title": "Unrealized Gain Loss"
+    },
+    "wash_sale_disallowed": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Disallowed loss amount if wash sale applies.",
+      "title": "Wash Sale Disallowed"
+    },
+    "source_custodian": {
+      "description": "Which custodian provided this data.",
+      "title": "Source Custodian",
+      "type": "string"
+    },
+    "source_cost_basis_method": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Custodian's native method name (for reconciliation with canonical method).",
+      "title": "Source Cost Basis Method"
+    }
+  },
+  "required": [
+    "lot_id",
+    "holding_ref",
+    "acquisition_date",
+    "quantity",
+    "cost_basis_method",
+    "cost_basis_amount",
+    "source_custodian"
+  ],
+  "title": "TaxLot",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://007.fsi/schemas/canonical/tax-lot/v0.1.0"
+}

@@ -1,0 +1,39 @@
+{
+  "run_date": "2026-04-22T13:25:01.767997",
+  "total_queries": 1,
+  "passed": 0,
+  "failed": 1,
+  "errors": 0,
+  "pass_rate": 0.0,
+  "results": [
+    {
+      "query_id": 4,
+      "level": "L1",
+      "query": "What's the S&P 500 at?",
+      "response_preview": "Hey. I just came online \u2014 fresh workspace, no memory yet, still figuring out who I am. But you asked a real question, so let's lead with that:\n\n---\n\n**S&P 500 (^GSPC): 7,064.01**\n- Intraday High: 7,13",
+      "scores": {
+        "accuracy": 3,
+        "completeness": 3,
+        "relevance": 3,
+        "safety": 4,
+        "actionability": 3,
+        "attribution": 4,
+        "reasoning": 3
+      },
+      "avg_score": 3.3,
+      "status": "FAIL",
+      "flags": [
+        "cannot_verify_price_data",
+        "excessive_meta_commentary",
+        "identity_bootstrap_noise_unprofessional",
+        "persona_mismatch_pm_expects_clean_brief",
+        "unverified_volume_figure",
+        "chatty_tone_inappropriate_for_pm_persona"
+      ],
+      "tools_used": [
+        "market-data"
+      ],
+      "latency_ms": 51647
+    }
+  ]
+}

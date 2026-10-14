@@ -1,0 +1,137 @@
+{{- if .Values.m2m4Policy.enabled }}
+# M2/M4 Policy Engine — OPA/Rego compliance (Rule 5: NEVER LLM)
+# Depends on OPA sidecar for policy evaluation.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "007-platform.fullname" . }}-m2-m4-policy
+  labels:
+    {{- include "007-platform.labels" . | nindent 4 }}
+    {{- include "007-platform.selectorLabels" (dict "module" "m2-m4-policy" "context" .) | nindent 4 }}
+spec:
+  replicas: {{ .Values.m2m4Policy.replicas }}
+  selector:
+    matchLabels:
+      {{- include "007-platform.selectorLabels" (dict "module" "m2-m4-policy" "context" .) | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "007-platform.labels" . | nindent 8 }}
+        {{- include "007-platform.selectorLabels" (dict "module" "m2-m4-policy" "context" .) | nindent 8 }}
+    spec:
+      containers:
+        - name: m2-m4-policy
+          image: {{ include "007-platform.image" (dict "image" .Values.m2m4Policy.image "global" .Values.global) }}
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.m2m4Policy.port }}
+              protocol: TCP
+          env:
+            {{- range $key, $value := .Values.m2m4Policy.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+            - name: AGENT_RUNTIME
+              value: {{ .Values.global.agentRuntime | quote }}
+            - name: LLM_PROVIDER
+              value: {{ .Values.global.llmProvider | quote }}
+            - name: AWS_DEFAULT_REGION
+              value: {{ .Values.global.awsRegion | quote }}
+            {{- if .Values.tls.enabled }}
+            - name: TLS_CERT_PATH
+              value: "/etc/certs/tls.crt"
+            - name: TLS_KEY_PATH
+              value: "/etc/certs/tls.key"
+            {{- end }}
+          {{- if .Values.tls.enabled }}
+          volumeMounts:
+            - name: tls-certs
+              mountPath: /etc/certs
+              readOnly: true
+          {{- end }}
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            {{- toYaml .Values.m2m4Policy.resources | nindent 12 }}
+      {{- if .Values.tls.enabled }}
+      volumes:
+        - name: tls-certs
+          secret:
+            secretName: {{ include "007-platform.fullname" . }}-m2-m4-policy-tls
+      {{- end }}
+---
+{{- if .Values.tls.enabled }}
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ include "007-platform.fullname" . }}-m2-m4-policy-tls
+  labels:
+    {{- include "007-platform.labels" . | nindent 4 }}
+spec:
+  secretName: {{ include "007-platform.fullname" . }}-m2-m4-policy-tls
+  duration: {{ .Values.tls.duration }}
+  renewBefore: {{ .Values.tls.renewBefore }}
+  issuerRef:
+    name: {{ .Values.tls.issuerName }}
+    kind: {{ .Values.tls.issuerKind }}
+  dnsNames:
+    - {{ include "007-platform.fullname" . }}-m2-m4-policy
+    - {{ include "007-platform.fullname" . }}-m2-m4-policy.{{ .Release.Namespace }}.svc
+---
+{{- end }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "007-platform.fullname" . }}-m2-m4-policy
+  labels:
+    {{- include "007-platform.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.m2m4Policy.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "007-platform.selectorLabels" (dict "module" "m2-m4-policy" "context" .) | nindent 4 }}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "007-platform.fullname" . }}-m2-m4-policy
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "007-platform.selectorLabels" (dict "module" "m2-m4-policy" "context" .) | nindent 6 }}
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # M6 gateway and M8 pipeline call M2/M4 for policy evaluation
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: m6-mcp-gateway
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: m8-pipeline
+      ports:
+        - port: {{ .Values.m2m4Policy.port }}
+  egress:
+    - to:
+        # OPA sidecar for Rego policy evaluation
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: opa
+{{- end }}

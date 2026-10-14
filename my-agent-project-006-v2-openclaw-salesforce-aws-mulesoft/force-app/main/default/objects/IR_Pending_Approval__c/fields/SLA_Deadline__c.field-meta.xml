@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>SLA_Deadline__c</fullName>
+    <description>Deadline for the second approver. Default: created_at + 1 hour. After this, the record transitions to EXPIRED.</description>
+    <externalId>false</externalId>
+    <label>SLA Deadline</label>
+    <required>true</required>
+    <type>DateTime</type>
+</CustomField>

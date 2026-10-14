@@ -1,0 +1,40 @@
+{
+  "run_date": "2026-04-22T13:30:18.895665",
+  "total_queries": 1,
+  "passed": 0,
+  "failed": 1,
+  "errors": 0,
+  "pass_rate": 0.0,
+  "results": [
+    {
+      "query_id": 7,
+      "level": "L1",
+      "query": "Show me NVDA options chain for next Friday",
+      "response_preview": "> **Bootstrap note:** This workspace is fresh \u2014 no identity, user profile, or soul config yet. The BOOTSTRAP.md flow is a conversational onboarding (name, vibe, emoji, etc.) that needs a real back-and",
+      "scores": {
+        "accuracy": 2,
+        "completeness": 2,
+        "relevance": 3,
+        "safety": 3,
+        "actionability": 3,
+        "attribution": 3,
+        "reasoning": 2
+      },
+      "avg_score": 2.6,
+      "status": "FAIL",
+      "flags": [
+        "Primary request unfulfilled \u2014 options chain not retrieved",
+        "NVDA spot price ($199.90) cannot be verified against ground truth; may be stale or fabricated",
+        "ATM strike clustering ($197.50/$200/$202.50) is a generic inference, not sourced from actual chain data",
+        "Implied volatility commentary is qualitative and unsourced \u2014 potentially misleading for a PM making trading decisions",
+        "Bootstrap/onboarding preamble is irrelevant noise for an eval context and a professional PM",
+        "Expiry date cited as 2025-07-18 \u2014 correctness of 'next Friday' alignment unverified",
+        "Fallback retry logic described narratively but no actual retry data shown"
+      ],
+      "tools_used": [
+        "market-data"
+      ],
+      "latency_ms": 88680
+    }
+  ]
+}

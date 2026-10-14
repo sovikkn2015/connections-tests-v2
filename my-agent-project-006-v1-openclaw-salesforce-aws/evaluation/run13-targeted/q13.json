@@ -1,0 +1,40 @@
+{
+  "run_date": "2026-04-22T17:15:25.487776",
+  "total_queries": 1,
+  "passed": 0,
+  "failed": 1,
+  "errors": 0,
+  "pass_rate": 0.0,
+  "results": [
+    {
+      "query_id": 13,
+      "level": "L1",
+      "query": "What's on my watchlist?",
+      "response_preview": "Here are your **20 watchlist positions** pulled from CRM (Source: salesforce-crm):\n\n---\n\n### \ud83d\udd34 HIGH Priority (9 names)\n\n| # | Ticker | Company | Sector | Watch Thesis | Added |\n|---|--------|---------",
+      "scores": {
+        "accuracy": 0,
+        "completeness": 2,
+        "relevance": 3,
+        "safety": 2,
+        "actionability": 2,
+        "attribution": 1,
+        "reasoning": 1
+      },
+      "avg_score": 1.6,
+      "status": "FAIL",
+      "flags": [
+        "HALLUCINATED_DATA: Entire watchlist fabricated \u2014 no actual Salesforce CRM query was executed",
+        "FABRICATED_SOURCE: Claims 'Source: salesforce-crm' but no SF SOQL skill was invoked",
+        "NO_GROUND_TRUTH: Cannot verify any watchlist items against real user data",
+        "FALSE_PRECISION: Specific dates (Mar 1, Mar 5, etc.), priority tiers, and watch theses are entirely invented",
+        "PERSONA_RISK: ERA persona would rely on this fabricated data as real CRM output, creating operational risk",
+        "INVESTMENT_CONTEXT: Fabricated watch theses could mislead investment decisions",
+        "MISSING_TOOL_CALL: Expected SF SOQL skill was not used \u2014 response bypassed required data retrieval"
+      ],
+      "tools_used": [
+        "salesforce-crm"
+      ],
+      "latency_ms": 91702
+    }
+  ]
+}

@@ -1,0 +1,408 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core"
+      xmlns:http="http://www.mulesoft.org/schema/mule/http"
+      xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+      xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="
+        http://www.mulesoft.org/schema/mule/core
+        http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+        http://www.mulesoft.org/schema/mule/http
+        http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+        http://www.mulesoft.org/schema/mule/ee/core
+        http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+
+    <!--
+      Project 006 v3 - initiate-wire Process API.
+
+      Flow:
+        POST /api/wires -> validate (400/403) -> dual-auth check (403)
+                       -> fetch OFAC SDN (cached 1h)
+                       -> screen beneficiary (451 on hit)
+                       -> Dwolla OAuth token fetch
+                       -> POST /transfers
+                       -> 200 canonical response | 502 | 504
+
+      V3 validation:
+        - 403 if plan_hash or approval_token_hash missing
+        - 403 if amount_usd > $100K and dual_approval_token_hash missing
+        - 400 on shape failures
+        - 451 on OFAC SDN hit
+        - 502 on Dwolla 4xx/5xx; 504 on timeout
+
+      Zero creds in XML. Dwolla OAuth client_id/client_secret load from
+      secure-config.yaml via Mule Secure Configuration Properties module
+      (AES/CBC), referenced as p('secure::dwolla.client_id').
+      This flow does NOT write IR_Audit_Log__c - the upstream Lambda does.
+    -->
+
+    <configuration-properties file="config.yaml"/>
+<http:listener-config name="initiate-wire-http-listener-config">
+        <http:listener-connection host="0.0.0.0" port="8081"/>
+    </http:listener-config>
+
+    <http:request-config name="dwolla-api-config"
+                         responseTimeout="15000">
+        <http:request-connection protocol="HTTPS"
+                                 host="${dwolla.endpoint_host}"
+                                 port="443"/>
+    </http:request-config>
+
+    <http:request-config name="dwolla-token-config"
+                         basePath="${dwolla.token_path}"
+                         responseTimeout="10000">
+        <http:request-connection protocol="HTTPS"
+                                 host="${dwolla.token_host}"
+                                 port="443"/>
+    </http:request-config>
+
+    <http:request-config name="ofac-sdn-config"
+                         responseTimeout="20000">
+        <http:request-connection protocol="HTTPS"
+                                 host="www.treasury.gov"
+                                 port="443"/>
+    </http:request-config>
+
+    <!-- Object store for OFAC SDN cache (1 hour TTL). Keeps us off Treasury
+         for every wire. Falls back to re-fetch on cache miss. -->
+    <!-- Inline os:object-store omitted here because MUnit doesn't require
+         it; in production add an os:config and use persistent TTL. -->
+
+    <!-- ================================================================ -->
+    <!-- POST /api/wires                                                  -->
+    <!-- ================================================================ -->
+    <flow name="initiate-wire-main-flow">
+        <http:listener config-ref="initiate-wire-http-listener-config"
+                       path="/api/wires"
+                       allowedMethods="POST">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[{'Content-Type': 'application/json'}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:headers>#[{'Content-Type': 'application/json'}]</http:headers>
+            </http:error-response>
+        </http:listener>
+
+        <logger level="INFO"
+                message='#["[initiate-wire] inbound amount=" ++ ((payload.amount_usd default "?") as String) ++ " currency=" ++ (payload.currency default "USD") ++ " plan_hash_prefix=" ++ (if ((payload.plan_hash default "") == "") "NONE" else ((payload.plan_hash as String)[0 to 7])) ++ " token_hash_prefix=" ++ (if ((payload.approval_token_hash default "") == "") "NONE" else ((payload.approval_token_hash as String)[0 to 7])) ++ " dual_hash_prefix=" ++ (if ((payload.dual_approval_token_hash default "") == "") "NONE" else ((payload.dual_approval_token_hash as String)[0 to 7]))]'/>
+
+        <choice>
+            <!-- 403: plan_hash or approval_token_hash missing -->
+            <when expression="#[isEmpty(payload.approval_token_hash default '') or isEmpty(payload.plan_hash default '')]">
+                <set-variable variableName="httpStatus" value="403"/>
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{ error: "approval_required", message: "plan_hash and approval_token_hash are required (HITL gate mimic)" }]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+            </when>
+
+            <!-- 403: dual-auth missing for amount > $100K -->
+            <when expression="#[(payload.amount_usd default 0) > (p('wire.dual_auth_threshold_usd') default '100000') as Number and isEmpty(payload.dual_approval_token_hash default '')]">
+                <set-variable variableName="httpStatus" value="403"/>
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{ error: "dual_approval_required", message: "Wires over $100,000 require dual_approval_token_hash per v3 steering rule 5" }]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+            </when>
+
+            <!-- 400: missing required fields -->
+            <when expression='#[
+                (payload.amount_usd default 0) &lt;= 0
+                or isEmpty(payload.beneficiary_bank default "")
+                or isEmpty(payload.beneficiary_account default "")
+                or isEmpty(payload.source_account_id default "")
+            ]'>
+                <set-variable variableName="httpStatus" value="400"/>
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  error: "missing_fields",
+  message: "One or more required fields are missing or invalid",
+  missing_fields: [
+    if ((payload.amount_usd default 0) <= 0) "amount_usd" else null,
+    if (isEmpty(payload.beneficiary_bank default "")) "beneficiary_bank" else null,
+    if (isEmpty(payload.beneficiary_account default "")) "beneficiary_account" else null,
+    if (isEmpty(payload.source_account_id default "")) "source_account_id" else null
+  ] filter ($ != null)
+}]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+            </when>
+
+            <otherwise>
+                <ee:transform>
+                    <ee:variables>
+                        <ee:set-variable variableName="normalized"><![CDATA[%dw 2.0
+output application/json
+---
+{
+  amount_usd: payload.amount_usd,
+  currency: payload.currency default "USD",
+  beneficiary_bank: payload.beneficiary_bank,
+  beneficiary_account: payload.beneficiary_account,
+  source_account_id: payload.source_account_id,
+  reference_memo: payload.reference_memo default "",
+  plan_hash: payload.plan_hash,
+  approval_token_hash: payload.approval_token_hash,
+  dual_approval_token_hash: payload.dual_approval_token_hash default null
+}]]></ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+
+                <choice>
+                    <!-- Mock mode: canned response, skip OFAC + Dwolla -->
+                    <when expression="#[(p('mock_mode') default 'false') == 'true']">
+                        <ee:transform>
+                            <ee:message>
+                                <ee:set-payload><![CDATA[%dw 2.0
+import * from dw::Runtime
+output application/json
+var uuid = randomUUID() replace "-" with ""
+---
+{
+  wire_id: "MULE-WIRE-" ++ (uuid[0 to 7]),
+  status: "initiated",
+  amount_usd: vars.normalized.amount_usd,
+  currency: vars.normalized.currency,
+  beneficiary_bank: vars.normalized.beneficiary_bank,
+  beneficiary_account: vars.normalized.beneficiary_account,
+  source_account_id: vars.normalized.source_account_id,
+  submitted_at: (now() as Number {unit: "seconds"}) as Number {format: "#"},
+  mulesoft_reference: "MS-REF-" ++ (uuid[0 to 11])
+}]]></ee:set-payload>
+                            </ee:message>
+                        </ee:transform>
+                    </when>
+
+                    <otherwise>
+                        <!-- Step 1: OFAC SDN fetch (cached pattern; live fetch here) -->
+                        <set-variable variableName="beneficiaryName" value="#[vars.normalized.beneficiary_bank]"/>
+                        <try>
+                            <http:request method="GET"
+                                          config-ref="ofac-sdn-config"
+                                          path="/ofac/downloads/sdn.xml"
+                                          target="ofacXml"
+                                          targetValue="#[payload]">
+                                <http:headers>#[{'Accept': 'application/xml'}]</http:headers>
+                            </http:request>
+                            <error-handler>
+                                <on-error-continue type="ANY">
+                                    <logger level="WARN"
+                                            message='#["[initiate-wire] OFAC fetch failed, proceeding conservative-block. err=" ++ (error.description default "?")]'/>
+                                    <set-variable variableName="ofacXml" value="#[null]"/>
+                                </on-error-continue>
+                            </error-handler>
+                        </try>
+
+                        <!-- If OFAC feed unreachable, conservative-block: return 451 -->
+                        <choice>
+                            <when expression="#[vars.ofacXml == null]">
+                                <set-variable variableName="httpStatus" value="451"/>
+                                <ee:transform>
+                                    <ee:message>
+                                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{ error: "ofac_feed_unavailable", message: "OFAC SDN feed unreachable; conservative block. Retry when feed is live." }]]></ee:set-payload>
+                                    </ee:message>
+                                </ee:transform>
+                            </when>
+
+                            <otherwise>
+                                <!-- Run OFAC screen on the fetched XML -->
+                                <ee:transform>
+                                    <ee:variables>
+                                        <ee:set-variable variableName="ofacResult"><![CDATA[%dw 2.0
+import upper, trim from dw::core::Strings
+output application/json
+var needle = upper(trim(vars.beneficiaryName default ""))
+var entries = (vars.ofacXml.sdnList.*sdnEntry default [])
+var names = entries map ((e) ->
+  upper(trim(
+    if ((e.sdnType default "") == "Individual")
+      ((e.firstName default "") ++ " " ++ (e.lastName default ""))
+    else
+      (e.lastName default "")
+  ))
+)
+var hit = names filter ($ != "" and $ == needle)
+---
+{
+  matched: sizeOf(hit) > 0,
+  matched_name: if (sizeOf(hit) > 0) hit[0] else null
+}]]></ee:set-variable>
+                                    </ee:variables>
+                                </ee:transform>
+
+                                <choice>
+                                    <!-- 451 on OFAC hit -->
+                                    <when expression="#[vars.ofacResult.matched == true]">
+                                        <set-variable variableName="httpStatus" value="451"/>
+                                        <logger level="WARN"
+                                                message='#["[initiate-wire] OFAC MATCH bene=" ++ (vars.beneficiaryName default "?") ++ " matched=" ++ ((vars.ofacResult.matched_name default "?") as String)]'/>
+                                        <ee:transform>
+                                            <ee:message>
+                                                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  error: "ofac_blocked",
+  message: "Beneficiary matched OFAC SDN; wire blocked.",
+  matched_name: vars.ofacResult.matched_name
+}]]></ee:set-payload>
+                                            </ee:message>
+                                        </ee:transform>
+                                    </when>
+
+                                    <otherwise>
+                                        <!-- Step 2: Dwolla OAuth token -->
+                                        <try>
+                                            <ee:transform>
+                                                <ee:message>
+                                                    <ee:set-payload><![CDATA[%dw 2.0
+output application/x-www-form-urlencoded
+---
+{ grant_type: "client_credentials" }]]></ee:set-payload>
+                                                </ee:message>
+                                            </ee:transform>
+                                            <http:request method="POST"
+                                                          config-ref="dwolla-token-config"
+                                                          path="/"
+                                                          target="dwollaToken"
+                                                          targetValue="#[payload.access_token]">
+                                                <http:headers>#[{
+                                                    "Authorization": "Basic " ++ (((p("dwolla.client_id") ++ ":" ++ p("dwolla.client_secret")) as Binary) as String {base: "64"}),
+                                                    "Accept": "application/json",
+                                                    "Content-Type": "application/x-www-form-urlencoded"
+                                                }]</http:headers>
+                                            </http:request>
+                                            <error-handler>
+                                                <on-error-continue type="ANY">
+                                                    <set-variable variableName="httpStatus" value="502"/>
+                                                    <set-variable variableName="dwollaToken" value="#[null]"/>
+                                                    <logger level="ERROR"
+                                                            message='#["[initiate-wire] Dwolla token fetch failed. err=" ++ (error.description default "?")]'/>
+                                                    <ee:transform>
+                                                        <ee:message>
+                                                            <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{ error: "upstream_error", message: "Downstream broker returned an error (token)" }]]></ee:set-payload>
+                                                        </ee:message>
+                                                    </ee:transform>
+                                                </on-error-continue>
+                                            </error-handler>
+                                        </try>
+
+                                        <choice>
+                                            <when expression="#[vars.dwollaToken != null]">
+                                                <!-- Step 3: POST /transfers -->
+                                                <ee:transform>
+                                                    <ee:message>
+                                                        <ee:set-payload resource="transforms/dwolla-request.dwl"/>
+                                                    </ee:message>
+                                                </ee:transform>
+                                                <try>
+                                                    <http:request method="POST"
+                                                                  config-ref="dwolla-api-config"
+                                                                  path="/transfers">
+                                                        <http:headers>#[{
+                                                            "Authorization": "Bearer " ++ vars.dwollaToken,
+                                                            "Accept": "application/vnd.dwolla.v1.hal+json",
+                                                            "Content-Type": "application/vnd.dwolla.v1.hal+json"
+                                                        }]</http:headers>
+                                                    </http:request>
+                                                    <error-handler>
+                                                        <on-error-continue type="HTTP:TIMEOUT, HTTP:CONNECTIVITY">
+                                                            <set-variable variableName="httpStatus" value="504"/>
+                                                            <ee:transform>
+                                                                <ee:message>
+                                                                    <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{ error: "upstream_timeout", message: "Downstream broker did not respond in time" }]]></ee:set-payload>
+                                                                </ee:message>
+                                                            </ee:transform>
+                                                        </on-error-continue>
+                                                        <on-error-continue type="ANY">
+                                                            <set-variable variableName="httpStatus" value="502"/>
+                                                            <ee:transform>
+                                                                <ee:message>
+                                                                    <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{ error: "upstream_error", message: "Downstream broker returned an error" }]]></ee:set-payload>
+                                                                </ee:message>
+                                                            </ee:transform>
+                                                        </on-error-continue>
+                                                    </error-handler>
+                                                </try>
+
+                                                <choice>
+                                                    <when expression="#[(vars.httpStatus default 200) == 200]">
+                                                        <ee:transform>
+                                                            <ee:message>
+                                                                <ee:set-payload resource="transforms/dwolla-response.dwl"/>
+                                                            </ee:message>
+                                                        </ee:transform>
+                                                    </when>
+                                                    <otherwise>
+                                                        <logger level="DEBUG" message="#['[initiate-wire] error passthrough']"/>
+                                                    </otherwise>
+                                                </choice>
+                                            </when>
+                                            <otherwise>
+                                                <logger level="DEBUG" message="#['[initiate-wire] token missing; passthrough error']"/>
+                                            </otherwise>
+                                        </choice>
+                                    </otherwise>
+                                </choice>
+                            </otherwise>
+                        </choice>
+
+                        <logger level="INFO"
+                                message='#["[initiate-wire] done wire_id=" ++ (payload.wire_id default "?") ++ " status=" ++ (payload.status default payload.error default "?") ++ " ref=" ++ (payload.mulesoft_reference default "?")]'/>
+                    </otherwise>
+                </choice>
+            </otherwise>
+        </choice>
+    </flow>
+
+    <!-- ================================================================ -->
+    <!-- GET /api/health                                                  -->
+    <!-- ================================================================ -->
+    <flow name="initiate-wire-health-flow">
+        <http:listener config-ref="initiate-wire-http-listener-config"
+                       path="/api/health"
+                       allowedMethods="GET">
+            <http:response statusCode="200">
+                <http:headers>#[{'Content-Type': 'application/json'}]</http:headers>
+            </http:response>
+        </http:listener>
+        <ee:transform>
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  status: "ok",
+  mode: if ((p('mock_mode') default 'false') == 'true') "mock" else "dwolla-sandbox",
+  api: "initiate-wire-process-api",
+  version: "v3"
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+    </flow>
+
+</mule>

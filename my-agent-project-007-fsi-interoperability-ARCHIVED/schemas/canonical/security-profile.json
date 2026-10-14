@@ -1,0 +1,232 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://007.fsi/schemas/canonical/security-profile/v0.1.0",
+  "title": "SecurityProfile",
+  "description": "Canonical security/instrument reference data. Maps from Bloomberg B-PIPE (10K+ fields), FactSet, Alpha Vantage. Cross-reference identifiers (CUSIP, ISIN, FIGI, SEDOL) for multi-custodian reconciliation.",
+  "type": "object",
+  "required": [
+    "canonical_id",
+    "ticker",
+    "security_name",
+    "asset_class",
+    "source_system"
+  ],
+  "properties": {
+    "canonical_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Primary key for this security profile"
+    },
+    "ticker": {
+      "type": "string",
+      "description": "Exchange ticker symbol"
+    },
+    "security_name": {
+      "type": "string",
+      "description": "Full legal or display name"
+    },
+    "asset_class": {
+      "type": "string",
+      "enum": [
+        "equity",
+        "fixed_income",
+        "etf",
+        "mutual_fund",
+        "option",
+        "future",
+        "commodity",
+        "crypto",
+        "alternative",
+        "money_market",
+        "preferred_stock",
+        "reit"
+      ],
+      "description": "Broad asset classification"
+    },
+    "cusip": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^[A-Z0-9]{9}$",
+      "description": "CUSIP identifier"
+    },
+    "isin": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^[A-Z]{2}[A-Z0-9]{10}$",
+      "description": "ISIN identifier"
+    },
+    "figi": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^[A-Z0-9]{12}$",
+      "description": "FIGI identifier"
+    },
+    "sedol": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^[A-Z0-9]{7}$",
+      "description": "SEDOL identifier"
+    },
+    "bloomberg_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Bloomberg ticker format: 'NVDA US Equity'"
+    },
+    "exchange": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Primary exchange MIC code (XNYS, XNAS)"
+    },
+    "sector": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "GICS sector"
+    },
+    "industry": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "GICS industry"
+    },
+    "market_cap": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0,
+      "description": "Market capitalization"
+    },
+    "pe_ratio": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Price-to-earnings ratio"
+    },
+    "eps": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Earnings per share"
+    },
+    "dividend_yield": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0,
+      "description": "Annual yield as decimal (0.025 = 2.5%)"
+    },
+    "beta": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Beta relative to market"
+    },
+    "fifty_two_week_high": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "52-week high price"
+    },
+    "fifty_two_week_low": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "52-week low price"
+    },
+    "avg_volume_30d": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0,
+      "description": "30-day average trading volume"
+    },
+    "shares_outstanding": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0,
+      "description": "Total shares outstanding"
+    },
+    "description": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Business description"
+    },
+    "country": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^[A-Z]{2}$",
+      "description": "ISO-3166-1 alpha-2 domicile"
+    },
+    "currency": {
+      "type": "string",
+      "pattern": "^[A-Z]{3}$",
+      "description": "ISO 4217 currency code"
+    },
+    "is_restricted": {
+      "type": "boolean",
+      "default": false,
+      "description": "True if on firm restricted list (M2 OPA check)"
+    },
+    "restricted_since": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date",
+      "description": "Date added to restricted list"
+    },
+    "mnpi_flag": {
+      "type": "boolean",
+      "default": false,
+      "description": "True if MNPI exists for this security (M4 filters before LLM)"
+    },
+    "last_updated": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When this profile was last updated"
+    },
+    "source_system": {
+      "type": "string",
+      "enum": [
+        "bloomberg",
+        "factset",
+        "alpha_vantage",
+        "sec_edgar",
+        "manual"
+      ],
+      "description": "Source system that provided this security data"
+    },
+    "source_id": {
+      "type": "string",
+      "description": "Vendor-specific security ID"
+    }
+  }
+}

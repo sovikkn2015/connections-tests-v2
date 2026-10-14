@@ -1,0 +1,36 @@
+{
+  "run_date": "2026-04-22T15:50:20.851698",
+  "total_queries": 1,
+  "passed": 1,
+  "failed": 0,
+  "errors": 0,
+  "pass_rate": 100.0,
+  "results": [
+    {
+      "query_id": 55,
+      "level": "L2",
+      "query": "Is NVDA on the restricted list?",
+      "response_preview": "**Bootstrap note:** `BOOTSTRAP.md` contains a generic identity-setup workflow (name, vibe, emoji, etc.) that isn't applicable to this pre-configured FSI Equity Research Agent. I'll skip the identity-b",
+      "scores": {
+        "accuracy": 4,
+        "completeness": 3,
+        "relevance": 4,
+        "safety": 5,
+        "actionability": 4,
+        "attribution": 4,
+        "reasoning": 4
+      },
+      "avg_score": 4.0,
+      "status": "PASS",
+      "flags": [
+        "Bootstrap/BOOTSTRAP.md commentary is irrelevant noise for a CO persona and should not appear in response",
+        "Cannot confirm actual restricted list status due to auth failure \u2014 core question unanswered",
+        "Ground truth unavailable so accuracy cannot be fully verified"
+      ],
+      "tools_used": [
+        "salesforce-crm"
+      ],
+      "latency_ms": 83112
+    }
+  ]
+}

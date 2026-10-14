@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Project 006 v2 - submit-order Process API
+  Mule 4.4.x Maven project, deploys to CloudHub 2.0.
+
+  Zero credentials: Anypoint auth comes from env vars, NEVER hardcoded.
+    - ANYPOINT_USERNAME / ANYPOINT_PASSWORD                     (legacy Platform login)
+    - ANYPOINT_CONNECTED_APP_ID / ANYPOINT_CONNECTED_APP_SECRET (preferred Connected App)
+  See README.md -> "Deploy to CloudHub 2.0".
+
+  Alpaca key_id / secret are NEVER in this pom. Those flow into CloudHub via
+  the Runtime Manager -> Secure Properties UI, not Maven.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                             http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>2dc8acc5-23cb-424f-95a5-13686d8b9b16</groupId>
+    <artifactId>submit-order-process-api</artifactId>
+    <version>1.0.11</version>
+    <packaging>mule-application</packaging>
+    <name>submit-order-process-api</name>
+    <description>006 v2 submit-order Process API (LIVE Alpaca paper-trading backend)</description>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <app.runtime>4.9.0</app.runtime>
+        <mule.maven.plugin.version>4.4.0</mule.maven.plugin.version>
+        <munit.version>3.1.0</munit.version>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+
+        <!-- CloudHub 2.0 deploy target (override via -D flags or CI env vars) -->
+        <cloudhub.app.name>openclaw-v2-trade-process-api</cloudhub.app.name>
+        <cloudhub.region>us-east-2</cloudhub.region>
+        <cloudhub.vcores>0.1</cloudhub.vcores>
+        <cloudhub.replicas>1</cloudhub.replicas>
+        <cloudhub.environment>Sandbox</cloudhub.environment>
+    </properties>
+
+    <!-- OSS-only dependencies: the EE mule-runtime-bom and munit require
+         Anypoint Maven credentials in ~/.m2/settings.xml. For this app we only
+         need the OSS http connector; config.yaml is loaded via Mule's built-in
+         configuration-properties element. Run MUnit in Anypoint Code Builder
+         where IDE wires the EE creds automatically. -->
+    <dependencies>
+        <!-- HTTP connector: listener + outbound request to Alpaca -->
+        <dependency>
+            <groupId>org.mule.connectors</groupId>
+            <artifactId>mule-http-connector</artifactId>
+            <version>1.9.0</version>
+            <classifier>mule-plugin</classifier>
+        </dependency>
+
+        <!-- Sockets: transitive dep of http-connector -->
+        <dependency>
+            <groupId>org.mule.connectors</groupId>
+            <artifactId>mule-sockets-connector</artifactId>
+            <version>1.2.5</version>
+            <classifier>mule-plugin</classifier>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!--
+              mule-maven-plugin: packages the Mule app and deploys to CloudHub 2.0.
+              Credentials come from env vars; NOTHING is hardcoded. Any auth pair:
+                ANYPOINT_CONNECTED_APP_ID + ANYPOINT_CONNECTED_APP_SECRET (preferred)
+                ANYPOINT_USERNAME + ANYPOINT_PASSWORD                     (dev fallback)
+              Required:
+                ANYPOINT_ORG_ID (business-group / organization id)
+              Deploy with:
+                mvn mule:deploy -DskipTests -Dmunit.skip=true
+            -->
+            <plugin>
+                <groupId>org.mule.tools.maven</groupId>
+                <artifactId>mule-maven-plugin</artifactId>
+                <version>${mule.maven.plugin.version}</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <classifier>mule-application</classifier>
+                    <cloudhub2Deployment>
+                        <uri>https://anypoint.mulesoft.com</uri>
+                        <muleVersion>${app.runtime}</muleVersion>
+                        <applicationName>${cloudhub.app.name}</applicationName>
+                        <environment>${cloudhub.environment}</environment>
+                        <target>Cloudhub-US-East-2</target>
+                        <provider>MC</provider>
+                        <businessGroupId>${env.ANYPOINT_ORG_ID}</businessGroupId>
+                        <replicas>${cloudhub.replicas}</replicas>
+                        <vCores>${cloudhub.vcores}</vCores>
+                        <username>${env.ANYPOINT_USERNAME}</username>
+                        <password>${env.ANYPOINT_PASSWORD}</password>
+                        <artifact>${project.build.directory}/${project.build.finalName}-mule-application.jar</artifact>
+                        <deploymentSettings>
+                            <generateDefaultPublicUrl>true</generateDefaultPublicUrl>
+                        </deploymentSettings>
+                    </cloudhub2Deployment>
+                </configuration>
+            </plugin>
+
+            <!-- MUnit coverage + runner -->
+            <plugin>
+                <groupId>com.mulesoft.munit.tools</groupId>
+                <artifactId>munit-maven-plugin</artifactId>
+                <version>${munit.version}</version>
+                <executions>
+                    <execution>
+                        <id>test</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>test</goal>
+                            <goal>coverage-report</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <coverage>
+                        <runCoverage>true</runCoverage>
+                        <formats>
+                            <format>console</format>
+                        </formats>
+                    </coverage>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <profiles>
+        <!--
+          Activate with `mvn deploy -Pcloudhub-sandbox`.
+          Required env vars (any one auth pair is enough):
+            ANYPOINT_USERNAME + ANYPOINT_PASSWORD
+              (Anypoint Platform user login; fine for dev/personal sandbox)
+          OR
+            ANYPOINT_CONNECTED_APP_ID + ANYPOINT_CONNECTED_APP_SECRET
+              (Connected App; REQUIRED for CI/automation per v2 steering rule 18)
+
+          Also required:
+            ANYPOINT_ORG_ID (business group / Anypoint organization id)
+        -->
+        <profile>
+            <id>cloudhub-sandbox</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.mule.tools.maven</groupId>
+                        <artifactId>mule-maven-plugin</artifactId>
+                        <version>${mule.maven.plugin.version}</version>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <cloudHub2Deployment>
+                                <uri>https://anypoint.mulesoft.com</uri>
+                                <muleVersion>${app.runtime}</muleVersion>
+                                <applicationName>${cloudhub.app.name}</applicationName>
+                                <environment>${cloudhub.environment}</environment>
+                                <target>Cloudhub-US-East-2</target>
+                                <provider>MC</provider>
+                                <businessGroupId>${env.ANYPOINT_ORG_ID}</businessGroupId>
+                                <replicas>${cloudhub.replicas}</replicas>
+                                <vCores>${cloudhub.vcores}</vCores>
+
+                                <!-- Connected App (preferred) -->
+                                <connectedAppClientId>${env.ANYPOINT_CONNECTED_APP_ID}</connectedAppClientId>
+                                <connectedAppClientSecret>${env.ANYPOINT_CONNECTED_APP_SECRET}</connectedAppClientSecret>
+                                <connectedAppGrantType>client_credentials</connectedAppGrantType>
+
+                                <!-- Platform user fallback (dev only) -->
+                                <username>${env.ANYPOINT_USERNAME}</username>
+                                <password>${env.ANYPOINT_PASSWORD}</password>
+                            </cloudHub2Deployment>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
+    <distributionManagement>
+        <repository>
+            <id>anypoint-exchange-v3</id>
+            <name>Anypoint Exchange Maven Repository</name>
+            <url>https://maven.anypoint.mulesoft.com/api/v3/organizations/${env.ANYPOINT_ORG_ID}/maven</url>
+            <layout>default</layout>
+        </repository>
+    </distributionManagement>
+
+    <!-- Mule EE repository (needed for mule-ee artifacts + munit) -->
+    <repositories>
+        <!-- Anypoint Exchange - needed for exchange-pre-deploy plugin to fetch preConditions files -->
+        <repository>
+            <id>anypoint-exchange-v3</id>
+            <name>Anypoint Exchange</name>
+            <url>https://maven.anypoint.mulesoft.com/api/v3/organizations/${env.ANYPOINT_ORG_ID}/maven</url>
+            <layout>default</layout>
+        </repository>
+        <repository>
+            <id>mulesoft-releases</id>
+            <name>MuleSoft Releases Repository</name>
+            <url>https://repository.mulesoft.org/releases/</url>
+            <layout>default</layout>
+        </repository>
+        <repository>
+            <id>mulesoft-public</id>
+            <name>MuleSoft Public Repository</name>
+            <url>https://repository.mulesoft.org/nexus/content/repositories/public/</url>
+        </repository>
+    </repositories>
+    <pluginRepositories>
+        <pluginRepository>
+            <id>mulesoft-releases</id>
+            <url>https://repository.mulesoft.org/releases/</url>
+        </pluginRepository>
+        <pluginRepository>
+            <id>mulesoft-public</id>
+            <url>https://repository.mulesoft.org/nexus/content/repositories/public/</url>
+        </pluginRepository>
+    </pluginRepositories>
+</project>

@@ -1,0 +1,78 @@
+# Enterprise Config — Tier 3 Broker-Dealer
+# Stricter compliance: Reg BI, Smarsh, principal review, BSA/AML.
+# Zero credentials. All secrets via Vault/Secrets Manager at runtime.
+
+config_version: "0.4.0"
+
+firm:
+  name: "National Financial Partners"
+  lei: "5493001KJTIIGC8Y1R12"
+  crd_number: "789012"
+  registration_type: "dual_registered"
+
+archetype: "tier3_broker_dealer"
+
+jurisdiction:
+  primary: "us"
+  data_residency: "us"
+
+deployment:
+  topology: "cloud"
+  region: "us-east-1"
+  runtime: "managed_agents"
+
+vendors:
+  crm: "salesforce_fsc"
+  portfolio: "orion"
+  planning: "emoney"
+  custodians: ["pershing", "schwab"]
+  market_data: "alpha_vantage"
+  compliance_archive: "smarsh"
+
+channels:
+  enabled: ["slack", "teams", "web"]
+  primary: "teams"
+
+compliance:
+  suitability_standard: "reg_bi"
+  reg_bi_enabled: true
+  smarsh_enabled: true
+  principal_review_enabled: true
+  principal_review_config:
+    mode: "pre_use"
+    sla_hours: 4
+    timeout_action: "block"
+  bsa_aml_config:
+    enabled: true
+    ctr_threshold: 10000.0
+    sar_structuring_threshold: 8000.0
+  reg_bi_config:
+    template: "default"
+    conflict_inventory:
+      - type: "revenue_sharing"
+        description: "Firm receives revenue sharing from XYZ Fund Family"
+        mitigation: "Disclosed in Form CRS and account opening documents"
+      - type: "proprietary_product"
+        description: "Firm-managed model portfolios generate advisory fees"
+        mitigation: "Fee comparison provided; non-proprietary alternatives offered"
+    auto_generate: true
+    require_advisor_review: true
+    narrative_model: "haiku"
+  worm_retention_years: 7
+  mnpi_filtering: "tier3_advisor_level"
+  hitl_timeout_hours: 24
+
+specialists:
+  enabled: ["client_service", "research", "execution", "onboarding"]
+  supervisor_model: "haiku"
+  research_model: "sonnet"
+  client_service_model: "haiku"
+  execution_model: "haiku"
+  onboarding_model: "haiku"
+
+memory:
+  l1_ttl_hours: 8
+  l2_retention_days: 7
+  l3_retention_years: 2
+  l4_enabled: true
+  l5_enabled: true

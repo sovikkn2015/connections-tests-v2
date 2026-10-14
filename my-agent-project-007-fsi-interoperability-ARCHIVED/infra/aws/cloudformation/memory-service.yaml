@@ -1,0 +1,72 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: |
+  Memory Service — AWS resources.
+  Owner: intelligence-layer team.
+
+  Resources:
+    - L2 memory DynamoDB (7-day short-term, TTL on attribute `ttl`)
+    - L3 memory DynamoDB (2-year episodic)
+
+  L1 (working memory) lives in ElastiCache Redis, provisioned separately
+  per-tenant. L4 (semantic) lives in Pinecone/pgvector.
+
+  Depends on: platform-common.
+
+Parameters:
+  Prefix:       { Type: String, Default: fsi007 }
+  Environment:  { Type: String, Default: dev }
+
+Resources:
+
+  MemoryL2:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub '${Prefix}-${Environment}-memory-l2'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - { AttributeName: conversation_id, AttributeType: S }
+      KeySchema:
+        - { AttributeName: conversation_id, KeyType: HASH }
+      TimeToLiveSpecification: { AttributeName: ttl, Enabled: true }
+      PointInTimeRecoverySpecification: { PointInTimeRecoveryEnabled: true }
+      SSESpecification:
+        SSEEnabled: true
+        SSEType: KMS
+        KMSMasterKeyId: !ImportValue '007-platform-KmsKeyId'
+      Tags:
+        - { Key: project, Value: '007' }
+        - { Key: environment, Value: !Ref Environment }
+        - { Key: module, Value: memory-service }
+
+  MemoryL3:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub '${Prefix}-${Environment}-memory-l3'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - { AttributeName: client_id, AttributeType: S }
+      KeySchema:
+        - { AttributeName: client_id, KeyType: HASH }
+      PointInTimeRecoverySpecification: { PointInTimeRecoveryEnabled: true }
+      SSESpecification:
+        SSEEnabled: true
+        SSEType: KMS
+        KMSMasterKeyId: !ImportValue '007-platform-KmsKeyId'
+      Tags:
+        - { Key: project, Value: '007' }
+        - { Key: environment, Value: !Ref Environment }
+        - { Key: module, Value: memory-service }
+
+Outputs:
+  MemoryL2TableName:
+    Value: !Ref MemoryL2
+    Export: { Name: '007-memory-service-MemoryL2TableName' }
+  MemoryL2TableArn:
+    Value: !GetAtt MemoryL2.Arn
+    Export: { Name: '007-memory-service-MemoryL2TableArn' }
+  MemoryL3TableName:
+    Value: !Ref MemoryL3
+    Export: { Name: '007-memory-service-MemoryL3TableName' }
+  MemoryL3TableArn:
+    Value: !GetAtt MemoryL3.Arn
+    Export: { Name: '007-memory-service-MemoryL3TableArn' }

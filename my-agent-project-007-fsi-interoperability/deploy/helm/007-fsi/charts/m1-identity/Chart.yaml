@@ -1,0 +1,14 @@
+apiVersion: v2
+name: m1-identity
+description: M1 Agent Identity -- FastAPI AID issuer/verifier (Project 007 trust layer).
+type: application
+version: 0.1.0
+appVersion: "0.3.0"
+keywords:
+  - fsi
+  - identity
+  - jwt
+  - aid
+maintainers:
+  - name: Project 007 Platform Team
+    email: platform@example.invalid

@@ -1,0 +1,69 @@
+# fsi-client-liaison persona — 3 agents (1 orchestrator + 2 specialists)
+# Read-only plus rm-handoff. No trades, no wires, no MNPI ever.
+# Channel defaults to web-mockup; real channels gated on env.
+
+persona: fsi_client_liaison
+display_name: "FSI Client Liaison"
+channels: [web_mockup]
+optional_channels: [whatsapp, wechat, sms]
+default_orchestrator: liaison_orchestrator
+
+response_template:
+  disclaimer: "For informational purposes. Your RM makes recommendations."
+  cta_buttons:
+    - { label: "Schedule call", action: "schedule_call" }
+    - { label: "Ask your RM", action: "ask_rm" }
+
+agents:
+
+  - id: liaison_orchestrator
+    role: orchestrator
+    model: haiku
+    description: >
+      FAQ vs escalation decision. Haiku for cost. Read-only plus rm-handoff
+      (writes Client_Inquiry__c on escalation).
+    system_prompt_summary: |
+      Two-way classifier: FAQ -> faq_specialist (Haiku bounded answers);
+      anything else -> context_specialist (MNPI-filtered read) + rm-handoff
+      (writes Client_Inquiry__c). Every response carries disclaimer + CTA.
+      Err on the side of ESCALATE.
+    tool_allowlist:
+      - dispatch_specialist
+      - rm_handoff
+    mcp_allowlist:
+      - salesforce-crm
+    memory_scope: [session, read_only]
+    timeout_s: 30
+
+  - id: faq_specialist
+    role: specialist
+    model: haiku
+    description: >
+      Bounded client-safe FAQs on Haiku 4.5. Never touches positions or
+      ticker opinions. Always ends with disclaimer + CTA.
+    system_prompt_summary: |
+      Haiku. Bounded scope: market hours, what-is-a-10K, schedule-call,
+      generic volatility framing. Refuses ticker-specific and position
+      questions — those escalate. No MNPI ever touches this agent.
+    tool_allowlist: []
+    mcp_allowlist: []
+    memory_scope: [read_only]
+    timeout_s: 15
+
+  - id: context_specialist
+    role: specialist
+    model: sonnet
+    description: >
+      MNPI-filtered client context reads on Sonnet. Feeds rm-handoff payload.
+      READ-ONLY. Never writes.
+    system_prompt_summary: |
+      Calls client-summary skill. MNPI filter on all content; if raw share
+      counts or dollar amounts surface from CRM, reject the block and
+      request re-filter. Does NOT write Client_Inquiry__c — the
+      orchestrator does via rm-handoff.
+    tool_allowlist:
+      - client_summary
+    mcp_allowlist:
+      - salesforce-crm
+    memory_scope: [read_only]
+    timeout_s: 20

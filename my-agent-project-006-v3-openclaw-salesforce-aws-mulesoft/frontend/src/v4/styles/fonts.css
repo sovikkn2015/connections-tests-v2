@@ -1,0 +1,6 @@
+/*
+ * V4 web fonts — ported verbatim from the uploaded design zip.
+ * Inter for UI, JetBrains Mono for numbers/timestamps, Source Serif 4 for
+ * long-form prose inside briefs. Loaded once at V4App mount.
+ */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap');

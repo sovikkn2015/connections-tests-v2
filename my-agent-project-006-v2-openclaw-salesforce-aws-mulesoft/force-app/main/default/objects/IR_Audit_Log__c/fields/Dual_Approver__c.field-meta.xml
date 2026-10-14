@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Dual_Approver__c</fullName>
+    <description>SF User Id of the second (senior) approver for wire greater than 100K, trade greater than 500K, or any account closure. Null when dual auth not required. MUST be distinct from Approved_By__c (enforced by dual_auth.py).</description>
+    <externalId>false</externalId>
+    <label>Dual Approver</label>
+    <referenceTo>User</referenceTo>
+    <relationshipLabel>Dual Approved Audit Logs</relationshipLabel>
+    <relationshipName>Dual_Approved_Audit_Logs</relationshipName>
+    <required>false</required>
+    <type>Lookup</type>
+</CustomField>

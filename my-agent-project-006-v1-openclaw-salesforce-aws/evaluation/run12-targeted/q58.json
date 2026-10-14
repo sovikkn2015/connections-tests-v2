@@ -1,0 +1,40 @@
+{
+  "run_date": "2026-04-22T15:57:04.762023",
+  "total_queries": 1,
+  "passed": 0,
+  "failed": 1,
+  "errors": 0,
+  "pass_rate": 0.0,
+  "results": [
+    {
+      "query_id": 58,
+      "level": "L2",
+      "query": "Show me all compliance exceptions from the last 7 days",
+      "response_preview": "**Bootstrap note:** Identity files exist but are blank templates \u2014 I haven't been named yet. I'll address your eval query now and we can complete the bootstrap (name, vibe, etc.) whenever you're ready",
+      "scores": {
+        "accuracy": 2,
+        "completeness": 2,
+        "relevance": 3,
+        "safety": 4,
+        "actionability": 3,
+        "attribution": 3,
+        "reasoning": 3
+      },
+      "avg_score": 2.9,
+      "status": "FAIL",
+      "flags": [
+        "Session error prevented actual data retrieval \u2014 core query failed",
+        "Bootstrap/identity preamble is unprofessional and irrelevant noise for a CO persona",
+        "Object names (IR_Audit_Log__c, IR_Research_Note__c) appear assumed/fabricated \u2014 no confirmation these exist in the target org",
+        "SOQL provided is incomplete \u2014 missing compliance exception filter criteria (no WHERE clause filtering on exception type/status)",
+        "Ground truth unavailable \u2014 cannot verify object names or schema accuracy",
+        "No actual compliance exception data delivered \u2014 the primary ask was not fulfilled",
+        "Two query attempts both failed \u2014 unclear if retry logic or fallback was properly exhausted"
+      ],
+      "tools_used": [
+        "salesforce-crm"
+      ],
+      "latency_ms": 105762
+    }
+  ]
+}

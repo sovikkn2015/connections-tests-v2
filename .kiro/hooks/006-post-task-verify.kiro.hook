@@ -1,0 +1,12 @@
+{
+  "name": "006 Post-Task Verification",
+  "version": "1.0.0",
+  "description": "After each spec task completes, verify the implementation matches the design doc — not a shortcut or stub. This is the hook that prevents 005's V1 failure pattern where stubs were marked as done.",
+  "when": {
+    "type": "postTaskExecution"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "A task just completed for project 006. Before marking it done, verify:\n\n1. DESIGN MATCH: Does the implementation match what the design doc specifies? Read the relevant section of docs/design-doc.md and compare. If the implementation is a simplified version or stub — flag it.\n\n2. NO STUBS: Is any critical functionality stubbed with TODO/placeholder/mock that the design doc says should be real? In 005, the research brief was stubbed to route to company lookup — that kind of shortcut is not acceptable.\n\n3. PROTOCOL COMPLIANCE: If this task involves MCP servers, do they implement the full MCP protocol? If it involves OpenClaw, does it use the WebSocket Gateway API? If it involves Salesforce, does it go through the salesforce-api skill?\n\n4. AUDIT TRAIL: Does the implementation write to IR_Audit_Log__c where the design doc says it should?\n\n5. REPRODUCIBILITY: Can this be deployed from scratch with just git clone + sf project deploy + sam deploy? Any manual steps that aren't scripted?\n\nIf any check fails, list what needs to be fixed before the task can be considered complete."
+  }
+}

@@ -1,0 +1,221 @@
+# -----------------------------------------------------------------------------
+# Project 007 FSI Interoperability Platform -- umbrella values (cloud topology)
+#
+# Wave 1 scope: M1 Identity, M2/M4 Policy Engine, M6 MCP Gateway, M10 Audit.
+# Hybrid / on-prem values files ship in Phase 4 (Steering Rule 25). This file
+# is opinionated for AWS EKS + GKE; Azure AKS requires a separate overlay.
+#
+# Every value marked `# OVERRIDE PER TENANT` must be supplied by a per-tenant
+# overlay before install. The chart will lint and render without them, but
+# reconciliation will fail in-cluster (which is the intended fail-closed
+# behaviour -- we do not ship default credentials of any kind).
+# -----------------------------------------------------------------------------
+
+global:
+  topology: cloud
+  namespace: trust-layer
+
+  # OVERRIDE PER TENANT -- per-tenant container registry.
+  imageRegistry: example.invalid/007-fsi
+
+  # OVERRIDE PER TENANT -- IAM role ARN that owns the per-tenant KMS CMK.
+  # Propagated to each ServiceAccount via the
+  # `eks.amazonaws.com/role-arn` annotation (Steering Rule 23).
+  tenantRoleArn: "arn:aws:iam::000000000000:role/placeholder-007-fsi-tenant"
+
+  # Labels applied to every resource via _helpers.tpl.
+  labels:
+    app.kubernetes.io/part-of: 007-fsi
+    app.kubernetes.io/managed-by: helm
+
+  # Wave 4 egress narrowing (ops-hardening-wave4-egress-narrowing.md).
+  # Flip the global egress mode to `allowlist` for the production SOC 2 CC6.1
+  # posture. Each sub-chart below declares its per-destination allowlist.
+  # Migration path: operators upgrading from Wave 1/2 MUST read
+  # VALUES-EGRESS-READ ME.md before running `helm upgrade` -- pods will lose
+  # all outbound connectivity (except DNS) the moment allowlist mode is
+  # enabled and the allowlist is empty.
+  networkPolicy:
+    egressMode: allowlist
+
+  # PrivateLink CIDR for Bedrock (M8 + M9). OVERRIDE PER TENANT.
+  privateLinkCidrs:
+    bedrockRuntime: "10.100.0.0/16"
+
+  # cert-manager defaults used by every trust-layer chart (Rule 21 -- 24h).
+  # Operators can override per-chart via the chart's own values block if
+  # they need a tenant-specific issuer / duration / renewBefore.
+  certManager:
+    # OVERRIDE PER TENANT -- ClusterIssuer name.
+    issuerName: letsencrypt-prod
+    # ClusterIssuer vs Issuer. ClusterIssuer is the default for multi-tenant
+    # clusters; per-namespace Issuers are a per-tenant overlay concern.
+    issuerKind: ClusterIssuer
+    # Steering Rule 21 -- 24h rotation.
+    duration: 24h
+    renewBefore: 2h
+
+externalSecrets:
+  # The ClusterSecretStore must exist in the cluster before install.
+  # Vault backend convention: secret/data/007/<module>/<leaf>.
+  storeName: vault-cluster-store
+  refreshInterval: 1m
+
+# -----------------------------------------------------------------------------
+# Sub-chart values.
+# Each sub-chart owns its own defaults under its keyed block below. We
+# deliberately override nothing here by default -- sub-chart values carry
+# the baseline so `helm install` with no overrides produces a runnable
+# (but unauthenticated) workload for CI smoke tests.
+# -----------------------------------------------------------------------------
+
+m1-identity:
+  image:
+    repository: 007-fsi/m1-identity
+    tag: latest
+    # :latest dev tags pull Always; pinned tags (vX.Y.Z, @sha256:...)
+    # flip to IfNotPresent via _helpers.tpl.
+    pullPolicy: Always
+  egressAllowlist:
+    # Vault (HashiCorp) -- secret/data/007/m1-identity/signing
+    - host: 10.0.0.10
+      port: 8200
+      protocol: TCP
+    # cert-manager webhook
+    - namespace: cert-manager
+      podLabels:
+        app.kubernetes.io/name: cert-manager-webhook
+      port: 443
+      protocol: TCP
+
+m2-m4-policy-engine:
+  image:
+    repository: 007-fsi/m2-m4-policy-engine
+    tag: latest
+    pullPolicy: Always
+  egressAllowlist:
+    # Vault
+    - host: 10.0.0.10
+      port: 8200
+      protocol: TCP
+    # OPA bundle server
+    - host: 10.0.0.20
+      port: 8443
+      protocol: TCP
+
+m6-mcp-gateway:
+  image:
+    repository: 007-fsi/m6-mcp-gateway
+    tag: latest
+    pullPolicy: Always
+  # HorizontalPodAutoscaler is only provisioned on M6 (Wave 1 contract).
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+  egressAllowlist:
+    # M1 identity (intra-cluster)
+    - namespace: trust-layer
+      podLabels:
+        app.kubernetes.io/name: m1-identity
+      port: 8080
+      protocol: TCP
+    # M2/M4 policy engine (intra-cluster)
+    - namespace: trust-layer
+      podLabels:
+        app.kubernetes.io/name: m2-m4-policy-engine
+      port: 8080
+      protocol: TCP
+    # M10 audit logger (intra-cluster)
+    - namespace: trust-layer
+      podLabels:
+        app.kubernetes.io/name: m10-audit-logger
+      port: 8080
+      protocol: TCP
+    # Vendor MCP endpoints: operator MUST add each vendor explicitly.
+    # (No defaults here -- fail-closed discovery.)
+
+m10-audit-logger:
+  image:
+    repository: 007-fsi/m10-audit-logger
+    tag: latest
+    pullPolicy: Always
+  egressAllowlist:
+    # Langfuse (OVERRIDE PER TENANT)
+    - host: 10.0.0.30
+      port: 443
+      protocol: TCP
+    # S3 / MinIO (OVERRIDE PER TENANT with resolved VPC endpoint CIDR)
+    - host: 10.0.0.40
+      port: 443
+      protocol: TCP
+    # CRM -- Salesforce (OVERRIDE PER TENANT)
+    - host: 10.0.0.50
+      port: 443
+      protocol: TCP
+    # Vault
+    - host: 10.0.0.10
+      port: 8200
+      protocol: TCP
+
+# -----------------------------------------------------------------------------
+# Intelligence-layer sub-charts (from a separate wave) -- disabled in Wave 1.
+# -----------------------------------------------------------------------------
+
+m8-pipeline-engine:
+  enabled: false
+  egressAllowlist:
+    - namespace: trust-layer
+      podLabels:
+        app.kubernetes.io/name: m6-mcp-gateway
+      port: 8443
+      protocol: TCP
+  awsPrivateLink:
+    bedrockRuntime:
+      enabled: true
+
+m9-intent-router:
+  enabled: false
+  # M9 runs PrivateLink-only; empty allowlist is valid when shortcut on.
+  egressAllowlist: []
+  awsPrivateLink:
+    bedrockRuntime:
+      enabled: true
+
+m12-supervisor:
+  enabled: false
+  egressAllowlist:
+    - namespace: trust-layer
+      podLabels:
+        app.kubernetes.io/name: m8-pipeline-engine
+      port: 8443
+      protocol: TCP
+    - namespace: trust-layer
+      podLabels:
+        app.kubernetes.io/name: m9-intent-router
+      port: 8443
+      protocol: TCP
+    - namespace: trust-layer
+      podLabels:
+        app.kubernetes.io/name: m6-mcp-gateway
+      port: 8443
+      protocol: TCP
+
+# -----------------------------------------------------------------------------
+# Phase 4 institutional adapters (M11 Python half).
+# Disabled by default -- enable per-tenant via an overlay when Bloomberg
+# Terminal seats or ICE Data entitlements are provisioned.
+# -----------------------------------------------------------------------------
+
+m11-blpapi-adapter:
+  enabled: false
+
+m11-grpc-adapter:
+  enabled: false
+
+# M13 FIX Bridge -- disabled by default. Operator adds per-venue
+# FIX host entries when enabling; empty list is valid fallback.
+m13-fix-bridge:
+  enabled: false
+  egressAllowlist: []

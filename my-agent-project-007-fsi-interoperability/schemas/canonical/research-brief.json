@@ -1,0 +1,359 @@
+{
+  "$defs": {
+    "ResearchSource": {
+      "description": "Source used in a research brief. Source attribution required.",
+      "properties": {
+        "source_type": {
+          "description": "Source type: sec_filing, market_data, news, earnings_transcript, analyst_consensus, crm_data.",
+          "title": "Source Type",
+          "type": "string"
+        },
+        "description": {
+          "description": "Source description.",
+          "title": "Description",
+          "type": "string"
+        },
+        "url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Source URL if available.",
+          "title": "Url"
+        },
+        "source_date": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Date of the source material.",
+          "title": "Source Date"
+        }
+      },
+      "required": [
+        "source_type",
+        "description"
+      ],
+      "title": "ResearchSource",
+      "type": "object"
+    },
+    "SecurityIdentifier": {
+      "description": "Cross-reference object holding multiple identifiers for the same security.",
+      "properties": {
+        "ticker": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Exchange ticker symbol.",
+          "title": "Ticker"
+        },
+        "cusip": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "CUSIP identifier (9-char alphanumeric).",
+          "title": "Cusip"
+        },
+        "isin": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "ISIN identifier (2-letter country + 10 alphanum).",
+          "title": "Isin"
+        },
+        "figi": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "FIGI identifier (12-char alphanumeric).",
+          "title": "Figi"
+        },
+        "sedol": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "SEDOL identifier (7-char alphanumeric).",
+          "title": "Sedol"
+        },
+        "bloomberg_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Bloomberg ticker format (e.g., 'NVDA US Equity').",
+          "title": "Bloomberg Id"
+        }
+      },
+      "title": "SecurityIdentifier",
+      "type": "object"
+    },
+    "Valuation": {
+      "description": "Valuation analysis for research briefs.",
+      "properties": {
+        "dcf_fair_value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "DCF fair value estimate.",
+          "title": "Dcf Fair Value"
+        },
+        "comps_implied_value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Comparable companies implied value.",
+          "title": "Comps Implied Value"
+        },
+        "monte_carlo_p5": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Monte Carlo 5th percentile.",
+          "title": "Monte Carlo P5"
+        },
+        "monte_carlo_median": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Monte Carlo median value.",
+          "title": "Monte Carlo Median"
+        },
+        "monte_carlo_p95": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Monte Carlo 95th percentile.",
+          "title": "Monte Carlo P95"
+        }
+      },
+      "title": "Valuation",
+      "type": "object"
+    }
+  },
+  "description": "Structured output from Research Specialist. Source-attributed. Anti-fabrication scored.",
+  "properties": {
+    "brief_id": {
+      "description": "Primary key for this research brief.",
+      "format": "uuid",
+      "title": "Brief Id",
+      "type": "string"
+    },
+    "security_identifier": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/SecurityIdentifier"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Security being researched."
+    },
+    "analyst_id": {
+      "description": "Analyst or agent ID that produced this brief.",
+      "title": "Analyst Id",
+      "type": "string"
+    },
+    "rating": {
+      "description": "Rating: strong_buy, buy, hold, sell, strong_sell.",
+      "title": "Rating",
+      "type": "string"
+    },
+    "target_price": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Analyst target price.",
+      "title": "Target Price"
+    },
+    "current_price": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Current market price at time of brief.",
+      "title": "Current Price"
+    },
+    "summary": {
+      "description": "Executive summary (2-3 paragraphs).",
+      "title": "Summary",
+      "type": "string"
+    },
+    "thesis": {
+      "description": "Investment thesis.",
+      "title": "Thesis",
+      "type": "string"
+    },
+    "catalysts": {
+      "description": "Potential catalysts.",
+      "items": {
+        "type": "string"
+      },
+      "title": "Catalysts",
+      "type": "array"
+    },
+    "risks": {
+      "description": "Key risks.",
+      "items": {
+        "type": "string"
+      },
+      "title": "Risks",
+      "type": "array"
+    },
+    "valuation": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Valuation"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Valuation analysis (DCF, comps, Monte Carlo)."
+    },
+    "sources": {
+      "description": "Sources used in the research. Source attribution required.",
+      "items": {
+        "$ref": "#/$defs/ResearchSource"
+      },
+      "title": "Sources",
+      "type": "array"
+    },
+    "pipeline_run_id": {
+      "description": "LangGraph pipeline execution ID.",
+      "title": "Pipeline Run Id",
+      "type": "string"
+    },
+    "hitl_gates_passed": {
+      "description": "HITL gates passed during pipeline.",
+      "items": {
+        "type": "string"
+      },
+      "title": "Hitl Gates Passed",
+      "type": "array"
+    },
+    "anti_fabrication_score": {
+      "description": "Anti-fabrication confidence score (0-1).",
+      "maximum": 1,
+      "minimum": 0,
+      "title": "Anti Fabrication Score",
+      "type": "number"
+    },
+    "created_at": {
+      "description": "Brief creation timestamp.",
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "trace_id": {
+      "description": "Links to M10 audit trail.",
+      "title": "Trace Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "brief_id",
+    "analyst_id",
+    "rating",
+    "summary",
+    "thesis",
+    "sources",
+    "pipeline_run_id",
+    "anti_fabrication_score",
+    "created_at",
+    "trace_id"
+  ],
+  "title": "ResearchBrief",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://007.fsi/schemas/canonical/research-brief/v0.1.0"
+}

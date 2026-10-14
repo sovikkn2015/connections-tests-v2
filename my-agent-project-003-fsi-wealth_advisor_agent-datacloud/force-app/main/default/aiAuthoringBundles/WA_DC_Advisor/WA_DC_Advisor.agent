@@ -1,0 +1,168 @@
+system:
+    instructions: "You are a wealth advisor tool. You MUST use the available actions to answer every question. Call the action first, then present the results."
+    messages:
+        welcome: "Wealth Advisor Assistant (Data Cloud) ready. Ask me about any client."
+        error: "Action failed. Please try again."
+
+config:
+    developer_name: "WA_DC_Advisor"
+    default_agent_user: "Sovik Nath"
+    agent_label: "WA DC Advisor"
+    description: "Wealth advisor powered by Data Cloud"
+
+variables:
+    result: mutable string = ""
+        description: "Result from the last action call"
+
+language:
+    default_locale: "en_US"
+    additional_locales: ""
+    all_additional_locales: False
+
+start_agent topic_selector:
+    label: "Topic Selector"
+    description: "Route to the right topic"
+
+    reasoning:
+        instructions:|
+            Select the tool that best matches the user's message.
+        actions:
+            go_to_client_lookup: @utils.transition to @topic.client_lookup
+                description: "User wants to look up a client or household"
+            go_to_portfolio_review: @utils.transition to @topic.portfolio_review
+                description: "User wants to review a portfolio or check performance"
+            go_to_goal_planning: @utils.transition to @topic.goal_planning
+                description: "User wants to check financial goals or progress"
+            go_to_meeting_prep: @utils.transition to @topic.meeting_prep
+                description: "User wants to prepare for a client meeting"
+            go_to_escalation: @utils.transition to @topic.escalation
+                description: "User wants to speak to a human"
+            go_to_off_topic: @utils.transition to @topic.off_topic
+                description: "User request is off-topic"
+
+topic client_lookup:
+    label: "Client Lookup"
+    description: "Look up client and household information from Data Cloud"
+
+    actions:
+        get_client_360:
+            description: "Look up a client or household by name from Data Cloud. Returns household members, AUM, accounts."
+            inputs:
+                clientName: string
+                    description: "The client or household name"
+            outputs:
+                clientSummary: string
+                    description: "Complete client and household summary"
+            target: "apex://DC_ClientLookupAction"
+
+    reasoning:
+        instructions:->
+            if @variables.result:
+                | Here is the client information:
+                  {!@variables.result}
+            else:
+                | Use get_client_360 to look up the client. Extract the name from the user message and call the action immediately.
+        actions:
+            get_client_360: @actions.get_client_360
+                with clientName=...
+                set @variables.result = @outputs.clientSummary
+
+topic portfolio_review:
+    label: "Portfolio Review"
+    description: "Review portfolio allocation and performance from Data Cloud"
+
+    actions:
+        get_portfolio_summary:
+            description: "Get portfolio summary for a client from Data Cloud. Returns balances, allocation, and YTD returns."
+            inputs:
+                clientName: string
+                    description: "The client name"
+            outputs:
+                portfolioSummary: string
+                    description: "Portfolio summary"
+            target: "apex://DC_PortfolioReviewAction"
+
+    reasoning:
+        instructions:->
+            if @variables.result:
+                | Here is the portfolio summary:
+                  {!@variables.result}
+            else:
+                | Use get_portfolio_summary to look up the portfolio. Extract the client name and call the action immediately.
+        actions:
+            get_portfolio_summary: @actions.get_portfolio_summary
+                with clientName=...
+                set @variables.result = @outputs.portfolioSummary
+
+topic goal_planning:
+    label: "Goal Planning"
+    description: "Review financial goals and progress from Data Cloud"
+
+    actions:
+        get_financial_goals:
+            description: "Get financial goals for a client from Data Cloud. Returns targets, progress, and gap analysis."
+            inputs:
+                clientName: string
+                    description: "The client or household name"
+            outputs:
+                goalsSummary: string
+                    description: "Financial goals with progress"
+            target: "apex://DC_GoalPlanningAction"
+
+    reasoning:
+        instructions:->
+            if @variables.result:
+                | Here are the financial goals:
+                  {!@variables.result}
+            else:
+                | Use get_financial_goals to look up the goals. Extract the name and call the action immediately.
+        actions:
+            get_financial_goals: @actions.get_financial_goals
+                with clientName=...
+                set @variables.result = @outputs.goalsSummary
+
+topic meeting_prep:
+    label: "Meeting Prep"
+    description: "Prepare a meeting brief from Data Cloud"
+
+    actions:
+        get_meeting_prep:
+            description: "Generate a meeting preparation brief from Data Cloud. Returns client summary, portfolio, goals, and talking points."
+            inputs:
+                clientName: string
+                    description: "The client name"
+            outputs:
+                meetingBrief: string
+                    description: "Complete meeting brief"
+            target: "apex://DC_MeetingPrepAction"
+
+    reasoning:
+        instructions:->
+            if @variables.result:
+                | Here is the meeting brief:
+                  {!@variables.result}
+            else:
+                | Use get_meeting_prep to prepare the brief. Extract the client name and call the action immediately.
+        actions:
+            get_meeting_prep: @actions.get_meeting_prep
+                with clientName=...
+                set @variables.result = @outputs.meetingBrief
+
+topic escalation:
+    label: "Escalation"
+    description: "Transfer to a human specialist"
+
+    reasoning:
+        instructions:->
+            | Escalate immediately.
+        actions:
+            escalate_to_human: @utils.escalate
+                description: "Transfer to human"
+
+topic off_topic:
+    label: "Off Topic"
+    description: "Redirect off-topic requests"
+
+    reasoning:
+        instructions:->
+            | I can help with client lookups, portfolio reviews, goal planning, and meeting prep.

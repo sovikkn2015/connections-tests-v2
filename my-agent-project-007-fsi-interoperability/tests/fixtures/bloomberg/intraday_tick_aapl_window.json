@@ -1,0 +1,13 @@
+{
+  "data": {
+    "IntradayTickResponse": {
+      "tickData": [
+        {"time": "2026-05-20T13:30:00Z", "type": "TRADE", "value": 189.46, "size": 100},
+        {"time": "2026-05-20T13:30:01Z", "type": "BID",   "value": 189.44, "size": 500},
+        {"time": "2026-05-20T13:30:01Z", "type": "ASK",   "value": 189.48, "size": 500}
+      ]
+    }
+  },
+  "partial": false,
+  "vendor_response_code": 0
+}

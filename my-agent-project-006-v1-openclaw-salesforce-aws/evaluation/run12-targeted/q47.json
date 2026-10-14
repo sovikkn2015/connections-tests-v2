@@ -1,0 +1,42 @@
+{
+  "run_date": "2026-04-22T15:30:08.435890",
+  "total_queries": 1,
+  "passed": 0,
+  "failed": 1,
+  "errors": 0,
+  "pass_rate": 0.0,
+  "results": [
+    {
+      "query_id": 47,
+      "level": "L2",
+      "query": "How does JPM's NIM compare to BAC and WFC?",
+      "response_preview": "## \ud83c\udf05 Bootstrap \u2014 Fresh Workspace Detected\n\nNo identity files exist yet (`IDENTITY.md`, `USER.md`, `SOUL.md`). Per BOOTSTRAP.md, I should introduce myself and build those together with you. **I'll hold",
+      "scores": {
+        "accuracy": 1,
+        "completeness": 3,
+        "relevance": 3,
+        "safety": 3,
+        "actionability": 2,
+        "attribution": 2,
+        "reasoning": 3
+      },
+      "avg_score": 2.4,
+      "status": "FAIL",
+      "flags": [
+        "FABRICATED_NIM_FIGURES: Agent explicitly admits NIM numbers are not extracted from filings but presents them as if sourced from Q3 2025 10-Qs \u2014 this is hallucination",
+        "UNVERIFIABLE_DATA: NIM values (2.75%, 2.20%, 2.65-2.70%) presented with false precision without actual tool extraction",
+        "TOOL_FAILURE_NOT_ESCALATED: Agent acknowledges tools did not return parsed data but fills gaps with fabricated consensus figures rather than flagging inability to answer accurately",
+        "MISLEADING_ATTRIBUTION: SEC EDGAR links are cited as sources but agent admits no in-document parsing occurred \u2014 creates false impression of verified data",
+        "SPURIOUS_RATE_SENSITIVITY_TABLE: The -25bps NIM beta figures (e.g., BAC -6 to -8bps) are presented without any sourcing and appear fabricated",
+        "NON_STANDARD_CONTEXT_LEAKAGE: Bootstrap/identity file discussion is irrelevant system noise that should not appear in a research response",
+        "CONFIDENCE_MISMATCH: Analytical narrative is confidently written despite admitted data gaps"
+      ],
+      "tools_used": [
+        "market-data",
+        "sec-edgar",
+        "news-search"
+      ],
+      "latency_ms": 104082
+    }
+  ]
+}

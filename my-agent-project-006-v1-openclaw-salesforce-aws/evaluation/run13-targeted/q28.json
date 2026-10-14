@@ -1,0 +1,38 @@
+{
+  "run_date": "2026-04-22T17:29:01.392339",
+  "total_queries": 1,
+  "passed": 1,
+  "failed": 0,
+  "errors": 0,
+  "pass_rate": 100.0,
+  "results": [
+    {
+      "query_id": 28,
+      "level": "L1",
+      "query": "Headlines on the NVDA-ARM deal",
+      "response_preview": "The **news-search MCP is currently returning a 500 error** across all three endpoints (search_financial_news, get_news_coverage, get_headlines). This is a live tool failure \u2014 I cannot fabricate headli",
+      "scores": {
+        "accuracy": 5,
+        "completeness": 3,
+        "relevance": 4,
+        "safety": 5,
+        "actionability": 4,
+        "attribution": 4,
+        "reasoning": 5
+      },
+      "avg_score": 4.3,
+      "status": "PASS",
+      "flags": [
+        "Tool failure prevented primary task completion",
+        "Cannot verify if new NVDA-ARM deal activity exists beyond 2022 collapse",
+        "Completeness inherently limited by MCP 500 error \u2014 not agent fabrication fault"
+      ],
+      "tools_used": [
+        "market-data",
+        "sec-edgar",
+        "news-search"
+      ],
+      "latency_ms": 69452
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+# The eval suite uses AgentCore SDK directly (boto3 invoke_agent_runtime),
+# not the gateway URL. This field is retained for reference only.
+# gateway_url: "http://localhost:18789"  # local dev only — not used by run_suite.py
+gateway_url: "agentcore-sdk"  # sentinel value — eval uses boto3, not HTTP
+gateway_token: "${OPENCLAW_GATEWAY_TOKEN}"
+agent_id: "fsi-research"
+judge_model: "us.anthropic.claude-sonnet-4-6"
+langfuse:
+  secret_key: "${LANGFUSE_SECRET_KEY}"
+  public_key: "${LANGFUSE_PUBLIC_KEY}"
+  base_url: "${LANGFUSE_BASE_URL}"
+thresholds:
+  L1: 4.5
+  L2: 4.0
+  L3: 3.5
+  L4: 3.0
+  L5: 3.5
+  Edge: "refusal"

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Linked_Wire_Id__c</fullName>
+    <label>Linked Wire Id</label>
+    <description>Dwolla / Fedwire reference when Action__c is WIRE_*.</description>
+    <type>Text</type>
+    <length>64</length>
+    <required>false</required>
+    <externalId>false</externalId>
+    <trackTrending>false</trackTrending>
+</CustomField>

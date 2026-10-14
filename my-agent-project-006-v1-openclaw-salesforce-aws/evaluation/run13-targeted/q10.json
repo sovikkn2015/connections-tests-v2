@@ -1,0 +1,39 @@
+{
+  "run_date": "2026-04-22T17:12:13.552258",
+  "total_queries": 1,
+  "passed": 0,
+  "failed": 1,
+  "errors": 0,
+  "pass_rate": 0.0,
+  "results": [
+    {
+      "query_id": 10,
+      "level": "L1",
+      "query": "Where's crude oil trading?",
+      "response_preview": "WTI Crude Oil (CL=F) is trading at **$93.21/bbl**, with an intraday range of $87.64 \u2013 $93.73.\n\nSource: market-data (Yahoo Finance)",
+      "scores": {
+        "accuracy": 2,
+        "completeness": 3,
+        "relevance": 4,
+        "safety": 4,
+        "actionability": 3,
+        "attribution": 3,
+        "reasoning": 3
+      },
+      "avg_score": 3.1,
+      "status": "FAIL",
+      "flags": [
+        "UNVERIFIABLE_PRICE_DATA: $93.21/bbl cannot be verified against ground truth \u2014 price may be stale or fabricated",
+        "INCOMPLETE_CONTEXT: No timestamp provided for the quote, critical for trading decisions",
+        "MISSING_BENCHMARKS: Brent crude not mentioned, only WTI covered",
+        "INTRADAY_RANGE_SUSPICIOUS: $87.64\u2013$93.73 is an unusually wide ~7% intraday range for crude oil",
+        "NO_CHANGE_DATA: No daily change % or volume provided",
+        "ATTRIBUTION_WEAK: 'Yahoo Finance via market-data MCP' is partially traceable but no timestamp or ticker confirmation shown"
+      ],
+      "tools_used": [
+        "market-data"
+      ],
+      "latency_ms": 51585
+    }
+  ]
+}

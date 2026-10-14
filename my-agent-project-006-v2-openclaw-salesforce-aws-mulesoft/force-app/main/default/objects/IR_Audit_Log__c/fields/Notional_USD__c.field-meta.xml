@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Notional_USD__c</fullName>
+    <description>Estimated USD notional value of the action at approval time. Drives dual-auth threshold logic. 0 for non-monetary actions like KYC screening or account opening.</description>
+    <externalId>false</externalId>
+    <label>Notional (USD)</label>
+    <precision>18</precision>
+    <required>false</required>
+    <scale>2</scale>
+    <type>Currency</type>
+</CustomField>

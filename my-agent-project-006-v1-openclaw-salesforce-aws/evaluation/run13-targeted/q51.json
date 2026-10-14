@@ -1,0 +1,42 @@
+{
+  "run_date": "2026-04-22T17:58:15.569060",
+  "total_queries": 1,
+  "passed": 0,
+  "failed": 1,
+  "errors": 0,
+  "pass_rate": 0.0,
+  "results": [
+    {
+      "query_id": 51,
+      "level": "L2",
+      "query": "NVDA filed an 8-K yesterday \u2014 what was it and how did the stock react?",
+      "response_preview": "Here's what the data shows:\n\n---\n\n**NVDA 8-K (Filed 2026-03-06) \u2014 Item 5.02: Director/Officer Departure or Appointment**\n\nThe most recent NVDA 8-K (accession **0001045810-26-000024**, filed **March 6,",
+      "scores": {
+        "accuracy": 2,
+        "completeness": 3,
+        "relevance": 4,
+        "safety": 4,
+        "actionability": 3,
+        "attribution": 4,
+        "reasoning": 3
+      },
+      "avg_score": 3.3,
+      "status": "FAIL",
+      "flags": [
+        "UNVERIFIABLE_FILING_DETAILS: 404 on actual document means specific executive/director name is unknown \u2014 core content of 8-K unconfirmed",
+        "POTENTIAL_HALLUCINATION: Stock price data ($175.64, $175.20, $165.17) cannot be verified against ground truth; may be fabricated or approximate",
+        "CAUSAL_OVERCLAIM: Attributing 5.7% drop to the 8-K filing without news context is speculative and potentially misleading",
+        "NEWS_MCP_FAILURE: News tool returned 500 error, leaving sentiment and press reaction completely unaddressed",
+        "CURRENT_PRICE_UNVERIFIABLE: $202.33 as of 2026-04-22 cannot be cross-checked",
+        "INCOMPLETE_FILING_CONTENT: Cannot confirm Item 5.02 specifics (who departed/was appointed) \u2014 the most critical piece of the query",
+        "DATE_AMBIGUITY: 'Yesterday' is relative; agent anchors to Mar 6 filing but query date context is unclear"
+      ],
+      "tools_used": [
+        "market-data",
+        "sec-edgar",
+        "news-search"
+      ],
+      "latency_ms": 112851
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "name": "finra_audit",
+  "passed": false,
+  "details": {
+    "correlation_id": "syn-audit-d3025e4b-963b-4551-8ad3-42a9b4175295",
+    "route": "/sec-edgar/tools/list",
+    "http_status": 200,
+    "audit_records_found": 0,
+    "audit_has_gateway_stage": false,
+    "cloudwatch_log_group": "/aws/ecs/ir-flex-gateway",
+    "cloudwatch_audit_events": 0
+  },
+  "error": null
+}

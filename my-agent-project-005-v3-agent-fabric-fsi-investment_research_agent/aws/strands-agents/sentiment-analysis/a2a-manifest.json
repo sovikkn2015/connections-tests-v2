@@ -1,0 +1,264 @@
+{
+  "protocol": "a2a/v1",
+  "agent": {
+    "id": "sentiment-analysis-agent",
+    "name": "Sentiment Analysis Agent",
+    "description": "Strands SDK agent on AWS Lambda. Analyzes earnings call transcripts, news sentiment, management tone shifts, and aggregates sentiment using Amazon Comprehend and Bedrock Claude Sonnet.",
+    "version": "2.0.0",
+    "vendor": "fsi-investment-research-v3",
+    "endpoint": "/agent",
+    "discovery_path": "/agent/.well-known/agent.json",
+    "capabilities": [
+      {
+        "id": "transcript-analysis",
+        "name": "Earnings Call Transcript Analysis",
+        "description": "Analyzes an earnings call transcript for sentiment, key themes, management tone, and named entities using Comprehend + Bedrock.",
+        "method": "POST",
+        "path": "/agent/analyze_transcript",
+        "internal_tool": "analyze_transcript",
+        "input_schema": {
+          "type": "object",
+          "required": ["ticker"],
+          "properties": {
+            "ticker": {
+              "type": "string",
+              "pattern": "^[A-Z]{1,5}$",
+              "description": "Stock ticker the transcript belongs to."
+            },
+            "text": {
+              "type": "string",
+              "maxLength": 50000,
+              "description": "Raw transcript text. If omitted, agent fetches latest via news/SEC MCP."
+            },
+            "quarter": {
+              "type": "string",
+              "pattern": "^[1-4]Q\\d{2,4}$",
+              "description": "Quarter identifier, e.g. '3Q24' or '3Q2024' (optional)."
+            }
+          },
+          "additionalProperties": false
+        },
+        "output_schema": {
+          "type": "object",
+          "required": ["ticker", "overall_sentiment", "themes"],
+          "properties": {
+            "ticker": {"type": "string"},
+            "overall_sentiment": {
+              "type": "string",
+              "enum": ["POSITIVE", "NEGATIVE", "NEUTRAL", "MIXED", "UNKNOWN"]
+            },
+            "sentiment_scores": {
+              "type": "object",
+              "properties": {
+                "positive": {"type": "number"},
+                "negative": {"type": "number"},
+                "neutral":  {"type": "number"},
+                "mixed":    {"type": "number"}
+              }
+            },
+            "themes": {
+              "type": "array",
+              "items": {"type": "string"},
+              "description": "Key themes extracted from the transcript."
+            },
+            "management_tone": {"type": "string"},
+            "entities": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "type":  {"type": "string"},
+                  "text":  {"type": "string"},
+                  "score": {"type": "number"}
+                }
+              }
+            },
+            "narrative": {"type": "string"}
+          }
+        }
+      },
+      {
+        "id": "news-sentiment-scoring",
+        "name": "News Sentiment Scoring",
+        "description": "Aggregates recent financial news headlines for a ticker and scores overall sentiment using Comprehend.",
+        "method": "POST",
+        "path": "/agent/score_news_sentiment",
+        "internal_tool": "score_news_sentiment",
+        "input_schema": {
+          "type": "object",
+          "required": ["ticker"],
+          "properties": {
+            "ticker": {"type": "string", "pattern": "^[A-Z]{1,5}$"},
+            "lookback_days": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 90,
+              "default": 7,
+              "description": "How many trailing days of news to include."
+            },
+            "max_articles": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          },
+          "additionalProperties": false
+        },
+        "output_schema": {
+          "type": "object",
+          "required": ["ticker", "overall_sentiment", "article_count"],
+          "properties": {
+            "ticker": {"type": "string"},
+            "overall_sentiment": {
+              "type": "string",
+              "enum": ["POSITIVE", "NEGATIVE", "NEUTRAL", "MIXED", "UNKNOWN"]
+            },
+            "sentiment_score": {
+              "type": "number",
+              "minimum": -1,
+              "maximum": 1,
+              "description": "Normalized score where +1 = fully positive, -1 = fully negative."
+            },
+            "article_count": {"type": "integer"},
+            "distribution": {
+              "type": "object",
+              "properties": {
+                "positive": {"type": "integer"},
+                "negative": {"type": "integer"},
+                "neutral":  {"type": "integer"},
+                "mixed":    {"type": "integer"}
+              }
+            },
+            "top_headlines": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "title":     {"type": "string"},
+                  "url":       {"type": "string"},
+                  "published": {"type": "string"},
+                  "sentiment": {"type": "string"}
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "id": "tone-shift-detection",
+        "name": "Management Tone Shift Detection",
+        "description": "Detects shifts in management tone between consecutive quarters or across a narrative by comparing sentiment and language patterns.",
+        "method": "POST",
+        "path": "/agent/detect_tone_shifts",
+        "internal_tool": "detect_tone_shifts",
+        "input_schema": {
+          "type": "object",
+          "required": ["ticker"],
+          "properties": {
+            "ticker": {"type": "string", "pattern": "^[A-Z]{1,5}$"},
+            "text": {
+              "type": "string",
+              "maxLength": 50000,
+              "description": "Optional combined commentary text. If omitted, agent compares latest two quarters."
+            },
+            "compare_quarters": {
+              "type": "array",
+              "items": {"type": "string", "pattern": "^[1-4]Q\\d{2,4}$"},
+              "minItems": 2,
+              "maxItems": 2,
+              "description": "Two quarter labels to compare, e.g. ['2Q24','3Q24']."
+            }
+          },
+          "additionalProperties": false
+        },
+        "output_schema": {
+          "type": "object",
+          "required": ["ticker", "shift_detected"],
+          "properties": {
+            "ticker": {"type": "string"},
+            "shift_detected": {"type": "boolean"},
+            "shift_magnitude": {
+              "type": "string",
+              "enum": ["none", "minor", "moderate", "significant"]
+            },
+            "direction": {
+              "type": "string",
+              "enum": ["more_positive", "more_negative", "neutral_drift", "none"]
+            },
+            "evidence": {
+              "type": "array",
+              "items": {"type": "string"},
+              "description": "Text snippets supporting the detected shift."
+            },
+            "narrative": {"type": "string"}
+          }
+        }
+      },
+      {
+        "id": "sentiment-aggregation",
+        "name": "Aggregate Sentiment Report",
+        "description": "Orchestrates transcript analysis, news scoring, and tone-shift detection to produce a combined sentiment report with Bedrock-generated narrative.",
+        "method": "POST",
+        "path": "/agent/aggregate_sentiment",
+        "internal_tool": "aggregate_sentiment",
+        "input_schema": {
+          "type": "object",
+          "required": ["ticker"],
+          "properties": {
+            "ticker": {"type": "string", "pattern": "^[A-Z]{1,5}$"},
+            "include_crm_context": {
+              "type": "boolean",
+              "default": true,
+              "description": "Whether to enrich with Salesforce analyst context."
+            }
+          },
+          "additionalProperties": false
+        },
+        "output_schema": {
+          "type": "object",
+          "required": ["ticker", "composite_sentiment", "narrative"],
+          "properties": {
+            "ticker": {"type": "string"},
+            "composite_sentiment": {
+              "type": "string",
+              "enum": ["POSITIVE", "NEGATIVE", "NEUTRAL", "MIXED"]
+            },
+            "composite_score": {"type": "number", "minimum": -1, "maximum": 1},
+            "components": {
+              "type": "object",
+              "properties": {
+                "transcript": {"type": "object"},
+                "news":       {"type": "object"},
+                "tone_shift": {"type": "object"}
+              }
+            },
+            "crm_context": {"type": ["object", "null"]},
+            "narrative": {"type": "string"}
+          }
+        }
+      }
+    ],
+    "auth": ["api-key", "mtls"],
+    "governance": {
+      "gateway": "flex-gateway",
+      "policies": [
+        "mnpi-filter",
+        "rate-limit",
+        "circuit-breaker",
+        "finra-audit",
+        "auth-mtls"
+      ]
+    },
+    "observability": {
+      "tracing": "langfuse",
+      "trace_id_header": "x-langfuse-trace-id"
+    },
+    "runtime": {
+      "platform": "aws-lambda",
+      "model": "us.anthropic.claude-sonnet-4-20250514-v1:0",
+      "sdk": "strands-agents",
+      "nlp_services": ["amazon-comprehend"]
+    }
+  }
+}

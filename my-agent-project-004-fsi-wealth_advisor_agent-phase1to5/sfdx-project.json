@@ -1,0 +1,7 @@
+{
+  "packageDirectories": [{"path": "force-app", "default": true}],
+  "name": "fsi-wealth-advisor-phase1to5",
+  "namespace": "",
+  "sfdcLoginUrl": "https://login.salesforce.com",
+  "sourceApiVersion": "66.0"
+}

@@ -1,0 +1,29 @@
+# Gap 4 — BSA/AML OPA bundle manifest.
+# Phase 3: Python monitors in compliance.gap4_bsa_aml_monitoring are the
+#          runtime. This bundle is an oracle-parity target.
+# Phase 4: promote OPA as runtime, Python becomes contract test oracle.
+schema_version: "1.0.0"
+bundle_name: "bsa-aml"
+bundle_version: "1.0.0"
+
+rules:
+  - file: "ctr.rego"
+    package: "authority.bsa_aml.ctr"
+    wsp_section: "WSP-BSA-8.2"
+    rule_applied: "authority/bsa_aml/ctr.v1"
+    oracle_ref: "compliance.gap4_bsa_aml_monitoring.monitors.CtrMonitor"
+    severity: "ESCALATE"
+    legal_refs:
+      - "31 CFR §1010.311"
+      - "31 CFR §1010.313"
+
+  - file: "sar_structuring.rego"
+    package: "authority.bsa_aml.sar_structuring"
+    wsp_section: "WSP-BSA-8.1"
+    rule_applied: "authority/bsa_aml/sar_structuring.v1"
+    oracle_ref: "compliance.gap4_bsa_aml_monitoring.monitors.SarStructuringMonitor"
+    severity: "ESCALATE"
+    legal_refs:
+      - "31 CFR §1023.320"
+      - "31 USC §5324"
+      - "31 USC §5318(g)(2)"   # anti-tipping-off

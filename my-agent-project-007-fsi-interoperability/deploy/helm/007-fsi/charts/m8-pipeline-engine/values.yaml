@@ -1,0 +1,100 @@
+# M8 Pipeline Engine -- sub-chart values.
+# Spec: .kiro/specs/ops-hardening-wave2-intelligence-layer.md v0.2.0.
+# Zero credentials. Only Vault path references, IRSA role placeholder,
+# and non-secret configuration.
+
+image:
+  repository: ghcr.io/project-007/m8-pipeline-engine
+  tag: "0.1.0"
+  digest: ""                         # Set to sha256:... for production; empty uses tag.
+  pullPolicy: IfNotPresent
+
+replicas: 2
+
+# IRSA (R4.3) -- Bedrock access via IAM role, never baked keys.
+irsa:
+  roleArn: "arn:aws:iam::REPLACE_ME:role/REPLACE_ME"
+
+# Resources (R5.7) -- Sonnet calls are heavy.
+resources:
+  requests:
+    cpu: 500m
+    memory: 1Gi
+  limits:
+    cpu: 2000m
+    memory: 4Gi
+
+# PriorityClass (R7.1) -- HITL pipeline, 4h pending state is critical.
+priorityClassName: system-cluster-critical
+
+# Non-secret config (R3.1-R3.11). Vault PATHS are not secrets.
+config:
+  awsRegion: us-east-1
+  modelProvider: bedrock
+  modelId: anthropic.claude-sonnet-4-5-20250929-v1:0
+  checkpointerBackend: postgres
+  checkpointerDsnVaultPath: secret/data/m8/checkpointer_dsn
+  hitlHmacKeyVaultPath: secret/data/m8/hitl_hmac_key
+  gatewayBaseUrl: https://m6-gateway.internal:8443
+  auditBaseUrl: https://m10-audit.internal:8443
+  hitlTimeoutSeconds: 14400
+  maxWallClockSeconds: 1200
+  alertWallClockSeconds: 900
+  # M5 config schema + library SCHEMA_VERSION pin.
+  schemaVersion: "1.0.0"
+  configSchemaVersion: "m5:v0.3.0"
+
+# mTLS cert mount (R2.4). Secret populated by cert-manager Certificate below.
+mtls:
+  secretName: m8-mtls-cert
+
+# cert-manager Certificate (R4.7).
+certificate:
+  enabled: true
+  issuerRef:
+    name: internal-ca
+    kind: ClusterIssuer
+  duration: 24h
+  renewBefore: 2h
+
+# StatefulSet checkpointer overflow PVC (R5.5).
+persistence:
+  enabled: true
+  storageClass: gp3
+  size: 10Gi
+  mountPath: /var/lib/m8/overflow
+
+# NetworkPolicy (R4.5) -- only M6 may ingress.
+networkPolicy:
+  enabled: true
+  gatewayPodLabel: m6-mcp-gateway
+  extraIngressFrom: []              # M8 has no extras.
+
+# PodDisruptionBudget (R4.6).
+pdb:
+  enabled: true
+  minAvailable: 1
+
+# M8 has no HPA (R6.4). Block retained for schema stability.
+hpa:
+  enabled: false
+
+# Probes (R5.4).
+probes:
+  readiness:
+    path: /ready
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    failureThreshold: 3
+  liveness:
+    path: /health
+    initialDelaySeconds: 10
+    periodSeconds: 30
+    failureThreshold: 3
+
+# Wave 4 egress narrowing.
+egressAllowlist: []
+
+awsPrivateLink:
+  bedrockRuntime:
+    enabled: false

@@ -1,0 +1,79 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: |
+  007 Platform — shared infrastructure (stack owner: platform team).
+
+  Cross-module base. Every module stack references exports from here via
+  !ImportValue. This is the CloudFormation equivalent of the Helm umbrella
+  chart's global values — the wiring that M1..M13 plug into.
+
+  Resources:
+    - KMS key (per-tenant encryption, Rule 23)
+    - CFN template staging bucket (for nested-stack template URLs)
+
+  Module stacks create their own data stores and reference this key as the
+  default-at-rest encryption key.
+
+Parameters:
+  Prefix:       { Type: String, Default: fsi007 }
+  Environment:  { Type: String, Default: dev, AllowedValues: [dev, staging, prod] }
+
+Resources:
+
+  PlatformKmsKey:
+    Type: AWS::KMS::Key
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      Description: !Sub '007 platform-wide encryption key (${Environment})'
+      EnableKeyRotation: true
+      KeyPolicy:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AllowRootAccount
+            Effect: Allow
+            Principal: { AWS: !Sub 'arn:aws:iam::${AWS::AccountId}:root' }
+            Action: 'kms:*'
+            Resource: '*'
+      Tags:
+        - { Key: project, Value: '007' }
+        - { Key: environment, Value: !Ref Environment }
+
+  PlatformKmsKeyAlias:
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: !Sub 'alias/${Prefix}-${Environment}-platform'
+      TargetKeyId: !Ref PlatformKmsKey
+
+  CfnStagingBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub '${Prefix}-${Environment}-cfn-staging-${AWS::Region}'
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault: { SSEAlgorithm: AES256 }
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        IgnorePublicAcls: true
+        BlockPublicPolicy: true
+        RestrictPublicBuckets: true
+      LifecycleConfiguration:
+        Rules:
+          - Id: expire-old-templates
+            Status: Enabled
+            ExpirationInDays: 30
+      VersioningConfiguration: { Status: Enabled }
+      Tags:
+        - { Key: project, Value: '007' }
+        - { Key: environment, Value: !Ref Environment }
+
+Outputs:
+  KmsKeyArn:
+    Description: Platform KMS key ARN. Module stacks reference this for at-rest encryption.
+    Value: !GetAtt PlatformKmsKey.Arn
+    Export: { Name: '007-platform-KmsKeyArn' }
+  KmsKeyId:
+    Value: !Ref PlatformKmsKey
+    Export: { Name: '007-platform-KmsKeyId' }
+  CfnStagingBucketName:
+    Value: !Ref CfnStagingBucket
+    Export: { Name: '007-platform-CfnStagingBucket' }

@@ -1,0 +1,268 @@
+<apex:page controller="WA_WorkbenchController" showHeader="false" sidebar="false" standardStylesheets="false" docType="html-5.0" applyHtmlTag="true" applyBodyTag="false">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Wealth Advisor Workbench</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif; background: #f4f6f9; color: #16325c; height: 100vh; overflow: hidden; }
+        .wa-header { display: flex; align-items: center; justify-content: space-between; background: #1b5297; color: #fff; padding: 0 24px; height: 56px; flex-shrink: 0; }
+        .wa-header-title { font-size: 18px; font-weight: 600; letter-spacing: 0.3px; }
+        .wa-header-user { font-size: 13px; opacity: 0.85; }
+        .wa-container { display: flex; height: calc(100vh - 56px); }
+        .wa-left { width: 40%; min-width: 320px; display: flex; flex-direction: column; background: #fff; border-right: 1px solid #d8dde6; }
+        .wa-right { flex: 1; background: #f4f6f9; overflow-y: auto; padding: 32px; }
+        .wa-chat { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+        .wa-chat::-webkit-scrollbar { width: 6px; }
+        .wa-chat::-webkit-scrollbar-thumb { background: #c9c9c9; border-radius: 3px; }
+        .wa-msg { max-width: 85%; padding: 10px 14px; border-radius: 12px; font-size: 14px; line-height: 1.5; word-wrap: break-word; animation: fadeIn 0.25s ease; }
+        .wa-msg-user { align-self: flex-end; background: #0070d2; color: #fff; border-bottom-right-radius: 4px; }
+        .wa-msg-agent { align-self: flex-start; background: #f3f3f3; color: #16325c; border-bottom-left-radius: 4px; }
+        .wa-thinking { align-self: flex-start; display: flex; align-items: center; gap: 6px; padding: 10px 14px; background: #f3f3f3; border-radius: 12px; border-bottom-left-radius: 4px; font-size: 13px; color: #706e6b; }
+        .wa-thinking-dots span { display: inline-block; width: 6px; height: 6px; background: #706e6b; border-radius: 50%; animation: pulse 1.4s infinite ease-in-out; }
+        .wa-thinking-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .wa-thinking-dots span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes pulse { 0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; } 40% { transform: scale(1); opacity: 1; } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+        .wa-input-area { display: flex; gap: 8px; padding: 12px 16px; border-top: 1px solid #d8dde6; background: #fff; }
+        .wa-input { flex: 1; padding: 10px 14px; border: 1px solid #d8dde6; border-radius: 8px; font-size: 14px; outline: none; transition: border-color 0.2s; }
+        .wa-input:focus { border-color: #0070d2; box-shadow: 0 0 0 2px rgba(0,112,210,0.15); }
+        .wa-input::placeholder { color: #b0adab; }
+        .wa-send-btn { padding: 10px 20px; background: #0070d2; color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+        .wa-send-btn:hover { background: #005fb2; }
+        .wa-send-btn:disabled { background: #b0adab; cursor: not-allowed; }
+        .wa-samples { padding: 12px 16px; border-top: 1px solid #d8dde6; overflow-y: auto; max-height: 260px; }
+        .wa-sample-cat { margin-bottom: 10px; }
+        .wa-sample-cat-header { display: flex; align-items: center; gap: 6px; cursor: pointer; padding: 4px 0; user-select: none; }
+        .wa-sample-cat-label { font-size: 11px; font-weight: 700; color: #706e6b; text-transform: uppercase; letter-spacing: 0.5px; }
+        .wa-sample-cat-arrow { font-size: 10px; color: #706e6b; transition: transform 0.2s; }
+        .wa-sample-cat-arrow.open { transform: rotate(90deg); }
+        .wa-sample-pills { display: flex; flex-wrap: wrap; gap: 6px; padding-top: 6px; }
+        .wa-sample-pills.collapsed { display: none; }
+        .wa-pill { padding: 5px 12px; border: 1px solid #0070d2; color: #0070d2; background: #fff; border-radius: 16px; font-size: 12px; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+        .wa-pill:hover { background: #0070d2; color: #fff; }
+        .wa-help-title { font-size: 22px; font-weight: 700; color: #16325c; margin-bottom: 8px; }
+        .wa-help-subtitle { font-size: 14px; color: #706e6b; margin-bottom: 28px; }
+        .wa-help-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .wa-help-card { background: #fff; border-radius: 10px; padding: 18px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+        .wa-help-card-icon { font-size: 22px; margin-bottom: 6px; }
+        .wa-help-card-title { font-size: 14px; font-weight: 700; color: #16325c; margin-bottom: 4px; }
+        .wa-help-card-desc { font-size: 12px; color: #706e6b; line-height: 1.4; }
+        @media (max-width: 768px) {
+            .wa-container { flex-direction: column; }
+            .wa-left { width: 100%; min-width: unset; height: 60vh; border-right: none; border-bottom: 1px solid #d8dde6; }
+            .wa-right { height: 40vh; padding: 20px; }
+            .wa-help-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="wa-header">
+        <div class="wa-header-title">&#x1F4BC; Wealth Advisor Workbench</div>
+        <div class="wa-header-user">{!$User.FirstName} {!$User.LastName}</div>
+    </div>
+    <div class="wa-container">
+        <div class="wa-left">
+            <div class="wa-chat" id="chatArea">
+                <div class="wa-msg wa-msg-agent">Welcome! I can help you look up clients, review portfolios, check goals, prep for meetings, and more. Try a sample query below or type your own.</div>
+            </div>
+            <div class="wa-input-area">
+                <input type="text" class="wa-input" id="queryInput" placeholder="Ask about a client, portfolio, goal..." />
+                <button class="wa-send-btn" id="sendBtn" onclick="sendQuery()">Send</button>
+            </div>
+            <div class="wa-samples" id="samplesArea">
+                <div class="wa-sample-cat">
+                    <div class="wa-sample-cat-header" onclick="toggleCat(this)">
+                        <span class="wa-sample-cat-arrow open">&#9654;</span>
+                        <span class="wa-sample-cat-label">&#x1F464; Client Lookup</span>
+                    </div>
+                    <div class="wa-sample-pills">
+                        <span class="wa-pill" onclick="runSample(this)">Tell me about the Johnsons</span>
+                        <span class="wa-pill" onclick="runSample(this)">Who is Wei Chen?</span>
+                        <span class="wa-pill" onclick="runSample(this)">Look up the Patel family</span>
+                    </div>
+                </div>
+                <div class="wa-sample-cat">
+                    <div class="wa-sample-cat-header" onclick="toggleCat(this)">
+                        <span class="wa-sample-cat-arrow open">&#9654;</span>
+                        <span class="wa-sample-cat-label">&#x1F4CA; Portfolio</span>
+                    </div>
+                    <div class="wa-sample-pills">
+                        <span class="wa-pill" onclick="runSample(this)">How is Wei Chen's portfolio?</span>
+                        <span class="wa-pill" onclick="runSample(this)">Johnson allocation</span>
+                        <span class="wa-pill" onclick="runSample(this)">Patel portfolio review</span>
+                    </div>
+                </div>
+                <div class="wa-sample-cat">
+                    <div class="wa-sample-cat-header" onclick="toggleCat(this)">
+                        <span class="wa-sample-cat-arrow open">&#9654;</span>
+                        <span class="wa-sample-cat-label">&#x1F3AF; Goals</span>
+                    </div>
+                    <div class="wa-sample-pills">
+                        <span class="wa-pill" onclick="runSample(this)">What are the Patels' goals?</span>
+                        <span class="wa-pill" onclick="runSample(this)">Johnson retirement progress</span>
+                    </div>
+                </div>
+                <div class="wa-sample-cat">
+                    <div class="wa-sample-cat-header" onclick="toggleCat(this)">
+                        <span class="wa-sample-cat-arrow open">&#9654;</span>
+                        <span class="wa-sample-cat-label">&#x1F4CB; Meeting Prep</span>
+                    </div>
+                    <div class="wa-sample-pills">
+                        <span class="wa-pill" onclick="runSample(this)">Prep me for my meeting with Carlos</span>
+                        <span class="wa-pill" onclick="runSample(this)">Meeting brief for Raj Patel</span>
+                    </div>
+                </div>
+                <div class="wa-sample-cat">
+                    <div class="wa-sample-cat-header" onclick="toggleCat(this)">
+                        <span class="wa-sample-cat-arrow open">&#9654;</span>
+                        <span class="wa-sample-cat-label">&#x2696; Rebalancing</span>
+                    </div>
+                    <div class="wa-sample-pills">
+                        <span class="wa-pill" onclick="runSample(this)">Does Sarah Johnson need rebalancing?</span>
+                        <span class="wa-pill" onclick="runSample(this)">Check drift for Chen family</span>
+                    </div>
+                </div>
+                <div class="wa-sample-cat">
+                    <div class="wa-sample-cat-header" onclick="toggleCat(this)">
+                        <span class="wa-sample-cat-arrow open">&#9654;</span>
+                        <span class="wa-sample-cat-label">&#x1F4B3; Transactions</span>
+                    </div>
+                    <div class="wa-sample-pills">
+                        <span class="wa-pill" onclick="runSample(this)">Recent transactions for Wei Chen</span>
+                        <span class="wa-pill" onclick="runSample(this)">Johnson transaction history</span>
+                    </div>
+                </div>
+                <div class="wa-sample-cat">
+                    <div class="wa-sample-cat-header" onclick="toggleCat(this)">
+                        <span class="wa-sample-cat-arrow open">&#9654;</span>
+                        <span class="wa-sample-cat-label">&#x2705; Compliance</span>
+                    </div>
+                    <div class="wa-sample-pills">
+                        <span class="wa-pill" onclick="runSample(this)">Is the Patel account compliant?</span>
+                        <span class="wa-pill" onclick="runSample(this)">Compliance check on Martinez</span>
+                    </div>
+                </div>
+                <div class="wa-sample-cat">
+                    <div class="wa-sample-cat-header" onclick="toggleCat(this)">
+                        <span class="wa-sample-cat-arrow open">&#9654;</span>
+                        <span class="wa-sample-cat-label">&#x1F91D; Referrals</span>
+                    </div>
+                    <div class="wa-sample-pills">
+                        <span class="wa-pill" onclick="runSample(this)">Who referred the Williams family?</span>
+                        <span class="wa-pill" onclick="runSample(this)">Referral status for Chen</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="wa-right">
+            <div class="wa-help-title">Ask the Wealth Advisor</div>
+            <div class="wa-help-subtitle">About clients, portfolios, goals, and more. Use the chat or click a sample query to get started.</div>
+            <div class="wa-help-grid">
+                <div class="wa-help-card">
+                    <div class="wa-help-card-icon">&#x1F464;</div>
+                    <div class="wa-help-card-title">Client Lookup</div>
+                    <div class="wa-help-card-desc">Get a 360-degree view of any client — contact info, household, AUM, risk profile, and relationship history.</div>
+                </div>
+                <div class="wa-help-card">
+                    <div class="wa-help-card-icon">&#x1F4CA;</div>
+                    <div class="wa-help-card-title">Portfolio Review</div>
+                    <div class="wa-help-card-desc">Review asset allocation, performance metrics, top holdings, and benchmark comparisons for any client portfolio.</div>
+                </div>
+                <div class="wa-help-card">
+                    <div class="wa-help-card-icon">&#x1F3AF;</div>
+                    <div class="wa-help-card-title">Goal Planning</div>
+                    <div class="wa-help-card-desc">Check progress on financial goals — retirement, college savings, estate planning — with on-track indicators.</div>
+                </div>
+                <div class="wa-help-card">
+                    <div class="wa-help-card-icon">&#x1F4CB;</div>
+                    <div class="wa-help-card-title">Meeting Prep</div>
+                    <div class="wa-help-card-desc">Generate a comprehensive meeting brief with talking points, recent activity, and recommended discussion topics.</div>
+                </div>
+                <div class="wa-help-card">
+                    <div class="wa-help-card-icon">&#x2696;</div>
+                    <div class="wa-help-card-title">Rebalancing</div>
+                    <div class="wa-help-card-desc">Analyze portfolio drift against target allocation and get rebalancing recommendations with trade suggestions.</div>
+                </div>
+                <div class="wa-help-card">
+                    <div class="wa-help-card-icon">&#x1F4B3;</div>
+                    <div class="wa-help-card-title">Transactions</div>
+                    <div class="wa-help-card-desc">View recent transaction history — buys, sells, dividends, and transfers — with dates and amounts.</div>
+                </div>
+                <div class="wa-help-card">
+                    <div class="wa-help-card-icon">&#x2705;</div>
+                    <div class="wa-help-card-title">Compliance</div>
+                    <div class="wa-help-card-desc">Run suitability and compliance checks — concentration limits, restricted securities, and regulatory flags.</div>
+                </div>
+                <div class="wa-help-card">
+                    <div class="wa-help-card-icon">&#x1F91D;</div>
+                    <div class="wa-help-card-title">Referrals</div>
+                    <div class="wa-help-card-desc">Track referral sources, status, and conversion history for client acquisition and relationship mapping.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        var chatArea = document.getElementById('chatArea');
+        var queryInput = document.getElementById('queryInput');
+        var sendBtn = document.getElementById('sendBtn');
+        var isProcessing = false;
+        queryInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' &amp;&amp; !isProcessing) sendQuery();
+        });
+        function toggleCat(header) {
+            var arrow = header.querySelector('.wa-sample-cat-arrow');
+            var pills = header.nextElementSibling;
+            arrow.classList.toggle('open');
+            pills.classList.toggle('collapsed');
+        }
+        function runSample(el) {
+            if (isProcessing) return;
+            queryInput.value = el.textContent;
+            sendQuery();
+        }
+        function sendQuery() {
+            var query = queryInput.value.trim();
+            if (!query || isProcessing) return;
+            isProcessing = true;
+            sendBtn.disabled = true;
+            queryInput.value = '';
+            addMessage(query, 'user');
+            var thinkingEl = document.createElement('div');
+            thinkingEl.className = 'wa-thinking';
+            thinkingEl.innerHTML = 'Thinking <div class="wa-thinking-dots"><span></span><span></span><span></span></div>';
+            chatArea.appendChild(thinkingEl);
+            scrollToBottom();
+            Visualforce.remoting.Manager.invokeAction(
+                '{!$RemoteAction.WA_WorkbenchController.routeQuery}',
+                query,
+                function(result, event) {
+                    if (thinkingEl.parentNode) thinkingEl.parentNode.removeChild(thinkingEl);
+                    if (event.status) {
+                        addMessage(result, 'agent');
+                    } else {
+                        addMessage('Error: ' + (event.message || 'Unknown error'), 'agent');
+                    }
+                    isProcessing = false;
+                    sendBtn.disabled = false;
+                    queryInput.focus();
+                },
+                { escape: false }
+            );
+        }
+        function addMessage(text, type) {
+            var div = document.createElement('div');
+            div.className = 'wa-msg wa-msg-' + type;
+            if (type === 'agent') {
+                div.innerHTML = text.replace(/\n/g, '<br/>');
+            } else {
+                div.textContent = text;
+            }
+            chatArea.appendChild(div);
+            scrollToBottom();
+        }
+        function scrollToBottom() {
+            setTimeout(function() { chatArea.scrollTop = chatArea.scrollHeight; }, 50);
+        }
+    </script>
+</body>
+</apex:page>

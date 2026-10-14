@@ -1,0 +1,26 @@
+{
+  "id": 12,
+  "text": "Show me Apple 10-Q",
+  "expected_category": "sec_filing",
+  "expected_path": "ORCH->GW->MCP:sec-edgar.get_10q",
+  "judge_pass": true,
+  "judge_score": 1.0,
+  "judge_reason": "Response correctly references the filing type (10-Q) and company (Apple Inc.). Multiple 10-Q filings are provided with accession numbers, fi",
+  "response_excerpt": "{\"tool\": \"get_10q\", \"ticker\": \"AAPL\", \"filings\": [{\"accession_number\": \"0000320193-26-000006\", \"filing_date\": \"2026-01-30\", \"form_type\": \"10-Q\", \"company_name\": \"Apple Inc.\", \"description\": \"10-Q\"}, {\"accession_number\": \"0000320193-25-00007",
+  "latency_ms": 3362,
+  "http_status": 200,
+  "status_verdict": "PASS",
+  "skip_reason": null,
+  "tool_calls": [
+    "sec-edgar.get_10q"
+  ],
+  "langfuse_trace_id": "715b8fab-d181-47b0-b960-a5b101622776",
+  "audit_records_found": 0,
+  "audit_has_gateway_stage": false,
+  "mnpi_redactions_observed": 0,
+  "circuit_breaker_tripped": false,
+  "v2_status": "PASS",
+  "error": null,
+  "mcp_direct_route": "/sec-edgar/tools/call",
+  "mcp_direct_correlation_id": "715b8fab-d181-47b0-b960-a5b101622776"
+}

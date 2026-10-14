@@ -1,0 +1,82 @@
+# Wave 2 values-cloud fragment -- intelligence layer (M8, M9, M12).
+#
+# Wave 1 owns values-cloud.yaml. Wave 2 supplies this fragment to be
+# merged under the three sub-chart alias keys. No credentials. Only
+# Vault path references, IRSA role placeholders, and non-secret config.
+#
+# Merge target: values-cloud.yaml (Wave 1) merges these three top-level
+# keys. Each key matches the corresponding sub-chart dependency alias
+# in the umbrella Chart.yaml (Wave 1 declares the dependency list).
+#
+# Spec: .kiro/specs/ops-hardening-wave2-intelligence-layer.md v0.2.0 R8.
+
+m8-pipeline-engine:
+  image:
+    repository: ghcr.io/project-007/m8-pipeline-engine
+    tag: "0.1.0"
+    digest: "REPLACE_ME_SHA256"       # Production: sha256:<digest from registry>.
+    pullPolicy: IfNotPresent
+  replicas: 2
+  irsa:
+    roleArn: "arn:aws:iam::REPLACE_ME:role/project-007-m8-bedrock"
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: 2000m
+      memory: 4Gi
+  priorityClassName: system-cluster-critical
+  persistence:
+    enabled: true
+    storageClass: gp3
+    size: 10Gi
+    mountPath: /var/lib/m8/overflow
+
+m9-intent-router:
+  image:
+    repository: ghcr.io/project-007/m9-intent-router
+    tag: "0.1.0"
+    digest: "REPLACE_ME_SHA256"
+    pullPolicy: IfNotPresent
+  replicas: 3
+  irsa:
+    roleArn: "arn:aws:iam::REPLACE_ME:role/project-007-m9-bedrock"
+  resources:
+    requests:
+      cpu: 200m
+      memory: 256Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+  priorityClassName: system-node-critical
+  hpa:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+
+m12-supervisor:
+  image:
+    repository: ghcr.io/project-007/m12-supervisor
+    tag: "0.1.0"
+    digest: "REPLACE_ME_SHA256"
+    pullPolicy: IfNotPresent
+  replicas: 2
+  irsa:
+    roleArn: "arn:aws:iam::REPLACE_ME:role/project-007-m12-bedrock"
+  resources:
+    requests:
+      cpu: 300m
+      memory: 512Mi
+    limits:
+      cpu: 1500m
+      memory: 2Gi
+  priorityClassName: system-cluster-critical
+  hpa:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+  config:
+    dispatchMode: local              # Phase 2 lighthouse; flip to remote in Wave 3.

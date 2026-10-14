@@ -1,0 +1,22 @@
+{
+  "id": 7,
+  "text": "Analyst consensus for GOOGL",
+  "expected_category": "analyst_consensus",
+  "expected_path": "ORCH->CRM+MCP:market-data.get_analyst_consensus",
+  "judge_pass": true,
+  "judge_score": 0.85,
+  "judge_reason": "[dry-run] fake judge pass",
+  "response_excerpt": "GOOGL consensus: Sarah Chen HOLD target $185.00.",
+  "latency_ms": 1270,
+  "http_status": 200,
+  "tool_calls": [
+    "dry-run.fake_tool"
+  ],
+  "langfuse_trace_id": "dry-7",
+  "audit_records_found": 1,
+  "audit_has_gateway_stage": true,
+  "mnpi_redactions_observed": 0,
+  "circuit_breaker_tripped": false,
+  "v2_status": "PASS",
+  "error": null
+}

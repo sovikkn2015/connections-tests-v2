@@ -1,0 +1,13 @@
+{
+  "name": "007 Architecture Alignment",
+  "version": "1.0.0",
+  "description": "Before any write to the 007 project, verify the code aligns with the 13-module architecture. Enforces module boundaries, trust layer rules, and tech stack decisions.",
+  "when": {
+    "type": "preToolUse",
+    "toolTypes": ["write"]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "ONLY if the file being written is inside my-agent-project-007-fsi-interoperability/, check these rules. If NOT in the 007 folder, respond ACCESS GRANTED.\n\n1. MODULE BOUNDARY: Which module (M1-M13) does this file belong to? Does it import from another module directly? Cross-module imports are BLOCKED — modules communicate via REST/MCP only.\n2. TRUST LAYER: If this code accesses vendor data, does it go through M6 gateway? Direct vendor API calls bypassing M6 are BLOCKED.\n3. COMPLIANCE: If this code makes compliance decisions, does it use OPA/Rego? LLM-based compliance checks are BLOCKED.\n4. MNPI: Does this code send MNPI fields (holdings amounts, trade intentions, wire details, SSN, DOB) to LLM prompts or agent memory unfiltered? If yes — BLOCK.\n5. CREDENTIALS: Does this file contain any API keys, passwords, org URLs, or secrets? If yes — BLOCK.\n6. AUDIT: If this code accesses client data or makes decisions, does it log to M10? Missing audit writes — WARN.\n7. SCHEMA: If this code handles vendor data, does it use M3 canonical types? Raw vendor types in business logic — WARN.\n8. COST BASIS: If this code handles position/holding data, does it preserve cost_basis_method? Null cost basis — BLOCK.\n\nIf all checks pass, respond ACCESS GRANTED."
+  }
+}

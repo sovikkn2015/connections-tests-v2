@@ -1,0 +1,410 @@
+# Project 007 FSI Interoperability Platform — Production CI/CD Pipeline
+# Rule 26: GitOps via ArgoCD. CI/CD via GitHub Actions.
+# Rule 20: Zero credentials in git. All secrets via GitHub Secrets.
+
+name: "007 FSI Platform CI/CD"
+
+on:
+  push:
+    paths:
+      - "my-agent-project-007-fsi-interoperability/**"
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+    paths:
+      - "my-agent-project-007-fsi-interoperability/**"
+
+env:
+  PROJECT_ROOT: my-agent-project-007-fsi-interoperability
+  PYTHON_VERSION: "3.12"
+  OPA_VERSION: "0.68.0"
+  HELM_VERSION: "3.15.0"
+
+permissions:
+  contents: read
+  security-events: write
+
+# ─── JOBS ────────────────────────────────────────────────────────
+
+jobs:
+
+  # ── 1. Lint ──────────────────────────────────────────────────
+  lint:
+    name: "Lint (Python + Rego)"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-lint-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: ${{ runner.os }}-pip-lint-
+
+      - name: Install ruff
+        run: pip install ruff
+
+      - name: Lint Python (ruff)
+        run: ruff check ${{ env.PROJECT_ROOT }}/src/ --config ${{ env.PROJECT_ROOT }}/pyproject.toml
+
+      - name: Download OPA
+        run: |
+          curl -L -o opa https://openpolicyagent.org/downloads/v${{ env.OPA_VERSION }}/opa_linux_amd64_static
+          chmod +x opa
+
+      - name: Lint Rego (OPA check)
+        run: ./opa check ${{ env.PROJECT_ROOT }}/opa-bundles/
+
+  # ── 2. Schema Validate ───────────────────────────────────────
+  schema-validate:
+    name: "Schema Validation"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-schema-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: ${{ runner.os }}-pip-schema-
+
+      - name: Install jsonschema
+        run: pip install jsonschema
+
+      - name: Validate canonical schemas
+        run: |
+          python -c "
+          import json, jsonschema, glob, sys
+          errors = 0
+          for f in sorted(glob.glob('${{ env.PROJECT_ROOT }}/schemas/canonical/*.json')):
+              try:
+                  with open(f) as fh:
+                      schema = json.load(fh)
+                      jsonschema.Draft202012Validator.check_schema(schema)
+                      print(f'VALID: {f}')
+              except Exception as e:
+                  print(f'INVALID: {f} — {e}')
+                  errors += 1
+          if errors:
+              print(f'\n{errors} schema(s) failed validation')
+              sys.exit(1)
+          print('\nAll schemas valid')
+          "
+
+  # ── 3. OPA Tests ─────────────────────────────────────────────
+  opa-test:
+    name: "OPA Policy Tests"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download OPA
+        run: |
+          curl -L -o opa https://openpolicyagent.org/downloads/v${{ env.OPA_VERSION }}/opa_linux_amd64_static
+          chmod +x opa
+
+      - name: Run OPA tests
+        run: ./opa test ${{ env.PROJECT_ROOT }}/opa-bundles/ -v
+
+  # ── 4. Unit Tests ────────────────────────────────────────────
+  unit-tests:
+    name: "Unit Tests"
+    runs-on: ubuntu-latest
+    needs: [lint, schema-validate, opa-test]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-unit-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: ${{ runner.os }}-pip-unit-
+
+      - name: Install all module dependencies
+        run: |
+          pip install pytest pytest-asyncio pytest-cov httpx
+          for req in $(find ${{ env.PROJECT_ROOT }}/src -name "requirements.txt" -not -path "*/node_modules/*"); do
+            echo "Installing deps from: $req"
+            pip install -r "$req" || true
+          done
+
+      - name: Run unit tests (all modules)
+        run: bash ${{ env.PROJECT_ROOT }}/run_all_tests.sh
+
+  # ── 5. Integration Tests ─────────────────────────────────────
+  integration-tests:
+    name: "Integration Tests"
+    runs-on: ubuntu-latest
+    needs: [unit-tests]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-integration-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: ${{ runner.os }}-pip-integration-
+
+      - name: Install dependencies
+        run: |
+          pip install pytest pytest-asyncio httpx
+          for req in $(find ${{ env.PROJECT_ROOT }}/src -name "requirements.txt" -not -path "*/node_modules/*"); do
+            pip install -r "$req" || true
+          done
+
+      - name: Run integration tests
+        run: python -m pytest ${{ env.PROJECT_ROOT }}/tests/integration/ -v --tb=short
+
+  # ── 6. Adversarial Tests ─────────────────────────────────────
+  adversarial-tests:
+    name: "Adversarial Tests"
+    runs-on: ubuntu-latest
+    needs: [unit-tests]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-adversarial-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: ${{ runner.os }}-pip-adversarial-
+
+      - name: Install dependencies
+        run: |
+          pip install pytest pytest-asyncio httpx
+          for req in $(find ${{ env.PROJECT_ROOT }}/src -name "requirements.txt" -not -path "*/node_modules/*"); do
+            pip install -r "$req" || true
+          done
+
+      - name: Run adversarial tests
+        run: python -m pytest ${{ env.PROJECT_ROOT }}/tests/adversarial/ -v --tb=short
+
+  # ── 7. Schema Reconciliation ─────────────────────────────────
+  schema-reconciliation:
+    name: "Schema Reconciliation"
+    runs-on: ubuntu-latest
+    needs: [lint, schema-validate]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-reconciliation-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: ${{ runner.os }}-pip-reconciliation-
+
+      - name: Install dependencies
+        run: |
+          pip install pytest pytest-asyncio httpx jsonschema
+          for req in $(find ${{ env.PROJECT_ROOT }}/src -name "requirements.txt" -not -path "*/node_modules/*"); do
+            pip install -r "$req" || true
+          done
+
+      - name: Run schema reconciliation tests
+        run: python -m pytest ${{ env.PROJECT_ROOT }}/tests/schema-reconciliation/ -v --tb=short
+
+  # ── 8. Docker Build (matrix) ─────────────────────────────────
+  docker-build:
+    name: "Docker Build — ${{ matrix.module.name }}"
+    runs-on: ubuntu-latest
+    needs: [unit-tests, integration-tests, adversarial-tests]
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
+    strategy:
+      fail-fast: false
+      matrix:
+        module:
+          # Trust Layer (Phase 1)
+          - { name: m1-identity, context: src/m1-identity }
+          - { name: m2-m4-policy-engine, context: src/m2-m4-policy-engine }
+          - { name: m10-audit-logger, context: src/m10-audit-logger }
+          # Gateway (Phase 1)
+          - { name: m6-mcp-gateway, context: src/m6-mcp-gateway }
+          # Intelligence Layer (Phase 2)
+          - { name: m8-pipeline-engine, context: src/m8-pipeline-engine }
+          - { name: m9-intent-router, context: src/m9-intent-router }
+          # Specialists
+          - { name: client-service-specialist, context: src/client-service-specialist }
+          - { name: execution-specialist, context: src/execution-specialist }
+          - { name: smarsh-archiver, context: src/smarsh-archiver }
+          # M11 Adapters (polyglot — each is its own container, Rule 10)
+          - { name: m11-sec-edgar, context: src/m11-mcp-adapters/sec-edgar }
+          - { name: m11-salesforce-fsc, context: src/m11-mcp-adapters/salesforce-fsc }
+          - { name: m11-news-search, context: src/m11-mcp-adapters/news-search }
+          # M13 FIX Bridge (Phase 4, separate from M11 — Rule 11)
+          - { name: m13-fix-bridge, context: src/m13-fix-bridge }
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build image
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ env.PROJECT_ROOT }}/${{ matrix.module.context }}
+          push: false
+          tags: 007-fsi/${{ matrix.module.name }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ── 9. Docker Push to ECR (tags only) ────────────────────────
+  docker-push:
+    name: "Push to ECR — ${{ matrix.module.name }}"
+    runs-on: ubuntu-latest
+    needs: [docker-build, security-scan]
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    strategy:
+      fail-fast: false
+      matrix:
+        module:
+          - { name: m1-identity, context: src/m1-identity }
+          - { name: m2-m4-policy-engine, context: src/m2-m4-policy-engine }
+          - { name: m10-audit-logger, context: src/m10-audit-logger }
+          - { name: m6-mcp-gateway, context: src/m6-mcp-gateway }
+          - { name: m8-pipeline-engine, context: src/m8-pipeline-engine }
+          - { name: m9-intent-router, context: src/m9-intent-router }
+          - { name: client-service-specialist, context: src/client-service-specialist }
+          - { name: execution-specialist, context: src/execution-specialist }
+          - { name: smarsh-archiver, context: src/smarsh-archiver }
+          - { name: m11-sec-edgar, context: src/m11-mcp-adapters/sec-edgar }
+          - { name: m11-salesforce-fsc, context: src/m11-mcp-adapters/salesforce-fsc }
+          - { name: m11-news-search, context: src/m11-mcp-adapters/news-search }
+          - { name: m13-fix-bridge, context: src/m13-fix-bridge }
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: ecr-login
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Extract tag
+        id: tag
+        run: echo "version=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ env.PROJECT_ROOT }}/${{ matrix.module.context }}
+          push: true
+          tags: |
+            ${{ steps.ecr-login.outputs.registry }}/007-fsi/${{ matrix.module.name }}:${{ steps.tag.outputs.version }}
+            ${{ steps.ecr-login.outputs.registry }}/007-fsi/${{ matrix.module.name }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ── 10. Helm Lint ────────────────────────────────────────────
+  helm-lint:
+    name: "Helm Chart Lint"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: v${{ env.HELM_VERSION }}
+
+      - name: Lint chart (cloud values)
+        run: |
+          helm lint ${{ env.PROJECT_ROOT }}/infra/helm/007-platform/ \
+            -f ${{ env.PROJECT_ROOT }}/infra/helm/007-platform/values.yaml \
+            -f ${{ env.PROJECT_ROOT }}/infra/helm/007-platform/values-cloud.yaml
+
+      - name: Lint chart (hybrid values)
+        run: |
+          helm lint ${{ env.PROJECT_ROOT }}/infra/helm/007-platform/ \
+            -f ${{ env.PROJECT_ROOT }}/infra/helm/007-platform/values.yaml \
+            -f ${{ env.PROJECT_ROOT }}/infra/helm/007-platform/values-hybrid.yaml
+
+  # ── 11. Security Scan (Trivy) ────────────────────────────────
+  security-scan:
+    name: "Security Scan — ${{ matrix.module.name }}"
+    runs-on: ubuntu-latest
+    needs: [docker-build]
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
+    strategy:
+      fail-fast: false
+      matrix:
+        module:
+          - { name: m1-identity, context: src/m1-identity }
+          - { name: m2-m4-policy-engine, context: src/m2-m4-policy-engine }
+          - { name: m10-audit-logger, context: src/m10-audit-logger }
+          - { name: m6-mcp-gateway, context: src/m6-mcp-gateway }
+          - { name: m8-pipeline-engine, context: src/m8-pipeline-engine }
+          - { name: m9-intent-router, context: src/m9-intent-router }
+          - { name: client-service-specialist, context: src/client-service-specialist }
+          - { name: execution-specialist, context: src/execution-specialist }
+          - { name: smarsh-archiver, context: src/smarsh-archiver }
+          - { name: m11-sec-edgar, context: src/m11-mcp-adapters/sec-edgar }
+          - { name: m11-salesforce-fsc, context: src/m11-mcp-adapters/salesforce-fsc }
+          - { name: m11-news-search, context: src/m11-mcp-adapters/news-search }
+          - { name: m13-fix-bridge, context: src/m13-fix-bridge }
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build image for scanning
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ env.PROJECT_ROOT }}/${{ matrix.module.context }}
+          push: false
+          load: true
+          tags: 007-fsi/${{ matrix.module.name }}:scan
+          cache-from: type=gha
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: 007-fsi/${{ matrix.module.name }}:scan
+          format: sarif
+          output: trivy-${{ matrix.module.name }}.sarif
+          severity: CRITICAL,HIGH
+          exit-code: "1"
+
+      - name: Upload Trivy SARIF
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: trivy-${{ matrix.module.name }}.sarif

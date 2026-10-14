@@ -1,0 +1,43 @@
+{
+  "bundle": "account-type",
+  "gap": 5,
+  "schema_version": "1.0.0",
+  "description": "Gap 5 ERISA / IRA account-type gating rules with wsp_section cross-reference for Gap 3 bidirectional traceability.",
+  "rules": [
+    {
+      "file": "fiduciary_gate.rego",
+      "package": "authority.account_type.fiduciary_gate",
+      "rule_id": "authority.account_type.fiduciary_gate.reg_bi_blocked_on_retirement",
+      "wsp_section": "ERISA Policy §404(a)(1)(B)",
+      "severity": "BLOCK"
+    },
+    {
+      "file": "pte_2020_02.rego",
+      "package": "authority.account_type.pte_2020_02",
+      "rule_id": "authority.account_type.pte_2020_02.rollover_requires_enhanced_doc",
+      "wsp_section": "ERISA Policy §PTE 2020-02(b)",
+      "severity": "REQUIRE_ENHANCED_DOC"
+    },
+    {
+      "file": "pte_2020_02.rego",
+      "package": "authority.account_type.pte_2020_02",
+      "rule_id": "authority.account_type.pte_2020_02.rollover_documentation_retention",
+      "wsp_section": "ERISA Policy §PTE 2020-02(e)",
+      "severity": "INFO"
+    },
+    {
+      "file": "erisa.rego",
+      "package": "authority.account_type.erisa",
+      "rule_id": "authority.account_type.erisa.prohibited_transaction_party_in_interest",
+      "wsp_section": "ERISA Policy §406",
+      "severity": "BLOCK"
+    },
+    {
+      "file": "ira.rego",
+      "package": "authority.account_type.ira",
+      "rule_id": "authority.account_type.ira.irc_4975_prohibited_transaction",
+      "wsp_section": "ERISA Policy §IRC 4975",
+      "severity": "BLOCK"
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "total": 30,
+  "pass_count": 12,
+  "fail_count": 6,
+  "skipped_count": 12,
+  "scored_count": 18,
+  "pass_rate_pct": 66.67,
+  "pass_rate_denominator": 18,
+  "pass_rate_note": "SKIPPED queries are orchestrator-only and excluded from denominator",
+  "p50_latency_ms": 1285,
+  "p95_latency_ms": 8416,
+  "max_latency_ms": 13915,
+  "audit_coverage_pct": 0.0,
+  "audit_gateway_stage_count": 0,
+  "gateway_expected_count": 13,
+  "mnpi_redactions_total": 0,
+  "circuit_breaker_trips": 0,
+  "error_count": 0,
+  "skip_reasons": {
+    "skipped: requires orchestrator (CRM/SOQL lookup)": 8,
+    "skipped: requires orchestrator (compliance topic routing)": 2,
+    "skipped: requires orchestrator (refusal behavior)": 2
+  },
+  "v2_baseline": {
+    "date": "2026-04-18",
+    "agent_id": "0XxgK000001JItVSAW",
+    "pass_count": 23,
+    "degraded_count": 7,
+    "fail_count": 0,
+    "total": 30,
+    "pass_rate_pct": 76.67,
+    "median_latency_ms": 4500,
+    "max_latency_ms": 7069
+  },
+  "mode": "LIVE_MCP_DIRECT",
+  "timestamp_utc": "20260427T071433Z",
+  "queries_file": "/Users/sovikn/Documents/connections-test/my-agent-project-005-v3-agent-fabric-fsi-investment_research_agent/scripts/eval/queries.json",
+  "run_dir": "/Users/sovikn/Documents/connections-test/my-agent-project-005-v3-agent-fabric-fsi-investment_research_agent/scripts/eval/results/run-20260427T071433Z",
+  "mcp_direct": true
+}

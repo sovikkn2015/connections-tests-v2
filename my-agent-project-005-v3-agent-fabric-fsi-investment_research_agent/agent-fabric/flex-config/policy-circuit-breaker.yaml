@@ -1,0 +1,68 @@
+# Circuit breaker — Envoy-style concurrent-request limits per upstream.
+# Mirrors agent-fabric/policies/circuit-breaker.yaml in flex-gateway
+# self-managed format.
+#
+# IMPORTANT — scope of this policy
+# ─────────────────────────────────
+# The design-doc CB semantics in agent-fabric/policies/circuit-breaker.yaml
+# ("open after 3 × (500|502|503|504) in 30s") describe a pattern that the
+# Flex self-managed `circuit-breaker-flex` policy does NOT implement.
+# Flex's CB is the Envoy upstream-clusters circuit breaker — it trips when
+# concurrent load exceeds a threshold, not when a rate of 5xx responses
+# accumulates. Rate-based CB (on 5xx) would require Envoy outlier-detection
+# configured via a bootstrap override, or a custom WASM policy.
+#
+# What THIS policy gives us, concretely:
+#   • maxConnections:      N parallel L4 connections to the upstream
+#   • maxPendingRequests:  N queued HTTP requests waiting for a connection
+#   • maxRequests:         N in-flight L7 requests
+#   • maxRetries:          N concurrent retries
+#   • maxConnectionPools:  N connection pools
+#
+# When ANY threshold is exceeded, Flex returns 503 to the offending caller
+# (and subsequent overflow), protecting the upstream from a thundering herd.
+#
+# Tuning rationale
+# ─────────────────
+# Rate-limit (per-agent, 25 req/s) is the FIRST defence at layer 7 — it
+# keeps any single caller within its quota. Circuit-breaker is the SECOND
+# defence at layer 4/7 — it caps concurrent load on the upstream cluster
+# regardless of which caller sent the request.
+#
+# The synthetic test fires N parallel long-running probes from a DEDICATED
+# agent id (cb-test-agent) so rate-limit (per-agent) does not interfere:
+# all N get through rate-limit, but CB trips on the concurrent-request
+# threshold and returns 503 with `x-circuit-breaker: open` for the excess.
+#
+# The thresholds are set low enough to deterministically trigger with 8
+# parallel slow calls, but Lambda cold-start latency (~2s) means a single
+# legitimate caller at 25 req/s (burst 50) stays well under 20 concurrent
+# requests in steady state. Numbers:
+#   • maxConnections     5 — L4 TCP connections to nginx sidecar (Envoy
+#                            multiplexes HTTP/1.1 over these)
+#   • maxPendingRequests 2 — queued behind the 5 connections
+#   • maxRequests        3 — L7 in-flight requests ceiling. This is the
+#                            critical lever: if >3 concurrent tool calls
+#                            are active, the 4th+ get 503.
+#   • maxRetries         2 — concurrent retries
+#   • maxConnectionPools 2 — connection-pool count (one per upstream + one
+#                            extra for safety)
+#
+# Reference: https://docs.mulesoft.com/gateway/latest/policies-outbound-circuit-breaker
+apiVersion: gateway.mulesoft.com/v1alpha1
+kind: PolicyBinding
+metadata:
+  name: circuit-breaker-binding
+spec:
+  targetRef:
+    kind: ApiInstance
+    name: fsi-mcp-servers
+  policyRef:
+    name: circuit-breaker-flex
+  config:
+    thresholds:
+      maxConnections: 5
+      maxPendingRequests: 2
+      maxRequests: 3
+      maxRetries: 2
+      maxConnectionPools: 2

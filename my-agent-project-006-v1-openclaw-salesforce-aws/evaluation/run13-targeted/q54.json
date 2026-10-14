@@ -1,0 +1,39 @@
+{
+  "run_date": "2026-04-22T18:05:56.958453",
+  "total_queries": 1,
+  "passed": 1,
+  "failed": 0,
+  "errors": 0,
+  "pass_rate": 100.0,
+  "results": [
+    {
+      "query_id": 54,
+      "level": "L2",
+      "query": "Any material weakness disclosures in recent 10-Ks from regional banks?",
+      "response_preview": "Let me go directly to the most notable case \u2014 NYCB \u2014 and verify the filing:\n\n**Tool status summary before answering:** The `sec-edgar__search_filings` MCP tool is returning 500 errors and cannot be us",
+      "scores": {
+        "accuracy": 4,
+        "completeness": 3,
+        "relevance": 4,
+        "safety": 5,
+        "actionability": 4,
+        "attribution": 3,
+        "reasoning": 4
+      },
+      "avg_score": 3.9,
+      "status": "PASS",
+      "flags": [
+        "Tool failures limit verification of Item 9A content for all banks listed",
+        "NYCB ticker/name change to FLGF not fully resolved in tool calls",
+        "No Salesforce/SOQL tool used despite being expected per persona",
+        "Filing dates listed as 2026 may reflect forward-looking metadata not validated against actual filings",
+        "Cannot confirm absence of material weaknesses for KEY, RF, ZION, FHN, WAL without document text"
+      ],
+      "tools_used": [
+        "sec-edgar",
+        "news-search"
+      ],
+      "latency_ms": 165862
+    }
+  ]
+}

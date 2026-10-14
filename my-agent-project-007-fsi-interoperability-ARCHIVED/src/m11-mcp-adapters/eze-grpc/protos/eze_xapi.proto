@@ -1,0 +1,174 @@
+// SS&C Eze xAPI gRPC Service Definitions — Phase 4
+// The actual .proto files are provided by SS&C Eze under NDA via their
+// developer portal. This definition models the realistic OMS/EMS API surface
+// so the adapter has something to compile against during development.
+//
+// Generate Python stubs:
+//   python -m grpc_tools.protoc -I protos \
+//     --python_out=src --grpc_python_out=src protos/eze_xapi.proto
+
+syntax = "proto3";
+
+package eze.xapi.v1;
+
+option java_multiple_files = true;
+option java_package = "com.sscinc.eze.xapi.v1";
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum Side {
+  SIDE_UNSPECIFIED = 0;
+  SIDE_BUY        = 1;
+  SIDE_SELL       = 2;
+  SIDE_SHORT      = 3;
+  SIDE_COVER      = 4;
+}
+
+enum OrderType {
+  ORDER_TYPE_UNSPECIFIED = 0;
+  ORDER_TYPE_MARKET     = 1;
+  ORDER_TYPE_LIMIT      = 2;
+  ORDER_TYPE_STOP       = 3;
+  ORDER_TYPE_STOP_LIMIT = 4;
+}
+
+enum OrderStatus {
+  ORDER_STATUS_UNSPECIFIED      = 0;
+  ORDER_STATUS_NEW              = 1;
+  ORDER_STATUS_OPEN             = 2;
+  ORDER_STATUS_PARTIALLY_FILLED = 3;
+  ORDER_STATUS_FILLED           = 4;
+  ORDER_STATUS_CANCELLED        = 5;
+  ORDER_STATUS_REJECTED         = 6;
+}
+
+// ---------------------------------------------------------------------------
+// OrderService — OMS operations
+// ---------------------------------------------------------------------------
+
+service OrderService {
+  // Retrieve orders filtered by portfolio and/or status.
+  rpc GetOrders (GetOrdersRequest) returns (GetOrdersResponse);
+
+  // Submit a new order for compliance pre-check and routing.
+  rpc SubmitOrder (SubmitOrderRequest) returns (SubmitOrderResponse);
+
+  // Cancel an open or partially filled order.
+  rpc CancelOrder (CancelOrderRequest) returns (CancelOrderResponse);
+}
+
+message Order {
+  string      order_id     = 1;
+  string      portfolio_id = 2;
+  string      security_id  = 3;   // CUSIP, ISIN, or SEDOL
+  Side        side         = 4;
+  double      quantity     = 5;
+  OrderType   order_type   = 6;
+  double      limit_price  = 7;   // populated when order_type is LIMIT or STOP_LIMIT
+  double      stop_price   = 8;   // populated when order_type is STOP or STOP_LIMIT
+  OrderStatus status       = 9;
+  string      created_at   = 10;  // ISO 8601
+  string      updated_at   = 11;  // ISO 8601
+}
+
+message GetOrdersRequest {
+  string      portfolio_id  = 1;
+  OrderStatus status_filter = 2;  // UNSPECIFIED returns all
+}
+
+message GetOrdersResponse {
+  repeated Order orders = 1;
+}
+
+message SubmitOrderRequest {
+  string    portfolio_id = 1;
+  string    security_id  = 2;
+  Side      side         = 3;
+  double    quantity     = 4;
+  OrderType order_type   = 5;
+  double    limit_price  = 6;
+  double    stop_price   = 7;
+  string    time_in_force = 8;  // DAY, GTC, IOC, FOK
+  string    account_id   = 9;   // sub-account for allocation
+}
+
+message SubmitOrderResponse {
+  string      order_id = 1;
+  OrderStatus status   = 2;
+  string      message  = 3;
+}
+
+message CancelOrderRequest {
+  string order_id = 1;
+}
+
+message CancelOrderResponse {
+  string      order_id = 1;
+  OrderStatus status   = 2;
+  string      message  = 3;
+}
+
+// ---------------------------------------------------------------------------
+// PositionService — portfolio position queries
+// ---------------------------------------------------------------------------
+
+service PositionService {
+  // Retrieve current positions for a portfolio.
+  rpc GetPositions (GetPositionsRequest) returns (GetPositionsResponse);
+}
+
+message Position {
+  string portfolio_id   = 1;
+  string security_id    = 2;   // CUSIP, ISIN, or SEDOL
+  double quantity        = 3;
+  double market_value    = 4;
+  double avg_cost        = 5;
+  double unrealized_pnl  = 6;
+  string as_of_date      = 7;  // ISO 8601 date
+  string currency        = 8;  // ISO 4217
+}
+
+message GetPositionsRequest {
+  string portfolio_id = 1;
+  string as_of_date   = 2;    // optional; defaults to current date
+}
+
+message GetPositionsResponse {
+  repeated Position positions = 1;
+}
+
+// ---------------------------------------------------------------------------
+// ExecutionService — trade execution / fill queries
+// ---------------------------------------------------------------------------
+
+service ExecutionService {
+  // Retrieve executions (fills) for a given order or portfolio.
+  rpc GetExecutions (GetExecutionsRequest) returns (GetExecutionsResponse);
+}
+
+message Execution {
+  string execution_id = 1;
+  string order_id     = 2;
+  string security_id  = 3;    // CUSIP, ISIN, or SEDOL
+  Side   side         = 4;
+  double quantity     = 5;
+  double price        = 6;
+  string venue        = 7;    // execution venue / market center
+  string timestamp    = 8;    // ISO 8601 with timezone
+  string currency     = 9;    // ISO 4217
+  double commission   = 10;
+  string settle_date  = 11;   // ISO 8601 date (T+1 / T+2)
+}
+
+message GetExecutionsRequest {
+  string order_id     = 1;    // filter by order (optional)
+  string portfolio_id = 2;    // filter by portfolio (optional)
+  string start_date   = 3;    // ISO 8601 date range start
+  string end_date     = 4;    // ISO 8601 date range end
+}
+
+message GetExecutionsResponse {
+  repeated Execution executions = 1;
+}

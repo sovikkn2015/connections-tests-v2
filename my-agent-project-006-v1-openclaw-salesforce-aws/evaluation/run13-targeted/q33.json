@@ -1,0 +1,39 @@
+{
+  "run_date": "2026-04-22T17:36:15.809228",
+  "total_queries": 1,
+  "passed": 1,
+  "failed": 0,
+  "errors": 0,
+  "pass_rate": 100.0,
+  "results": [
+    {
+      "query_id": 33,
+      "level": "L2",
+      "query": "What's consensus expecting for MSFT this quarter?",
+      "response_preview": "Here's what the available tools are returning for **MSFT** right now:\n\n---\n\n**Microsoft (MSFT) \u2014 Current Market Snapshot**\n- **Price:** $431.61 (+$7.45 / +1.76% on latest session)\n- **Source:** market",
+      "scores": {
+        "accuracy": 4,
+        "completeness": 3,
+        "relevance": 4,
+        "safety": 5,
+        "actionability": 4,
+        "attribution": 4,
+        "reasoning": 4
+      },
+      "avg_score": 4.0,
+      "status": "PASS",
+      "flags": [
+        "Consensus data unavailable due to tool error \u2014 core query unanswered",
+        "No fallback partial data provided (e.g., last known estimates)",
+        "Earnings calendar showing no event may be stale or provider-specific gap",
+        "Price figure cannot be independently verified against ground truth"
+      ],
+      "tools_used": [
+        "market-data",
+        "sec-edgar",
+        "news-search"
+      ],
+      "latency_ms": 86196
+    }
+  ]
+}

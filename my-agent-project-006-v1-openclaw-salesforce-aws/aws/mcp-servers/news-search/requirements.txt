@@ -1,0 +1,2 @@
+requests==2.32.3
+langfuse==2.51.0

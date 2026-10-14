@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<AiEvaluationDefinition xmlns="http://soap.sforce.com/2006/04/metadata">
+    <name>Hello_World_Agent_Test</name>
+    <subjectName>Hello_World_Agent</subjectName>
+    <subjectType>AGENT</subjectType>
+    <testCase>
+        <number>1</number>
+        <inputs>
+            <utterance>Hello, my name is Sam</utterance>
+        </inputs>
+        <expectation>
+            <expectedValue>greeting</expectedValue>
+            <name>topic_sequence_match</name>
+        </expectation>
+        <expectation>
+            <expectedValue>[&apos;get_greeting&apos;]</expectedValue>
+            <name>action_sequence_match</name>
+        </expectation>
+        <expectation>
+            <expectedValue>The agent calls get_greeting and returns a personalized greeting mentioning Sam</expectedValue>
+            <name>bot_response_rating</name>
+        </expectation>
+    </testCase>
+    <testCase>
+        <number>2</number>
+        <inputs>
+            <utterance>I want to talk to a real person</utterance>
+        </inputs>
+        <expectation>
+            <expectedValue>escalation</expectedValue>
+            <name>topic_sequence_match</name>
+        </expectation>
+        <expectation>
+            <expectedValue>[&apos;escalate_to_human&apos;]</expectedValue>
+            <name>action_sequence_match</name>
+        </expectation>
+        <expectation>
+            <expectedValue>The agent escalates the conversation to a human agent</expectedValue>
+            <name>bot_response_rating</name>
+        </expectation>
+    </testCase>
+</AiEvaluationDefinition>

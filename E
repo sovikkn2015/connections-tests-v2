@@ -1,0 +1,1 @@
+{"status":400,"path":"v6.0.0/sessions/019da13b-479b-733c-8837-d423ae5fb54f/messages/stream","mode":"unknown","requestId":"63de29d8-fa8f-4b7e-9152-50c39b8fcabf","error":"BadRequestException","message":"Failed to parse request body as JSON","timestamp":1776526512440,"expected":true,"details":null}

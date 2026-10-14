@@ -1,3 +1,17 @@
+# Never commit this file
+Kiro Productivity Guide*.pdf
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Misc
+E
+-p/
+
+# SAM deploy config (may contain API keys via parameter_overrides)
+**/samconfig.toml
+
 __pycache__/
 *.py[cod]
 .env

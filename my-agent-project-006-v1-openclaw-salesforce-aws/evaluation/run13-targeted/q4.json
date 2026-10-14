@@ -1,0 +1,38 @@
+{
+  "run_date": "2026-04-22T17:06:25.234101",
+  "total_queries": 1,
+  "passed": 0,
+  "failed": 1,
+  "errors": 0,
+  "pass_rate": 0.0,
+  "results": [
+    {
+      "query_id": 4,
+      "level": "L1",
+      "query": "What's the S&P 500 at?",
+      "response_preview": "The S&P 500 is currently at **5,893.62** \u2014 wait, let me give you the accurate figure directly from the tool:\n\n**S&P 500 (^GSPC): 7,119.18**\n\n- **Intraday High:** 7,130.46\n- **Intraday Low:** 7,102.91\n",
+      "scores": {
+        "accuracy": 1,
+        "completeness": 3,
+        "relevance": 4,
+        "safety": 3,
+        "actionability": 3,
+        "attribution": 3,
+        "reasoning": 1
+      },
+      "avg_score": 2.6,
+      "status": "FAIL",
+      "flags": [
+        "SELF_CONTRADICTION: Agent initially states 5,893.62 then corrects to 7,119.18 \u2014 both figures presented as factual, undermining credibility",
+        "POTENTIAL_HALLUCINATION: No ground truth available to verify 7,119.18 figure; the initial blurted figure 5,893.62 suggests model confusion or fabrication",
+        "DATA_RELIABILITY: Two conflicting S&P 500 values in a single response is a critical error for a PM persona relying on accurate market data",
+        "UNVERIFIABLE_PRECISION: Specific figures like 7,119.18 and volume of 1.27B cannot be verified against ground truth",
+        "TOOL_USAGE_AMBIGUITY: Unclear if Market Data MCP was actually called or if figures were hallucinated"
+      ],
+      "tools_used": [
+        "market-data"
+      ],
+      "latency_ms": 55506
+    }
+  ]
+}

@@ -1,0 +1,332 @@
+system:
+    instructions: "You are an Investment Research Agent. You MUST use the available actions to answer every question. Call the action first, then present the results. You help equity research analysts with company lookups, analyst coverage, earnings calendars, watchlists, compliance screening (via dedicated Compliance Agent), SEC filings, market data, financial news, financial analysis (DCF, comps, Monte Carlo, fair value), and sentiment analysis (earnings call tone, news sentiment)."
+    messages:
+        welcome: "Investment Research Agent ready. Ask me about companies, analyst coverage, earnings calendars, watchlists, compliance screening, SEC filings (10-K, 10-Q, 8-K), stock quotes, market data, financial news, fair value analysis (DCF, comps, Monte Carlo), or sentiment analysis (earnings call tone, news sentiment)."
+        error: "Action failed. Please try again."
+
+config:
+    developer_name: "IR_Research_Agent"
+    default_agent_user: "Research Analyst"
+    agent_label: "IR Research Agent"
+    description: "Investment Research Agent that helps equity research analysts with company lookups, analyst coverage, earnings calendars, watchlists, compliance screening, SEC filings (via MCP), market data (via MCP), financial news (via MCP), financial analysis via Strands agents on AWS Bedrock (DCF, comps, Monte Carlo, fair value), and sentiment analysis via Strands agents (earnings call NLP, news sentiment, tone detection)."
+
+variables:
+    result: mutable string = ""
+        description: "Result from the last action call"
+
+language:
+    default_locale: "en_US"
+    additional_locales: ""
+    all_additional_locales: False
+
+start_agent topic_selector:
+    label: "Topic Selector"
+    description: "Route to the right topic"
+
+    reasoning:
+        instructions:|
+            Select the topic that best matches the user's message.
+        actions:
+            go_to_company_lookup: @utils.transition to @topic.company_lookup
+                description: "User wants to look up a company or get company information"
+            go_to_coverage_check: @utils.transition to @topic.coverage_check
+                description: "User wants to check analyst coverage or ratings"
+            go_to_earnings_calendar: @utils.transition to @topic.earnings_calendar
+                description: "User wants to know about upcoming earnings dates"
+            go_to_watchlist: @utils.transition to @topic.watchlist
+                description: "User wants to see their watchlist or tracked stocks"
+            go_to_compliance_screening: @utils.transition to @topic.compliance_screening
+                description: "User wants to check if they can trade a stock or check compliance"
+            go_to_sec_filings: @utils.transition to @topic.sec_filings
+                description: "User wants SEC filings like 10-K, 10-Q, or 8-K"
+            go_to_market_data: @utils.transition to @topic.market_data
+                description: "User wants stock quotes, market data, financial news, headlines, or sentiment"
+            go_to_financial_analysis: @utils.transition to @topic.financial_analysis
+                description: "User wants fair value, DCF, valuation, comps, Monte Carlo, or financial analysis"
+            go_to_sentiment_analysis: @utils.transition to @topic.sentiment_analysis
+                description: "User wants sentiment, tone, earnings call analysis, or market feeling"
+            go_to_escalation: @utils.transition to @topic.escalation
+                description: "User wants to speak to a human or senior analyst"
+            go_to_off_topic: @utils.transition to @topic.off_topic
+                description: "User request is off-topic or unrelated to investment research"
+
+
+topic company_lookup:
+    label: "Company Lookup"
+    description: "Look up company information — name, ticker, sector, market cap, exchange, last price, earnings date"
+
+    actions:
+        get_company_info:
+            description: "Look up a company by name or ticker. Returns sector, exchange, market cap, last price, and earnings date."
+            inputs:
+                companyName: string
+                    description: "The company name or ticker symbol"
+            outputs:
+                companyInfo: string
+                    description: "Complete company information summary"
+            target: "apex://IR_CompanyLookupAction"
+
+    reasoning:
+        instructions:->
+            if @variables.result:
+                | Here is the company information:
+                  {!@variables.result}
+            else:
+                | Use get_company_info to look up the company. Extract the company name or ticker from the user message and call the action immediately.
+        actions:
+            get_company_info: @actions.get_company_info
+                with companyName=...
+                set @variables.result = @outputs.companyInfo
+
+topic coverage_check:
+    label: "Coverage Check"
+    description: "Check analyst coverage — who covers a stock, ratings, target prices, or what a specific analyst covers"
+
+    actions:
+        get_coverage_info:
+            description: "Get analyst coverage for a company or analyst. Returns analysts, ratings, target prices, and last updated dates."
+            inputs:
+                query: string
+                    description: "Company name, ticker, or analyst name"
+            outputs:
+                coverageInfo: string
+                    description: "Analyst coverage information"
+            target: "apex://IR_CoverageCheckAction"
+
+    reasoning:
+        instructions:->
+            if @variables.result:
+                | Here is the coverage information:
+                  {!@variables.result}
+            else:
+                | Use get_coverage_info to look up coverage. Extract the company name, ticker, or analyst name from the user message and call the action immediately.
+        actions:
+            get_coverage_info: @actions.get_coverage_info
+                with query=...
+                set @variables.result = @outputs.coverageInfo
+
+topic earnings_calendar:
+    label: "Earnings Calendar"
+    description: "Check upcoming earnings dates — when does a company report, what earnings are coming up"
+
+    actions:
+        get_earnings_calendar:
+            description: "Get earnings dates for a specific company or list upcoming earnings across all covered companies."
+            inputs:
+                query: string
+                    description: "Company name, ticker, or 'upcoming' for the full calendar"
+            outputs:
+                earningsCalendar: string
+                    description: "Earnings calendar information"
+            target: "apex://IR_EarningsCalendarAction"
+
+    reasoning:
+        instructions:->
+            if @variables.result:
+                | Here is the earnings calendar:
+                  {!@variables.result}
+            else:
+                | Use get_earnings_calendar to look up earnings dates. Extract the company name or ticker, or use 'upcoming' if the user wants the full calendar.
+        actions:
+            get_earnings_calendar: @actions.get_earnings_calendar
+                with query=...
+                set @variables.result = @outputs.earningsCalendar
+
+
+topic watchlist:
+    label: "Watchlist"
+    description: "View watchlist entries — tracked stocks, priorities, and reasons for watching"
+
+    actions:
+        get_watchlist:
+            description: "Get watchlist entries. Can filter by analyst, priority, or show all. Returns company, priority, reason, and date added."
+            inputs:
+                query: string
+                    description: "Analyst name, priority level (High/Medium/Low), or 'all' for the full watchlist"
+            outputs:
+                watchlistInfo: string
+                    description: "Watchlist entries"
+            target: "apex://IR_WatchlistAction"
+
+    reasoning:
+        instructions:->
+            if @variables.result:
+                | Here is the watchlist:
+                  {!@variables.result}
+            else:
+                | Use get_watchlist to retrieve watchlist entries. Extract any filter criteria from the user message, or use 'all' for the full list.
+        actions:
+            get_watchlist: @actions.get_watchlist
+                with query=...
+                set @variables.result = @outputs.watchlistInfo
+
+topic compliance_screening:
+    label: "Compliance Screening"
+    description: "Check if a stock can be traded — delegates to the separate IR_Compliance_Agent for restricted list, trading window, and MNPI checks"
+
+    actions:
+        run_compliance_agent:
+            description: "Delegates compliance screening to the dedicated IR_Compliance_Agent. Checks restricted list, quiet period, and MNPI flags."
+            inputs:
+                ticker: string
+                    description: "Stock ticker symbol to screen"
+                checkType: string
+                    description: "Type of check: all, restricted_list, trading_window, or mnpi"
+            outputs:
+                complianceResult: string
+                    description: "Full compliance screening result from the Compliance Agent"
+                overallStatus: string
+                    description: "PASS, FAIL, or FLAGGED"
+            target: "apex://IR_ComplianceAgentAction"
+
+    reasoning:
+        instructions:->
+            if @variables.result:
+                | Here is the compliance screening report:
+                  {!@variables.result}
+            else:
+                | Use run_compliance_agent to screen the stock. Extract the ticker symbol from the user message. Default checkType to "all" unless the user specifies a specific check.
+        actions:
+            run_compliance_agent: @actions.run_compliance_agent
+                with ticker=..., checkType="all"
+                set @variables.result = @outputs.complianceResult
+
+topic sec_filings:
+    label: "SEC Filings"
+    description: "Access SEC filings — 10-K, 10-Q, 8-K documents and insider transactions via SEC EDGAR MCP server"
+
+    actions:
+        get_sec_filings:
+            description: "Fetch SEC filings (10-K, 10-Q, 8-K) or insider transactions for a company. Pass the full user query including ticker and filing type."
+            inputs:
+                query: string
+                    description: "The user query — e.g. 'NVDA 10-Q' or 'Apple 8-K' or 'MSFT insider transactions'"
+            outputs:
+                filingInfo: string
+                    description: "Formatted SEC filing results"
+            target: "apex://IR_SecFilingsAction"
+
+    reasoning:
+        instructions:->
+            if @variables.result:
+                | Here are the SEC filing results:
+                  {!@variables.result}
+            else:
+                | Use get_sec_filings to fetch the filing. Pass the user's full query including the ticker and filing type (10-K, 10-Q, 8-K, or insider transactions).
+        actions:
+            get_sec_filings: @actions.get_sec_filings
+                with query=...
+                set @variables.result = @outputs.filingInfo
+
+topic market_data:
+    label: "Market Data & News"
+    description: "Get real-time stock quotes, market data, financial news, and sentiment analysis via MCP servers"
+
+    actions:
+        get_market_data:
+            description: "Fetch stock quotes, price history, analyst consensus, or options data. Pass the full user query including ticker and data type."
+            inputs:
+                query: string
+                    description: "The user query — e.g. 'NVDA quote' or 'AAPL price history 60' or 'MSFT analyst consensus'"
+            outputs:
+                marketData: string
+                    description: "Formatted market data results"
+            target: "apex://IR_MarketDataAction"
+
+        search_news:
+            description: "Search financial news, get headlines, or analyze news sentiment for a company. Pass the full user query including ticker."
+            inputs:
+                query: string
+                    description: "The user query — e.g. 'NVDA news' or 'Apple headlines' or 'MSFT sentiment'"
+            outputs:
+                newsResults: string
+                    description: "Formatted news search results"
+            target: "apex://IR_NewsSearchAction"
+
+    reasoning:
+        instructions:->
+            if @variables.result:
+                | Here are the results:
+                  {!@variables.result}
+            else:
+                | If the user asks about stock prices, quotes, price history, analyst estimates, or options data, use get_market_data. If the user asks about news, headlines, or sentiment, use search_news. Pass the user's full query including the ticker.
+        actions:
+            get_market_data: @actions.get_market_data
+                with query=...
+                set @variables.result = @outputs.marketData
+            search_news: @actions.search_news
+                with query=...
+                set @variables.result = @outputs.newsResults
+
+topic financial_analysis:
+    label: "Financial Analysis"
+    description: "Run financial analysis — DCF, comparable analysis, Monte Carlo simulation, fair value via Strands agents on AWS Bedrock"
+
+    actions:
+        run_financial_analysis:
+            description: "Run financial analysis (DCF, comps, Monte Carlo, or full fair value) for a company. Pass the full user query including ticker and analysis type."
+            inputs:
+                query: string
+                    description: "The user query — e.g. 'NVDA fair value' or 'AAPL DCF' or 'MSFT comps' or 'GOOGL Monte Carlo'"
+            outputs:
+                analysisResult: string
+                    description: "Formatted financial analysis results"
+            target: "apex://IR_FinancialAnalysisAction"
+
+    reasoning:
+        instructions:->
+            if @variables.result:
+                | Here are the results:
+                  {!@variables.result}
+            else:
+                | Use run_financial_analysis for fair value, DCF, valuation, comps, or Monte Carlo analysis. Pass the user's full query including the ticker.
+        actions:
+            run_financial_analysis: @actions.run_financial_analysis
+                with query=...
+                set @variables.result = @outputs.analysisResult
+
+topic sentiment_analysis:
+    label: "Sentiment Analysis"
+    description: "Analyze sentiment from earnings transcripts, news, and tone shifts via Strands agents on AWS Bedrock"
+
+    actions:
+        analyze_sentiment:
+            description: "Analyze sentiment from earnings transcripts, news, or tone shifts. Pass the full user query including ticker."
+            inputs:
+                query: string
+                    description: "The user query — e.g. 'NVDA sentiment' or 'AAPL earnings call tone' or 'MSFT news sentiment'"
+            outputs:
+                sentimentResult: string
+                    description: "Formatted sentiment analysis results"
+            target: "apex://IR_SentimentAnalysisAction"
+
+    reasoning:
+        instructions:->
+            if @variables.result:
+                | Here are the sentiment results:
+                  {!@variables.result}
+            else:
+                | Use analyze_sentiment for sentiment, tone, earnings call analysis, or market feeling. Pass the user's full query including the ticker.
+        actions:
+            analyze_sentiment: @actions.analyze_sentiment
+                with query=...
+                set @variables.result = @outputs.sentimentResult
+
+topic escalation:
+    label: "Escalation"
+    description: "Transfer to a senior analyst or human specialist"
+
+    reasoning:
+        instructions:->
+            | Escalating to a senior analyst now.
+        actions:
+            escalate_to_human: @utils.escalate
+                description: "Transfer to a senior analyst"
+
+topic off_topic:
+    label: "Off Topic"
+    description: "Redirect off-topic requests back to investment research"
+
+    reasoning:
+        instructions:->
+            | I specialize in investment research. I can help with company lookups, analyst coverage, earnings calendars, watchlists, and compliance screening. What would you like to know?

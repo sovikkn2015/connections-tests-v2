@@ -1,0 +1,76 @@
+# -----------------------------------------------------------------------------
+# Example Tenant — Tier 4 Independent RIA — Cloud topology.
+#
+# Copy this directory to create a new tenant:
+#   cp -r config/tenants/example-tenant-tier4-ria config/tenants/<your-id>
+# Then replace every REPLACE_ME placeholder below.
+#
+# Spec: .kiro/specs/ops-hardening-wave4-argocd-applicationset.md (§2.6).
+#
+# This file is rendered by the ApplicationSet at
+# deploy/argocd/applicationset.yaml. Do NOT change the file name; the
+# ApplicationSet expects exactly `values.yaml` in each tenant dir.
+# -----------------------------------------------------------------------------
+
+tenant:
+  id: example-tenant-tier4-ria
+  archetype: tier4_independent_ria
+  # Pin tenants to a platform release tag. Set `allowHead: true` only
+  # for pre-prod tenants that want to track main.
+  targetRevision: v0.5.0
+  allowHead: false
+  # Which topology file is layered on top of values-cloud.yaml.
+  # Options: "values-cloud.yaml" | "values-hybrid.yaml".
+  topologyFile: values-cloud.yaml
+
+# Global tenant-identity overlay. These land on every sub-chart via the
+# `global:` block the umbrella's _helpers.tpl propagates.
+global:
+  topology: cloud
+  runtime: managed_agents
+  # Tenant isolation namespace -- matches the ArgoCD destination
+  # namespace from applicationset.yaml.
+  namespace: example-tenant-tier4-ria
+  # OVERRIDE -- per-tenant container registry. Tenants can ship from
+  # their own ECR; default placeholder here.
+  imageRegistry: REPLACE_ME.dkr.ecr.us-east-1.amazonaws.com/007-fsi
+  # OVERRIDE -- IAM role ARN that owns the per-tenant KMS CMK
+  # (Steering Rule 23).
+  tenantRoleArn: "arn:aws:iam::REPLACE_ME:role/007-fsi-example-tenant"
+  # OVERRIDE -- per-tenant KMS key ARN for S3 + EBS encryption.
+  kmsKeyArn: "arn:aws:kms:us-east-1:REPLACE_ME:key/REPLACE_ME"
+  # OVERRIDE -- per-tenant DNS domain.
+  domain: example-tenant.advisor.example-firm.com
+  labels:
+    app.kubernetes.io/part-of: 007-fsi
+    app.kubernetes.io/managed-by: argocd
+    007.fsi/tenant: example-tenant-tier4-ria
+
+# -----------------------------------------------------------------------------
+# Feature toggles. Tier 4 RIAs enable the research + client-service
+# pipelines; BD-only features (principal review, Smarsh) stay off.
+# -----------------------------------------------------------------------------
+m1-identity:
+  enabled: true
+
+m2-m4-policy-engine:
+  enabled: true
+
+m6-mcp-gateway:
+  enabled: true
+
+m10-audit-logger:
+  enabled: true
+
+m8-pipeline-engine:
+  enabled: true
+
+m9-intent-router:
+  enabled: true
+
+m12-supervisor:
+  enabled: true
+  config:
+    specialists:
+      - client_service
+      - research

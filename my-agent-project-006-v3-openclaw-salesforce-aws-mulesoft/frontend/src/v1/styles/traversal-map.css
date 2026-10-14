@@ -1,0 +1,215 @@
+/*
+ * TraversalMap — SLDS-compatible color tokens, pure CSS animation.
+ *
+ * States (read from data-state on the node <g> or edge <path>):
+ *   dim    — border #3b4b5e, fill #0b1726, text rgba(230,237,243,0.35)
+ *   pulse  — accent cyan #1B96FF, breathing animation on stroke-width + opacity
+ *   solid  — border #04844b (green), text full opacity
+ *   error  — border #c23934, text #ea001e
+ * Edge states: dim | active (dashed-anim cyan) | complete (solid green).
+ */
+
+.v3-traversal-map {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  background: #0B1726;
+  border: 1px solid #1C2B3F;
+  border-radius: 0.25rem;
+  padding: 0.5rem;
+  color: #E6EDF3;
+}
+
+.v3-traversal-map__svg {
+  display: block;
+}
+
+.v3-traversal-map__legend {
+  position: absolute;
+  top: 0.375rem;
+  right: 0.5rem;
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.25rem 0.5rem;
+  background: rgba(15, 34, 57, 0.85);
+  border: 1px solid #1C2B3F;
+  border-radius: 0.25rem;
+  font-size: 0.6875rem;
+  font-family: 'SF Mono', Menlo, monospace;
+  color: #9FB6CF;
+  z-index: 1;
+  pointer-events: none;
+}
+.v3-traversal-map__legend-item[data-state="dim"] { color: #9FB6CF; }
+.v3-traversal-map__legend-item[data-state="pulse"] { color: #1B96FF; }
+.v3-traversal-map__legend-item[data-state="solid"] { color: #04844b; }
+.v3-traversal-map__legend-item[data-state="error"] { color: #c23934; }
+.v3-traversal-map__trace-id {
+  border-left: 1px solid #1C2B3F;
+  padding-left: 0.5rem;
+  color: #8B949E;
+}
+
+/* Node defaults — dim. */
+.v3-traversal-map__node {
+  cursor: pointer;
+  outline: none;
+}
+.v3-traversal-map__node[tabindex="-1"] { cursor: default; }
+
+.v3-traversal-map__node-rect {
+  fill: #0B1726;
+  stroke: #3b4b5e;
+  stroke-width: 1;
+  transition: stroke 120ms ease-out, stroke-width 120ms ease-out, fill 120ms ease-out;
+}
+.v3-traversal-map__node-label {
+  fill: rgba(230, 237, 243, 0.35);
+  font-size: 11px;
+  font-family: 'SF Mono', Menlo, monospace;
+  pointer-events: none;
+  transition: fill 120ms ease-out;
+}
+
+/* Kind-flavored accents on the dim border so the map reads as structured
+   even before any event arrives (the "architecture map" part of the story). */
+.v3-traversal-map__node[data-kind="coordinator"] .v3-traversal-map__node-rect { stroke: #5A7699; }
+.v3-traversal-map__node[data-kind="orchestrator"] .v3-traversal-map__node-rect { stroke: #4C6A8A; }
+.v3-traversal-map__node[data-kind="trust"] .v3-traversal-map__node-rect { stroke-dasharray: 4 2; }
+/* Skill = in-process Python, MCP = external service. Different stroke patterns
+   so the two bottom layers read as distinct architectural surfaces. */
+.v3-traversal-map__node[data-kind="skill"] .v3-traversal-map__node-rect {
+  stroke: #7B5A99;
+  fill: #120C1A;
+}
+.v3-traversal-map__node[data-kind="mcp"] .v3-traversal-map__node-rect {
+  stroke: #3B7A6E;
+  stroke-dasharray: 6 3;
+  fill: #0A1612;
+}
+.v3-traversal-map__node[data-kind="gate"] .v3-traversal-map__node-rect {
+  stroke: #B07A3D;
+  fill: #1A130A;
+  stroke-width: 1.5;
+}
+.v3-traversal-map__node[data-kind="gate"] .v3-traversal-map__node-label {
+  fill: rgba(224, 190, 142, 0.75);
+}
+
+/* Focus ring — keyboard accessibility. */
+.v3-traversal-map__node:focus-visible .v3-traversal-map__node-rect {
+  stroke: #1B96FF;
+  stroke-width: 2;
+}
+
+/* Active states */
+.v3-traversal-map__node[data-state="pulse"] .v3-traversal-map__node-rect {
+  stroke: #1B96FF;
+  stroke-width: 2;
+  animation: v3-traversal-pulse 1.2s ease-in-out infinite;
+}
+.v3-traversal-map__node[data-state="pulse"] .v3-traversal-map__node-label {
+  fill: #E6EDF3;
+}
+.v3-traversal-map__node[data-state="solid"] .v3-traversal-map__node-rect {
+  stroke: #04844b;
+  stroke-width: 2;
+  fill: #0C2A1E;
+}
+.v3-traversal-map__node[data-state="solid"] .v3-traversal-map__node-label {
+  fill: #E6EDF3;
+}
+.v3-traversal-map__node[data-state="error"] .v3-traversal-map__node-rect {
+  stroke: #c23934;
+  stroke-width: 2;
+  fill: #2A0F10;
+}
+.v3-traversal-map__node[data-state="error"] .v3-traversal-map__node-label {
+  fill: #ea001e;
+}
+
+@keyframes v3-traversal-pulse {
+  0%, 100% {
+    stroke-width: 2;
+    opacity: 0.7;
+  }
+  50% {
+    stroke-width: 3;
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .v3-traversal-map__node[data-state="pulse"] .v3-traversal-map__node-rect {
+    animation: none;
+  }
+  .v3-traversal-map__edge[data-state="active"] {
+    animation: none;
+  }
+}
+
+/* Sequential "serial gate" edges — thicker, always show direction of flow. */
+.v3-traversal-map__edge[data-kind="sequences"] {
+  stroke: rgba(176, 122, 61, 0.55);
+  stroke-width: 1.5;
+}
+.v3-traversal-map__edge[data-kind="sequences"][data-state="active"] {
+  stroke: #E0BE8E;
+  stroke-width: 2.5;
+}
+.v3-traversal-map__edge[data-kind="sequences"][data-state="complete"] {
+  stroke: #B07A3D;
+  stroke-width: 2;
+}
+
+/* Edges */
+.v3-traversal-map__edge {
+  stroke: rgba(159, 182, 207, 0.2);
+  stroke-width: 1;
+  fill: none;
+  transition: stroke 120ms ease-out, stroke-width 120ms ease-out;
+}
+.v3-traversal-map__edge[data-state="active"] {
+  stroke: #1B96FF;
+  stroke-width: 2;
+  stroke-dasharray: 4 2;
+  animation: v3-traversal-dash 600ms linear infinite;
+}
+.v3-traversal-map__edge[data-state="complete"] {
+  stroke: #04844b;
+  stroke-width: 1.5;
+}
+@keyframes v3-traversal-dash {
+  from { stroke-dashoffset: 0; }
+  to { stroke-dashoffset: -12; }
+}
+
+/* Collapsible <details> wrapper — per-persona screen mount point. */
+.v3-traversal-map-wrapper {
+  margin: 0.5rem;
+  padding: 0;
+  background: transparent;
+  border: 1px solid #1C2B3F;
+  border-radius: 0.25rem;
+  overflow: hidden;
+}
+.v3-traversal-map-wrapper > summary {
+  cursor: pointer;
+  padding: 0.375rem 0.75rem;
+  background: #162D47;
+  color: #9FB6CF;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  list-style: none;
+  user-select: none;
+}
+.v3-traversal-map-wrapper > summary::-webkit-details-marker { display: none; }
+.v3-traversal-map-wrapper > summary::before {
+  content: '▸ ';
+  display: inline-block;
+  transition: transform 120ms ease-out;
+}
+.v3-traversal-map-wrapper[open] > summary::before {
+  content: '▾ ';
+}

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Target_Allocation__c</fullName>
+    <label>Target Allocation</label>
+    <description>Target allocation based on risk profile, e.g. 55% Equity / 35% Fixed / 10% Cash</description>
+    <type>Text</type>
+    <length>255</length>
+    <required>false</required>
+</CustomField>
